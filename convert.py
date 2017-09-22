@@ -1,17 +1,21 @@
+# Convert line drawings in gif format to RGB png files to manipulate colours
 from PIL import Image
 import numpy as np
 import os
 import glob
 
-# imgs = glob.glob('./line_drawings/*.gif')
-imgs = os.listdir('./line_drawings')
-path = './line_drawings/converted'
-os.mkdir(path)
 
-for i in imgs:
-    name, ext = os.path.splitext(i)
-    img = Image.open('./line_drawings/' + i)
-    if img.size != (300,300): print 'unequal size !'
-    dest = os.path.join(path, name + '.png')
-    img.resize((600, 600)).save(dest)
-    print i
+imgs = glob.glob('./line_drawings/*.gif')
+
+out_path = './line_drawings/converted'
+if not os.path.isdir(out_path):
+	os.mkdir(out_path)
+
+for img in imgs:
+    path, filename = os.path.split(img)
+    file, ext = os.path.splitext(filename)
+    Img = Image.open(img)
+	
+    dest = os.path.join(out_path, file + '.png')
+    Img.resize((600, 600)).convert('RGB').save(dest, 'PNG')
+    print img
