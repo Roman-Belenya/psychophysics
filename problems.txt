@@ -1,0 +1,1 @@
+- psychopy does not allow 0:255 range in its stimuli. Need to convert to -1:1
