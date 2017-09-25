@@ -1,3 +1,4 @@
+
 from psychopy import visual, core, event
 from PIL import Image
 import numpy as np
@@ -38,13 +39,19 @@ monitor_fs = 60 # frames/second
 flicker_fs = 15 # cycles/second
 seconds = 6
 
+# r  |----|    |----|    |----|    |
+# g  |    |----|    |----|    |----|
+
+#    |--cycle--|
+
+
 assert flicker_fs * 2 <= monitor_fs, 'Too high flicker fs'
 
 cycle = monitor_fs / (flicker_fs * 2) # how many frames there are in a cycle
 frame_sec = cycle / float(monitor_fs)
 
-# green, red = prepare_image('./line_drawings/converted/obj032bat.png')
-green, red = prepare_image('./line_drawings/converted/obj010fishtank.png')
+green, red = prepare_image('./line_drawings/converted/obj032bat.png')
+# green, red = prepare_image('./line_drawings/converted/obj010fishtank.png')
 
 win = visual.Window(monitor = 'testMonitor', fullscr = True, units = 'pix', color = [1, 1, 1])
 win.refreshThreshold = 1./monitor_fs + 0.004
