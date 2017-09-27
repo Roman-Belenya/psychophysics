@@ -11,10 +11,11 @@ import time
 
 i = 5 # current picture number
 pics = glob('./line_drawings/converted/*.png')
-colour_delta = 2./256
+# colour_delta = 2./256
+colour_delta = 0.005
 
 #  1    x          2
-# --- = - ;   x = --- 
+# --- = - ;   x = ---
 # 256   2         256
 
 keys = ['f', 'j', 'escape'] # f = detected
@@ -22,7 +23,7 @@ keys = ['f', 'j', 'escape'] # f = detected
 responses = []
 lum_values = []
 
-n_trials = 20
+n_trials = 10
 n_catch_trials = int(0.25 * n_trials)
 catch_trials_idcs = np.random.choice(n_trials, n_catch_trials)
 
@@ -57,11 +58,13 @@ for trial in range(n_trials):
 
 	win.flip()
 	core.wait(1)
-	
+
 	stim.draw(); win.flip()
 	clock.reset()
 	while clock.getTime() < 1.5:
 		pass
+	win.flip()
+	core.wait(0.5)
 
 	detect_text.color = 1
 	not_detect_text.color = 1
@@ -70,29 +73,42 @@ for trial in range(n_trials):
 	win.flip()
 	key = event.waitKeys(keyList = keys)
 
-	if 'f' in key:
+	lum_values.append(fg_colour)
+
+	if key[0] == 'f':
 		fg_colour -= colour_delta
-		detect_text.color = 0.5
+		detect_text.color = -0.7
 		responses.append(1)
-	
-	elif 'j' in key:
+
+	elif key[0] == 'j':
 		fg_colour += colour_delta
-		not_detect_text.color = 0.5
+		not_detect_text.color = -0.7
 		responses.append(0)
 
 	elif key[0] == 'escape':
 		break
-		
+
 	detect_text.draw()
-	not_detect_text.draw()	
+	not_detect_text.draw()
 	win.flip()
 	core.wait(1)
-	
-	lum_values.append(fg_colour)
-	
+
+
 start_text.text = 'Done! Press any button to quit'
 start_text.draw()
 win.flip()
 event.waitKeys()
 
 win.close()
+
+fig = plt.figure()
+ax1 = fig.add_subplot(121)
+ax1.plot(responses)
+ax1.set_title('Responses')
+
+ax2 = fig.add_subplot(122)
+ax2.plot(lum_values)
+ax2.axhline(np.mean(lum_values), c = 'red')
+ax2.set_title('Luminance')
+
+plt.show()
