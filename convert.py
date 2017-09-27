@@ -17,5 +17,5 @@ for img in imgs:
     Img = Image.open(img)
 	
     dest = os.path.join(out_path, file + '.png')
-    Img.resize((600, 600)).convert('RGB').save(dest, 'PNG')
+    Img.resize((512, 512), Image.ANTIALIAS).convert('RGB').save(dest, 'PNG')
     print img
