@@ -54,7 +54,7 @@ clock = core.Clock()
 
 for trial in range(n_trials):
 
-	stim.tex = prepare_image(np.random.choice(pics), fg_colour)
+	stim.tex, _ = prepare_image(np.random.choice(pics), fg_colour)
 
 	win.flip()
 	core.wait(1)

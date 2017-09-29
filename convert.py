@@ -16,17 +16,17 @@ for img in imgs:
     file, ext = os.path.splitext(filename)
     Img = Image.open(img).convert('RGBA').resize((512, 512), Image.NEAREST)
 
-    m = np.array(Img)
+    rgba = np.array(Img)
 
-    if len(np.unique(m)) > 2:
+    if len(np.unique(rgba)) > 2:
         raise Exception('image {} has {} colour levels'.format(img, len(np.unique(m))))
 
-    mask = np.zeros([512, 512, 4], dtype = np.bool)
-    mask[:,:,3] = (m[:,:,0] == 255) # this is white background
+    bg = np.zeros([512, 512, 4], dtype = np.bool)
+    bg[:,:,3] = (rgba[:,:,0] == 255) # this is white background
 
-    m[mask] = 0
+    rgba[bg] = 0 # make white region fully transparent (0)
 
-    Img_converted = Image.fromarray(m)
+    Img_converted = Image.fromarray(rgba)
 
     dest = os.path.join(out_path, file + '.png')
     Img_converted.save(dest, 'PNG')
