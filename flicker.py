@@ -6,35 +6,6 @@ import matplotlib.pyplot as plt
 import time
 import os
 
-def prepare_image(img):
-	img = Image.open(img)
-	
-	green = np.array(img); print green.shape
-	green[:,:,1] = 255
-	red = np.array(img)
-	red[:,:,0] = 255
-		
-	green = green/127.5 - 1 # convert to [-1, 1] for psychopy
-	red = red/127.5 - 1
-	
-	green = np.flip(green, 0) # flip horizontally
-	red = np.flip(red, 0)
-	
-	return green, red
-
-
-def change_colour(image, dim = 0, by = +10):
-
-    assert np.all(0 <= image) and np.all(image <= 255), 'Some pixels outside 8-bit values'
-    img = image.copy() # img[img[:,:,dim] != 255] += by # changes entries in all dimensions
-    mask = np.zeros(image.shape, dtype = np.bool) # create a 3d boolean mask
-    nonwhite = img[:,:,dim] != 255
-    mask[:,:,dim] = nonwhite # insert all non-white pixels from to image to the dim in mask as True
-    img[mask] += by
-	
-    return img
-
-
 monitor_fs = 60 # frames/second
 flicker_fs = 15 # cycles/second
 seconds = 6
@@ -64,7 +35,7 @@ current_stim = green_stim
 t0 = time.time()
 win.recordFrameIntervals = True
 for frame in range(seconds * monitor_fs):
-	if frame % cycle == 0:
+	if frame % cycle == 0: # eg frame 4, 8, 16, 20, ...
 		print frame
 		if current_stim == green_stim:
 			current_stim = red_stim

@@ -28,7 +28,7 @@ def change_colour(image, dim = 0, by = +10):
 
 	# return green, red
 
-def prepare_image(image, fg_colour = 0):
+def prepare_image(image, fg_colour = 0, bg_colour = 0):
 
 
 	img = np.flip(
@@ -39,6 +39,5 @@ def prepare_image(image, fg_colour = 0):
 
 	fg = img == -1
 	img[fg] = fg_colour		# change colour of drawing
-	img[~fg] = 0			# background is always grey
-
-	return img, fg
+	img[~fg] = bg_colour	# ~background = foreground 
+	return img

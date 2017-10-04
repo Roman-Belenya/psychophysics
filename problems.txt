@@ -1,2 +1,3 @@
 - psychopy does not allow 0:255 range in its stimuli even if change to 'rgb255'. Need to convert to -1:1
-- grating stimulus appears a bit different shade of grey against the background 
+- grating stimulus appears a bit different shade of grey against the background
+- lab LG monitor only displays difference of 0.00879 in PsyhoPy's -1:1 coordinates. should be 2/256 = 0.0078125 (1/256 = x/2; x = 2/256)

@@ -4,11 +4,12 @@ from PIL import Image
 
 pic = np.zeros([8, 8, 3], dtype = np.float32)
 
-win = visual.Window(monitor = 'testMonitor', fullscr = True, units = 'pix', colorSpace = 'rgb', color = 0, size = [1920, 1080], useFBO = True)
+win = visual.Window(monitor = 'testMonitor', fullscr = False, units = 'pix', colorSpace = 'rgb', color = 0, size = [600, 600], useFBO = True)
 stim = visual.GratingStim(win, tex = pic, size = [1920, 1080], colorSpace = 'rgb')
 lum = visual.TextStim(win, text = '0', pos = (0, 0), colorSpace = 'rgb', color = -1)
 
-delta = 0.001
+# delta = 2./256
+delta = 0.00879
 
 stim.draw()
 win.flip()

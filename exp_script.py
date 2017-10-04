@@ -12,7 +12,7 @@ import time
 i = 5 # current picture number
 pics = glob('./line_drawings/converted/*.png')
 # colour_delta = 2./256
-colour_delta = 0.005
+colour_delta = 0.00879
 
 #  1    x          2
 # --- = - ;   x = ---
@@ -26,8 +26,6 @@ lum_values = []
 n_trials = 10
 n_catch_trials = int(0.25 * n_trials)
 catch_trials_idcs = np.random.choice(n_trials, n_catch_trials)
-
-img = prepare_image(pics[i])
 fg_colour = 0
 
 win = visual.Window(monitor = 'testMonitor', fullscr = True, units = 'pix', colorSpace = 'rgb')
@@ -54,7 +52,7 @@ clock = core.Clock()
 
 for trial in range(n_trials):
 
-	stim.tex, _ = prepare_image(np.random.choice(pics), fg_colour)
+	stim.tex = prepare_image(np.random.choice(pics), fg_colour)
 
 	win.flip()
 	core.wait(1)

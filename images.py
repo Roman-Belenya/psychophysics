@@ -1,3 +1,5 @@
+# Make 128 images of bat with different back-feoreground contrast. 128-128, 128-127, 128-126, ... 128-0
+
 from PIL import Image
 import numpy as np
 import os
