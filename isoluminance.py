@@ -28,7 +28,7 @@ red = np.array([225, 0, 0])
 green = np.array([0, 0, 0])
 
 win = visual.Window(
-	monitor = 'testMonitor', 
+	monitor = 'labLG', 
 	fullscr = True, 
 	units = 'pix', 
 	colorSpace = 'rgb255',
