@@ -7,96 +7,102 @@ import time
 import sys
 from functions import *
 
+'''
+10 Hz = 6 frames/cycle
+15 Hz = 4 frames/cycle. change colour every second frame
+30 Hz = 2 frames/cycle. change colour every frame
+'''
+
 monitor_fs = 60 # frames/second
 flicker_fs = 30 # cycles/second
-seconds = 6
-
 
 cycle = monitor_fs / (flicker_fs * 2) # how many frames there are in a demicycle
-# cycle = 1
-frame_sec = cycle / float(monitor_fs)
+
 
 # imgPath = './line_drawings/converted/obj032bat.png'
 imgPath = './line_drawings/converted/circle.png'
 
-bwImage = prepare_image(imgPath, fg_colour = -1, bg_colour = 1)
+fg = get_fg_mask(imgPath)
 
-red, _ = change_colour(bwImage, dim = 0, by = 2)
-green, _ = change_colour(bwImage, dim = 1, by = 1)
+red = np.array([225, 0, 0])
+green = np.array([0, 0, 0])
 
-# red = change_colour(bwImage, dim = 0, by = (222/127.5))
-# green = change_colour(bwImage, dim = 1, by = (135/127.5))
-
-
-win = visual.Window(monitor = 'testMonitor', fullscr = True, units = 'pix', color = [1, 1, 1])
+win = visual.Window(
+	monitor = 'testMonitor', 
+	fullscr = True, 
+	units = 'pix', 
+	colorSpace = 'rgb255',
+	color = [255, 255, 255])
+	
 win.refreshThreshold = 1./monitor_fs + 0.004
 win.recordFrameIntervals = True
 
-green_stim = visual.GratingStim(win, tex = green, size = (600, 600))
-red_stim = visual.GratingStim(win, tex = red, size = (600, 600))
+stim = visual.GratingStim(
+	win = win, 
+	tex = imgPath, 
+	size = (300, 300),
+	mask = fg,
+	colorSpace = 'rgb255',
+	color = red,
+	phase = 0.5
+	)
 
 
-current_stim = green_stim
 frame = 0
 finished = False
+delta = np.array([0, 5, 0])
 
-DELTA = 2./256
 
 while not finished:
 	if frame % cycle == 0:
-		# print frame
-		if current_stim == green_stim:
-			current_stim = red_stim
+		if np.all(stim.color == red):
+			stim.color = green
 		else:
-			current_stim = green_stim
-	current_stim.draw()
+			stim.color = red
+	stim.draw()
 	win.flip()
-	
 	
 	key = event.getKeys()
 	
 	if key:
-		if key[0] == 'up':
-			delta_red, delta_green = -DELTA, DELTA
-		elif key[0] == 'down':
-			delta_red, delta_green = DELTA, -DELTA
-		elif key[0] == 'escape':
+		key, = key
+		if key == 'up':
+			green = change_colour(green, delta)
+		elif key == 'down':
+			green = change_colour(green, -delta)
+		elif key == 'escape':
 			sys.exit()
-		elif key[0] == 'return':
-			print 'PRESSED ENTER'
-			delta_red, delta_green = 0, 0
+		elif key == 'return':			
 			finished = True
-		
-		red, rlevel = change_colour(red, dim = 0, by = delta_red)
-		green, glevel = change_colour(green, dim = 1, by = delta_green)
-		
-		red_stim.tex = red
-		green_stim.tex = green
-		
-		print 'red = {}; green = {}\n'.format(rlevel, glevel)
-
+		else:
+			try:
+				ans = int(key)
+				if ans == 0:
+					ans = 10
+				cycle = ans
+				frame = 0
+			except:
+				pass
+			
 	frame += 1
 	
 win.close()
 
-rlevel = 255 + int((rlevel - 1) * 127.5)
-glevel = 255 + int((glevel - 1) * 127.5)
 
 isoImage = np.zeros((600, 600, 3), dtype = np.uint8)
 
-isoImage[:300, :300, 0] = rlevel
-isoImage[:300, 300:, 1] = glevel
+isoImage[:300, :300, 0] = red[0]
+isoImage[:300, 300:, 1] = green[1]
 
-isoImage[300:, :, 0] = rlevel
-isoImage[300:, :, 1] = glevel
+isoImage[300:, :, 0] = red[0]
+isoImage[300:, :, 1] = green[1]
 
 Image.fromarray(isoImage).show()
 
 print '\n----------------------'	
 print 'END OF TRIALS'
-print '{} ms/frame'.format(frame_sec * 1000)
 print 'dropped {} frames'.format(win.nDroppedFrames)
-print 'red   = {}\ngreen = {}'.format(rlevel, glevel)
+print 'red   = {}\ngreen = {}'.format(red, green)
 print '----------------------'
 
 intervals_ms = np.array(win.frameIntervals) * 1000
