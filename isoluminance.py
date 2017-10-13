@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 from psychopy import visual, core, event
 from PIL import Image
 import numpy as np
@@ -13,10 +14,11 @@ from functions import *
 30 Hz = 2 frames/cycle. change colour every frame
 '''
 
-monitor_fs = 60 # frames/second
+monitor_fs = 120 # frames/second
 flicker_fs = 30 # cycles/second
 
-cycle = monitor_fs / (flicker_fs * 2) # how many frames there are in a demicycle
+# cycle = monitor_fs / (flicker_fs * 2) # how many frames there are in a demicycle
+cycle = 2
 
 
 # imgPath = './line_drawings/converted/obj032bat.png'
@@ -24,18 +26,22 @@ imgPath = './line_drawings/converted/circle.png'
 
 fg = get_fg_mask(imgPath)
 
-red = np.array([225, 0, 0])
-green = np.array([0, 0, 0])
-
 win = visual.Window(
-	monitor = 'labLG', 
+	monitor = 'labBENQ', 
+	screen = 0,
 	fullscr = True, 
 	units = 'pix', 
 	colorSpace = 'rgb255',
 	color = [255, 255, 255])
 	
 win.refreshThreshold = 1./monitor_fs + 0.004
+framerate = win.getActualFrameRate(nIdentical = 20, nMaxFrames = 200, nWarmUpFrames = 20, threshold = 1)
+print('framerate is {}'.format(framerate))
 win.recordFrameIntervals = True
+
+
+red = np.array([225, 0, 0])
+green = np.array([0, 0, 0])
 
 stim = visual.GratingStim(
 	win = win, 
@@ -55,6 +61,7 @@ delta = np.array([0, 5, 0])
 
 while not finished:
 	if frame % cycle == 0:
+		print(frame, end = '\r')
 		if np.all(stim.color == red):
 			stim.color = green
 		else:
@@ -99,11 +106,11 @@ isoImage[300:, :, 1] = green[1]
 
 Image.fromarray(isoImage).show()
 
-print '\n----------------------'	
-print 'END OF TRIALS'
-print 'dropped {} frames'.format(win.nDroppedFrames)
-print 'red   = {}\ngreen = {}'.format(red, green)
-print '----------------------'
+print('\n----------------------')
+print('END OF TRIALS')
+print('dropped {} frames'.format(win.nDroppedFrames))
+print('red   = {}\ngreen = {}'.format(red, green))
+print('----------------------')
 
 intervals_ms = np.array(win.frameIntervals) * 1000
 plt.plot(intervals_ms)
