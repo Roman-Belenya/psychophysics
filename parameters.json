@@ -1,0 +1,17 @@
+{
+	"ContrastDetection":{
+		"n_trials":			20,
+		"n_catch_trials":	4,
+		"grey_value":		128,
+		"colour_delta":		1,
+		"instructions":		""
+	},
+	
+	"Isoluminance":{
+		"n_trials":			20
+	},
+	
+	"Experiment":{
+		"n_trials":			20
+	}
+}
