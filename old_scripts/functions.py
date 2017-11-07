@@ -65,3 +65,10 @@ def change_colour(colour, by):
 		return colour
 	
 	return new_colour
+	
+	
+def deg_to_cm(degs, d):
+	return 2 * d * np.tan(degs/2.0)
+	
+def cm_to_deg(cms, d):
+	return 2 * np.atan(cms/(2.0*d))

@@ -22,7 +22,7 @@ cycle = 2
 
 
 # imgPath = './line_drawings/converted/obj032bat.png'
-imgPath = './line_drawings/converted/circle.png'
+imgPath = '../images/line_drawings/circle.png'
 
 fg = get_fg_mask(imgPath)
 

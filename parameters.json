@@ -1,27 +1,33 @@
 {
 	"Global":{
-		"image_path":		"./images"
+		"image_path": "./images",
+		"viewing_distane": 40
 	},
 	
 	"ContrastDetection":{
-		"images_path":		"./images/line_drawings",
-		"n_trials":			20,
-		"n_catch_trials":	4,
-		"grey_value":		128,
-		"colour_delta":		1,
-		"instructions_text":		"Write instructions for contrast detection part of the experiment here",
-		"stim_latency":		1.5,
-		"stim_pre_delay":	1,
-		"stim_post_delay":	0.5,
-		"detect_key":		"f",
-		"not_detect_key":	"j"
+		"images_path": "./images/line_drawings",
+		"n_trials":	 20,
+		"n_catch_trials": 4,
+		"grey_value": 128,
+		"colour_delta": 1,
+		"instructions_text": "Write instructions for contrast detection part of the experiment here",
+		"stim_latency": 1.5,
+		"stim_pre_delay": 1,
+		"stim_post_delay": 0.5,
+		"pos_key": "f",
+		"neg_key": "j"
 	},
 	
 	"Isoluminance":{
-		"n_trials":			20
+		"n_trials": 20,
+		"red": [225, 0, 0],
+		"green": [0, 0, 0],
+		"colour_delta": 1,
+		"pos_key": "f",
+		"neg_key": "j"		
 	},
 	
 	"Experiment":{
-		"n_trials":			20
+		"n_trials": 20
 	}
 }
