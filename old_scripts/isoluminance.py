@@ -41,7 +41,7 @@ win.recordFrameIntervals = True
 
 
 red = np.array([225, 0, 0])
-green = np.array([0, 0, 0])
+green = np.array([0, 50, 0])
 
 stim = visual.GratingStim(
 	win = win, 
@@ -56,12 +56,12 @@ stim = visual.GratingStim(
 
 frame = 0
 finished = False
-delta = np.array([0, 5, 0])
+delta = np.array([0, 10, 0])
 
 
 while not finished:
 	if frame % cycle == 0:
-		print(frame, end = '\r')
+		# print(frame, end = '\r')
 		if np.all(stim.color == red):
 			stim.color = green
 		else:
