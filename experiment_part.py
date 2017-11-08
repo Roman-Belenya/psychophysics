@@ -2,7 +2,7 @@ import numpy as np
 import glob
 import os
 from psychopy import visual, core, event
-from PIL import Image
+import tools as tls
 
 np.random.seed(1)
 
@@ -67,31 +67,6 @@ class ExperimentPart(object):
 		self.press_any.draw()
 		self.win.flip()
 		event.waitKeys()
-		
-		
-	@staticmethod	
-	def from_rgb(value):
-		assert np.all(value >= 0) and np.all(value <= 255), 'Invalid value'
-		
-		return value / 127.5 - 1
-		
-		
-	@staticmethod	
-	def to_rgb(value):
-		assert np.all(value >= -1) and np.all(value <= 1), 'Invalid value in {}'.format(np.unique(value))
-
-		v = 255 + np.around((value - 1) * 127.5)
-		return int(v)
-			
-					
-	def get_fg_mask(self, img_path):
-		# returns psyhopy mask of black pixel locations
-		# 1 = transparent, -1 = opaque
-    
-		img = np.flip(np.array(Image.open(img_path)), 0)
-		fg = self.from_rgb(img[:,:,0]) * -1
-
-		return fg
 		
 
 class ContrastDetection(ExperimentPart):
@@ -163,7 +138,7 @@ class ContrastDetection(ExperimentPart):
 		
 			# Process the image
 			img = str(np.random.choice(self.images)) # strange error here if left without str
-			fg = self.get_fg_mask(img)
+			fg = tls.get_fg_mask(img)
 			self.stim.tex = img
 			self.stim.mask = fg
 			self.stim.color = self.grey_value
@@ -199,4 +174,28 @@ class IsoluminanceDetection(ExperimentPart):
 		
 		self.positive.text = '{} = flickered'.format(self.pos_key.upper())
 		self.negative.text = '{} = not flickered'.format(self.neg_key.upper())
-		self.stim.color = red
+		self.red = np.array(self.red)
+		self.green = np.array(self.green)
+		self.stim.color = self.red
+		
+		
+	def run_trial(self, clock):
+		
+		frame = 0
+		half_cycle = self.monitor_fs / (2.0 * self.flicker_fs)
+		clock.reset()
+		
+		while clock.getTime() < self.stim_latency:
+			if frame % half_cycle == 0:
+				if np.all(self.stim.color == self.red):
+					self.stim.color = self.green
+				else:
+					self.stim.color == self.red
+			self.stim.draw()
+			self.win.flip()
+				
+	
+	def main_sequence(self):
+		self.show_instructions(self.instructions_text)
+		clock = core.Clock()
+		core.wait(1)

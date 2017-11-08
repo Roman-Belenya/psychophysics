@@ -19,12 +19,16 @@
 	},
 	
 	"Isoluminance":{
+		"instructions_text": "Write instructions for isoluminance detection part of the experiment here",
 		"n_trials": 20,
 		"red": [225, 0, 0],
-		"green": [0, 0, 0],
-		"colour_delta": 1,
+		"green": [0, 100, 0],
+		"colour_delta": 5,
 		"pos_key": "f",
-		"neg_key": "j"		
+		"neg_key": "j",
+		"monitor_fs": 120,
+		"flicker_fs": 30
+		"stim_latency": 1.5
 	},
 	
 	"Experiment":{
