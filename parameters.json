@@ -27,7 +27,7 @@
 		"pos_key": "f",
 		"neg_key": "j",
 		"monitor_fs": 120,
-		"flicker_fs": 30
+		"flicker_fs": 30,
 		"stim_latency": 1.5
 	},
 	

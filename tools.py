@@ -1,7 +1,17 @@
 from PIL import Image
 import numpy as np
+from psychopy import monitors
 
     
+def create_monitor(name, distance, width_cm, width_pix, height_pix):
+
+	mon = monitors.Monitor(name = name)
+	mon.setWidth(width_cm)
+	mon.setDistance(distance)
+	mon.setSizePix([width_pix, height_pix])
+	mon.saveMon()
+	
+
 def get_fg_mask(image):
     # returns psyhopy mask of black pixel locations
     # 1 = transparent, -1 = opaque
@@ -35,12 +45,20 @@ def change_colour(colour, by):
 	
 	return new_colour
 	
+def inverse_colour(colour):
+	colour = np.array(colour)
+	inv = 255 - colour
+	return inv.tolist()
+	
 	
 def deg_to_cm(degs, d):
 	return 2 * d * np.tan(degs/2.0)
 	
 def cm_to_deg(cms, d):
-	return 2 * np.atan(cms/(2.0*d))
+	return 2 * np.arctan(cms/(2.0*d))
+	
+def find_ppi(pix_h, pix_v, diagonal):
+	return np.sqrt(pix_h**2 + pix_v**2) / diagonal
 	
 	
 def find_flicker_fs(frames, monitor_fs):
@@ -48,3 +66,4 @@ def find_flicker_fs(frames, monitor_fs):
 	
 def find_frames_in_cycle(flicker_fs, monitor_fs):
 	return monitor_fs / float(flicker_fs)
+	
