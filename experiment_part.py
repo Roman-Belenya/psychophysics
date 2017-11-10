@@ -117,12 +117,12 @@ class ContrastDetection(ExperimentPart):
 		key = event.waitKeys(keyList = self.keys)
 
 		if key[0] == self.pos_key:
-			response = 'detect'
+			response = 1
 			increment = -self.colour_delta
 			self.positive.color = 150
 
 		elif key[0] == self.neg_key:
-			response = 'not_detect'
+			response = 0
 			increment = self.colour_delta
 			self.negative.color = 150
 
@@ -164,6 +164,7 @@ class ContrastDetection(ExperimentPart):
 			# Get the response
 			response, increment = self.get_response()
 			self.responses.append( (i, kind, self.grey_value, response) )
+			print self.responses[-1]
 			if response == 'stop':
 				break
 
@@ -171,7 +172,6 @@ class ContrastDetection(ExperimentPart):
 			if kind == 1:
 				self.grey_value += increment * self.colour_delta
 
-			print self.responses[-1]
 
 
 
