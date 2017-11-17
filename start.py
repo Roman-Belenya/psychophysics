@@ -14,7 +14,8 @@ win = visual.Window(
 	color = 128,
 	units = 'deg')
 
-exp = ContrastDetection(win, **params['ContrastDetection'])
+# exp = ContrastDetection(win, **params['ContrastDetection'])
+exp = IsoluminanceDetection(win, **params['IsoluminanceDetection'])
 exp.main_sequence()
 
 # path = "./images/line_drawings/obj032bat.png"

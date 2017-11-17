@@ -3,6 +3,7 @@ import glob
 import os
 from psychopy import visual, core, event
 from tools import *
+import sys
 
 np.random.seed(1)
 
@@ -16,7 +17,7 @@ class ExperimentPart(object):
 		self.win = win
 		self.images = glob.glob(self.images_path + '/*.png')
 		self.responses = []
-		self.keys = [self.pos_key, self.neg_key, 'escape']
+		# self.keys = [self.pos_key, self.neg_key, 'escape']
 
 		self.instructions = visual.TextStim(
 			win = self.win,
@@ -61,6 +62,10 @@ class ExperimentPart(object):
 		event.waitKeys()
 
 
+	def export_results():
+		pass
+
+
 class ContrastDetection(ExperimentPart):
 
 
@@ -68,13 +73,15 @@ class ContrastDetection(ExperimentPart):
 
 		super(ContrastDetection, self).__init__(win = win, **params)
 
-		# self.stim.color = invert(self.grey_value)
-		self.stim.color = self.grey_value
+		# self.stim.color = invert(self.grey)
+		self.stim.color = self.grey
 
 
 		seq = [1]*(self.n_trials - 3) + [0]*self.n_catch_trials # 1=trial, 0=catch trial
 		np.random.shuffle(seq) # randomise the seq array
 		self.trial_seq = [1, 1, 1] + seq
+
+		self.keys = [self.pos_key, self.neg_key, 'escape']
 
 		self.positive = visual.TextStim(
 			win = self.win,
@@ -150,10 +157,10 @@ class ContrastDetection(ExperimentPart):
 			# Process the image
 			img = image_seq[i]
 			fg = get_fg_mask(img)
-			self.stim.tex = img
+			# self.stim.tex = img
 			self.stim.mask = fg
-			# self.stim.color = invert(self.grey_value)
-			self.stim.color = self.grey_value
+			# self.stim.color = invert(self.grey)
+			self.stim.color = self.grey
 
 
 			#Run the trial
@@ -163,14 +170,14 @@ class ContrastDetection(ExperimentPart):
 
 			# Get the response
 			response, increment = self.get_response()
-			self.responses.append( (i, kind, self.grey_value, response) )
+			self.responses.append( (i, kind, self.grey, response) )
 			print self.responses[-1]
 			if response == 'stop':
 				break
 
 			# Adjust grey if experimental trial
 			if kind == 1:
-				self.grey_value += increment * self.colour_delta
+				self.grey += increment * self.colour_delta
 
 
 
@@ -182,30 +189,97 @@ class IsoluminanceDetection(ExperimentPart):
 
 		super(IsoluminanceDetection, self).__init__(win=win, **params)
 
-		self.positive.text = '{} = flickered'.format(self.pos_key.upper())
-		self.negative.text = '{} = not flickered'.format(self.neg_key.upper())
 		self.red = np.array(self.red)
-		self.green = np.array(self.green)
-		self.stim.color = self.red
+		self.green_low = np.array(self.green_low)
+		self.green_high = np.array(self.green_high)
+		self.colour_delta = np.array(self.colour_delta)
+
+		self.keys = [self.up_key, self.down_key, 'escape', 'return']
+
+		self.done = visual.TextStim(
+			win = self.win,
+			colorSpace = 'rgb255',
+			color = 255,
+			text = 'Done!',
+			pos = (0, 0),
+			alignHoriz = 'center',
+			alignVert = 'center')
 
 
-	def run_trial(self, clock):
+
+	def run_trial(self):
 
 		frame = 0
 		half_cycle = self.monitor_fs / (2.0 * self.flicker_fs)
-		clock.reset()
+		finished = False
 
-		while clock.getTime() < self.stim_latency:
+		while not finished:
 			if frame % half_cycle == 0:
 				if np.all(self.stim.color == self.red):
 					self.stim.color = self.green
 				else:
-					self.stim.color == self.red
+					self.stim.color = self.red
 			self.stim.draw()
 			self.win.flip()
+			frame += 1
+
+			ans = event.getKeys(keyList = self.keys)
+			if ans:
+				ans, = ans # unpack from the list
+				if ans == 'up':
+					self.green = change_colour(self.green, self.colour_delta)
+				elif ans == 'down':
+					self.green = change_colour(self.green, -1*self.colour_delta)
+				elif ans == 'return':
+					finished = True
+					print self.green
+					# save the green value
+				elif ans == 'escape':
+					# skip to the next trial, do not increment trial no
+					sys.exit()
+
+
+
+	def run_block(self, kind, images_seq):
+
+		if kind == 'up':
+			text = self.instructions_text_up
+			self.green = self.green_low
+		elif kind == 'down':
+			text = self.instructions_text_down
+			self.green = self.green_high
+		self.show_instructions(text)
+
+		values = []
+
+		for i in range(self.n_trials):
+
+			img = images_seq[i]
+			fg = get_fg_mask(img)
+			self.stim.mask = fg
+
+			self.run_trial()
+
+			values.append(self.green)
+
+			self.done.draw()
+			self.win.flip()
+			core.wait(2)
+
+		avg_green = int(np.around(np.mean(values)))
+		return avg_green
 
 
 	def main_sequence(self):
-		self.show_instructions(self.instructions_text)
-		clock = core.Clock()
-		core.wait(1)
+
+		assert len(self.blocks_seq) == self.n_blocks
+
+		images_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
+
+		for i, kind in zip(range(self.n_blocks), self.blocks_seq):
+
+			np.random.shuffle(images_seq)
+			green = self.run_block(kind, images_seq)
+			self.responses.append((i, kind, green))
+			print self.responses[-1]
+
