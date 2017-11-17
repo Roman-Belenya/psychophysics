@@ -189,10 +189,10 @@ class IsoluminanceDetection(ExperimentPart):
 
 		super(IsoluminanceDetection, self).__init__(win=win, **params)
 
-		self.red = np.array(self.red)
-		self.green_low = np.array(self.green_low)
-		self.green_high = np.array(self.green_high)
-		self.colour_delta = np.array(self.colour_delta)
+		self.fix_col = np.array(self.fix_col)
+		self.var_col_lo = np.array(self.var_col_lo)
+		self.var_col_hi = np.array(self.var_col_hi)
+		self.col_delta = np.array(self.col_delta)
 
 		self.keys = [self.up_key, self.down_key, 'escape', 'return']
 
@@ -200,25 +200,25 @@ class IsoluminanceDetection(ExperimentPart):
 			win = self.win,
 			colorSpace = 'rgb255',
 			color = 255,
-			text = 'Done!',
+			text = 'done',
 			pos = (0, 0),
 			alignHoriz = 'center',
 			alignVert = 'center')
 
 
 
-	def run_trial(self):
+	def run_trial(self, colour):
+		'''colour is the colour to be changed in the trial'''
 
 		frame = 0
 		half_cycle = self.monitor_fs / (2.0 * self.flicker_fs)
-		finished = False
 
-		while not finished:
+		while True:
 			if frame % half_cycle == 0:
-				if np.all(self.stim.color == self.red):
-					self.stim.color = self.green
+				if np.all(self.stim.color == self.fix_col):
+					self.stim.color = colour
 				else:
-					self.stim.color = self.red
+					self.stim.color = self.fix_col
 			self.stim.draw()
 			self.win.flip()
 			frame += 1
@@ -227,27 +227,26 @@ class IsoluminanceDetection(ExperimentPart):
 			if ans:
 				ans, = ans # unpack from the list
 				if ans == 'up':
-					self.green = change_colour(self.green, self.colour_delta)
+					colour = change_colour(colour, self.col_delta)
 				elif ans == 'down':
-					self.green = change_colour(self.green, -1*self.colour_delta)
+					colour = change_colour(colour, -1*self.col_delta)
 				elif ans == 'return':
-					finished = True
-					print self.green
-					# save the green value
+					print colour
+					return colour
 				elif ans == 'escape':
 					# skip to the next trial, do not increment trial no
 					sys.exit()
 
 
-
+ 
 	def run_block(self, kind, images_seq):
 
 		if kind == 'up':
 			text = self.instructions_text_up
-			self.green = self.green_low
+			colour = self.var_col_lo
 		elif kind == 'down':
 			text = self.instructions_text_down
-			self.green = self.green_high
+			colour = self.var_col_hi
 		self.show_instructions(text)
 
 		values = []
@@ -258,19 +257,21 @@ class IsoluminanceDetection(ExperimentPart):
 			fg = get_fg_mask(img)
 			self.stim.mask = fg
 
-			self.run_trial()
+			iso_colour = self.run_trial(colour)
 
-			values.append(self.green)
+			values.append(iso_colour)
 
 			self.done.draw()
 			self.win.flip()
-			core.wait(2)
+			core.wait(1)
 
-		avg_green = int(np.around(np.mean(values)))
-		return avg_green
+		avg_colour = np.around(np.mean(values, axis = 0), 0)
+		return avg_colour
 
 
 	def main_sequence(self):
+	
+		self.show_instructions(self.instructions_text)
 
 		assert len(self.blocks_seq) == self.n_blocks
 
@@ -279,7 +280,7 @@ class IsoluminanceDetection(ExperimentPart):
 		for i, kind in zip(range(self.n_blocks), self.blocks_seq):
 
 			np.random.shuffle(images_seq)
-			green = self.run_block(kind, images_seq)
-			self.responses.append((i, kind, green))
+			avg_col = self.run_block(kind, images_seq)
+			self.responses.append((i, kind, avg_col))
 			print self.responses[-1]
 

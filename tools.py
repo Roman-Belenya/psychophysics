@@ -1,6 +1,7 @@
 from PIL import Image
 import numpy as np
 from psychopy import monitors
+import matplotlib.pyplot as plt
 
 
 def create_monitor(name, distance, width_cm, dim_pix):
@@ -68,3 +69,19 @@ def find_flicker_fs(frames, monitor_fs):
 def find_frames_in_cycle(flicker_fs, monitor_fs):
     return monitor_fs / float(flicker_fs)
 
+
+def FFT(image):
+	img = Image.open(image)
+	f = np.fft.fft2(img)
+	fshift = np.fft.fftshift(f)
+	mag = 20 * np.log(np.abs(fshift))
+	
+	fig = plt.figure()
+	ax1 = fig.add_subplot(121)
+	ax1.imshow(img)
+	ax1.set_title('Image')
+	ax2 = fig.add_subplot(122)
+	ax2.imshow(mag, cmap = 'gray')
+	ax2.set_title('Magnitude spectrum')
+	
+	plt.show()
