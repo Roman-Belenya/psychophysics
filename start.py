@@ -1,6 +1,6 @@
 from experiment_part import *
 import json
-from psychopy import visual
+from psychopy import visual, core
 from tools import *
 
 with open('parameters.json', 'rb') as f:
@@ -14,25 +14,17 @@ win = visual.Window(
 	color = 128,
 	units = 'deg')
 
-exp1 = ContrastDetection(win, **params['ContrastDetection'])
-exp2 = IsoluminanceDetection(win, **params['IsoluminanceDetection'])
+# exp1 = ContrastDetection(win, **params['ContrastDetection'])
+# exp2 = IsoluminanceDetection(win, **params['IsoluminanceDetection'])
 
-exp1.main_sequence()
-exp2.main_sequence()
+# exp1.main_sequence()
+# exp2.main_sequence()
 
-# path = "./images/line_drawings/obj032bat.png"
-# fg = get_fg_mask(path)
+# exp = ExperimentPart(win, **params['Global'])
+# exp.fixation_cross.draw()
+# exp.win.flip()
+# core.wait(2)
+# exp.win.close()
 
-# stim = visual.ImageStim(
-# 	win = win,
-# 	image = path,
-# 	mask = None,
-# 	units = 'deg',
-# 	size = 5,
-# 	colorSpace = 'rgb255',
-# 	color = inverse_colour(0))
-
-# stim.draw()
-# win.flip()
-# event.waitKeys()
-# win.close()
+exp = FreeChoiceExperiment(win, **params['FreeChoiceExperiment'])
+exp.make_images_sequence()

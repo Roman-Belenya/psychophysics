@@ -4,6 +4,8 @@ import os
 from psychopy import visual, core, event
 from tools import *
 import sys
+from itertools import product
+import csv
 
 np.random.seed(1)
 
@@ -17,6 +19,7 @@ class ExperimentPart(object):
 		self.win = win
 		self.images = glob.glob(self.images_path + '/*.png')
 		self.responses = []
+		self.finished = False
 		# self.keys = [self.pos_key, self.neg_key, 'escape']
 
 		self.instructions = visual.TextStim(
@@ -50,7 +53,16 @@ class ExperimentPart(object):
 			size = 5,
 			colorSpace = 'rgb255',
 			color = 0)
-
+			
+		self.fixation_cross = visual.GratingStim(
+			win = self.win,
+			tex = None,
+			mask = 'cross',
+			size = 1,
+			units = 'deg',
+			colorSpace = 'rgb255',
+			color = 0)
+			
 
 	def show_instructions(self, text):
 
@@ -123,6 +135,9 @@ class ContrastDetection(ExperimentPart):
 		self.win.flip()
 		key = event.waitKeys(keyList = self.keys)
 
+		
+		# what if press another key by mistake? find a way not to exit form the loop
+		
 		if key[0] == self.pos_key:
 			response = 1
 			increment = -self.colour_delta
@@ -178,7 +193,8 @@ class ContrastDetection(ExperimentPart):
 			# Adjust grey if experimental trial
 			if kind == 1:
 				self.grey += increment * self.colour_delta
-
+				
+		self.finished = True
 
 
 
@@ -284,3 +300,48 @@ class IsoluminanceDetection(ExperimentPart):
 			self.responses.append((i, kind, avg_col))
 			print self.responses[-1]
 
+
+			
+class FreeChoiceExperiment(ExperimentPart):
+	
+	def __init__(self, win, **params):
+
+		super(FreeChoiceExperiment, self).__init__(win=win, **params)
+		
+		self.images_seq = self.read_images_sequence(self.seq_file)
+	
+	
+	def make_images_sequence(self):
+	
+		perm = list(product(self.conditions, self.images))
+		perm = perm * self.n_trials
+		np.random.shuffle(perm)
+		
+		with open('./images_sequence.csv', 'wb') as f:
+			writer = csv.writer(f)
+			for line in perm:
+				writer.writerow(line)
+		
+		
+	def read_images_sequence(self, file):
+		
+		seq = []
+		
+		with open(file, 'rb') as f:
+			reader = csv.reader(f)
+			for line in reader:
+				seq.append(tuple(line))
+				
+		return seq
+		
+		
+	def run_trial(self):
+		
+		self.stim.draw()
+		self.get_resonse()
+		
+	def get_response(self):
+		pass
+		
+	def main_sequence(self):
+		pass
