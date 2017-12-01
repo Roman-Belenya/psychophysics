@@ -134,9 +134,6 @@ class ContrastDetection(ExperimentPart):
 		self.negative.draw()
 		self.win.flip()
 		key = event.waitKeys(keyList = self.keys)
-
-		
-		# what if press another key by mistake? find a way not to exit form the loop
 		
 		if key[0] == self.pos_key:
 			response = 1
@@ -172,7 +169,6 @@ class ContrastDetection(ExperimentPart):
 			# Process the image
 			img = image_seq[i]
 			fg = get_fg_mask(img)
-			# self.stim.tex = img
 			self.stim.mask = fg
 			# self.stim.color = invert(self.grey)
 			self.stim.color = self.grey
@@ -308,8 +304,19 @@ class FreeChoiceExperiment(ExperimentPart):
 
 		super(FreeChoiceExperiment, self).__init__(win=win, **params)
 		
-		self.images_seq = self.read_images_sequence(self.seq_file)
-	
+		self.global_resp = visual.TextStim(
+			win = self.win,
+			colorSpace = 'rgb255',
+			color = 255,
+			text = '',
+			pos = (-10, -10))
+			
+		self.local_resp = visual.TextStim(
+			win = self.win,
+			colorSpace = 'rgb255',
+			color = 255,
+			text = '',
+			pos = (-10, 10))			
 	
 	def make_images_sequence(self):
 	
@@ -338,10 +345,21 @@ class FreeChoiceExperiment(ExperimentPart):
 	def run_trial(self):
 		
 		self.stim.draw()
-		self.get_resonse()
+		self.get_response()
 		
 	def get_response(self):
 		pass
-		
+	
+	
 	def main_sequence(self):
-		pass
+		self.show_instrucitons(self.instructions_text)
+		clock = core.Clock()
+		core.wait(1)
+		
+		images_seq = self.read_images_sequence(self.seq_file)
+		
+		# for cond, img in images_seq:
+			
+			# make the image
+			
+			

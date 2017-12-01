@@ -2,6 +2,7 @@ from PIL import Image
 import numpy as np
 from psychopy import monitors
 import matplotlib.pyplot as plt
+import os
 
 
 def create_monitor(name, distance, width_cm, dim_pix):
@@ -85,3 +86,34 @@ def FFT(image):
 	ax2.set_title('Magnitude spectrum')
 	
 	plt.show()
+	
+	
+class MyImage(object):
+	
+	def __init__(self, path):
+	
+		self.path = os.path.abspath(path)
+		self.img = np.array(Image.open(self.path))
+		
+		
+	def identify_global_local(self):
+	
+		path, name = os.path.split(self.path)
+		name, ext = os.path.splitext(name)
+		
+		assert len(name) == 2, 'Image name should be 2 characters'
+		
+		self.global_ch = name[0].upper()
+		self.local_ch = name[1].upper()
+		
+
+	def apply_colours(self, bg_col, fg_col):
+	
+		fg = self.img[:, :, 0] == 0
+		
+		self.img[fg] = fg_col
+		self.img[~fg] = bg_col	
+		
+	def save(self, path):
+		img = Image.fromarray(self.img)
+		img.save(path)
