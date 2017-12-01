@@ -92,28 +92,40 @@ class MyImage(object):
 	
 	def __init__(self, path):
 	
-		self.path = os.path.abspath(path)
-		self.img = np.array(Image.open(self.path))
+		self.filepath = os.path.abspath(path)
 		
+		self.path, name = os.path.split(path)
+		self.name, self.ext = os.path.splitext(name)
 		
-	def identify_global_local(self):
-	
-		path, name = os.path.split(self.path)
-		name, ext = os.path.splitext(name)
+		self.parvo_path = os.path.join(self.path, self.name + '_parvo' + self.ext)
+		self.magno_path = os.path.join(self.path, self.name + '_magno' + self.ext)
+		self.unbiased_path = os.path.join(self.path, self.name + '_unbiased' + self.ext)
+
+		assert len(os.path.splitext(self.name)[0]) == 2, 'Image name should be 2 characters'
 		
-		assert len(name) == 2, 'Image name should be 2 characters'
-		
-		self.global_ch = name[0].upper()
-		self.local_ch = name[1].upper()
+		self.global_letter = self.name[0].lower()
+		self.local_letter = self.name[1].lower()
 		
 
-	def apply_colours(self, bg_col, fg_col):
+	def apply_colours(self, fg_col, bg_col, fg_grey, bg_grey = [128]*3):
 	
-		fg = self.img[:, :, 0] == 0
+		img = np.array(Image.open(self.filepath))
+		fg = img[:, :, 0] == 0
 		
-		self.img[fg] = fg_col
-		self.img[~fg] = bg_col	
+		img[fg] = fg_col
+		img[~fg] = bg_col
+		self.save(self.parvo_path)
+		
+		img[fg] = fg_grey
+		img[~fg] = bg_grey
+		self.save(self.magno_path)
+		
+		img[fg] = [0]*3
+		# img[~fg] = bg_grey
+		self.save(self.unbiased_path)
+		
 		
 	def save(self, path):
 		img = Image.fromarray(self.img)
 		img.save(path)
+		

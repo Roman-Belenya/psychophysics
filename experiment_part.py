@@ -18,6 +18,7 @@ class ExperimentPart(object):
 
 		self.win = win
 		self.images = glob.glob(self.images_path + '/*.png')
+		self.images = [os.path.normpath(img) for img in self.images]
 		self.responses = []
 		self.finished = False
 		# self.keys = [self.pos_key, self.neg_key, 'escape']
@@ -316,7 +317,12 @@ class FreeChoiceExperiment(ExperimentPart):
 			colorSpace = 'rgb255',
 			color = 255,
 			text = '',
-			pos = (-10, 10))			
+			pos = (-10, 10))
+			
+			
+	def make_images(self):
+		for img in self.images:
+			MyImage(img).apply_colours(fg_col, bg_col, fg_grey)
 	
 	def make_images_sequence(self):
 	
@@ -336,20 +342,60 @@ class FreeChoiceExperiment(ExperimentPart):
 		
 		with open(file, 'rb') as f:
 			reader = csv.reader(f)
-			for line in reader:
-				seq.append(tuple(line))
+			for cond, path in reader:
+				img = MyImage(path)
+				seq.append((cond, img))
 				
 		return seq
 		
 		
-	def run_trial(self):
+	def run_trial(self, kind, clock):
+		
+		if cond == 'parvo':
+			self.stim = self.cur_img.parvo_path
+		elif cond == 'magno':
+			self.stim = self.cur_img.magno_path
+		elif cond == 'unbiased':
+			self.stim = self.cur_img.unbiased_path
+			
+		self.fixation_cross.draw()
+		win.flip()
+		clock.reset()
+		while clock.getTime < self.t_fix:
+			pass
 		
 		self.stim.draw()
+		win.flip()
+		clock.reset()
+		while clock.getTime() < self.t_stim:
+			pass
+			
+		win.flip()
 		self.get_response()
 		
+		
 	def get_response(self):
-		pass
+		
+		self.global_resp.text = self.cur_img.global_letter.upper()
+		self.global_resp.color = 255
+		self.local_resp.text = self.cur_img.local_letter.upper()
+		self.local_resp.color = 255
 	
+		self.global_resp.draw()
+		self.local_resp.draw()
+		self.win.flip()
+		
+		keylist = [self.cur_img.global_letter, self.cur_img.local_letter]
+		key = event.waitKeys(keyList = keylist)
+		
+		if key[0] == self.cur_img.global_letter:
+			response = 'global'
+		elif key[0] == self.cur_img.local_letter:
+			response = 'local'
+			
+		return response
+		
+		
 	
 	def main_sequence(self):
 		self.show_instrucitons(self.instructions_text)
@@ -357,9 +403,14 @@ class FreeChoiceExperiment(ExperimentPart):
 		core.wait(1)
 		
 		images_seq = self.read_images_sequence(self.seq_file)
+		# self.make_images()
 		
-		# for cond, img in images_seq:
+		for cond, img in images_seq:
 			
-			# make the image
+			self.cur_img = img
+			self.run_trial(cond, clock)
+			resp = self.get_response()
+			self.responses.append( (cond, img.name, response) )
+			
 			
 			
