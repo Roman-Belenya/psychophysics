@@ -97,9 +97,9 @@ class MyImage(object):
 		self.path, name = os.path.split(path)
 		self.name, self.ext = os.path.splitext(name)
 		
-		self.parvo_path = os.path.join(self.path, self.name + '_parvo' + self.ext)
-		self.magno_path = os.path.join(self.path, self.name + '_magno' + self.ext)
-		self.unbiased_path = os.path.join(self.path, self.name + '_unbiased' + self.ext)
+		self.parvo_path = os.path.join(self.path, 'stimuli', self.name + '_parvo' + self.ext)
+		self.magno_path = os.path.join(self.path, 'stimuli', self.name + '_magno' + self.ext)
+		self.unbiased_path = os.path.join(self.path, 'stimuli', self.name + '_unbiased' + self.ext)
 
 		assert len(os.path.splitext(self.name)[0]) == 2, 'Image name should be 2 characters'
 		
@@ -107,25 +107,22 @@ class MyImage(object):
 		self.local_letter = self.name[1].lower()
 		
 
-	def apply_colours(self, fg_col, bg_col, fg_grey, bg_grey = [128]*3):
+	def apply_colours(self, fg_col, bg_col, fg_grey, bg_grey):
 	
 		img = np.array(Image.open(self.filepath))
 		fg = img[:, :, 0] == 0
 		
 		img[fg] = fg_col
 		img[~fg] = bg_col
-		self.save(self.parvo_path)
+		Image.fromarray(img).save(self.parvo_path)
 		
 		img[fg] = fg_grey
 		img[~fg] = bg_grey
-		self.save(self.magno_path)
+		Image.fromarray(img).save(self.magno_path)
 		
 		img[fg] = [0]*3
 		# img[~fg] = bg_grey
-		self.save(self.unbiased_path)
+		Image.fromarray(img).save(self.unbiased_path)
 		
-		
-	def save(self, path):
-		img = Image.fromarray(self.img)
-		img.save(path)
+	
 		

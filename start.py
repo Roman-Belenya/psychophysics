@@ -15,11 +15,21 @@ win = visual.Window(
 	color = 128,
 	units = 'deg')
 
-exp1 = ContrastDetection(win, **params['ContrastDetection'])
-exp2 = IsoluminanceDetection(win, **params['IsoluminanceDetection'])
+contrast = ContrastDetection(win, **params['ContrastDetection'])
+isolum = IsoluminanceDetection(win, **params['IsoluminanceDetection'])
+free_choice = FreeChoiceExperiment(win, **params['FreeChoiceExperiment'])
 
-exp1.main_sequence()
-exp2.main_sequence()
+# contrast.main_sequence()
+# isolum.main_sequence()
+
+fg_col = params['IsoluminanceDetection']['fix_col']
+bg_col = [100, 120, 30]
+fg_grey = 130
+bg_grey = params['ContrastDetection']['grey']
+
+
+free_choice.define_colours(fg_col, bg_col, fg_grey, bg_grey)
+free_choice.main_sequence()
 
 # exp = ExperimentPart(win, **params['Global'])
 # exp.fixation_cross.draw()
@@ -27,8 +37,7 @@ exp2.main_sequence()
 # core.wait(2)
 # exp.win.close()
 
-# exp = FreeChoiceExperiment(win, **params['FreeChoiceExperiment'])
-# exp.make_images_sequence()
+
 
 
 class Applicaiton(object):

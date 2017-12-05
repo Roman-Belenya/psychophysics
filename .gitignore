@@ -1,2 +1,3 @@
 *.pyc
-./images/line_drawings
+./images/line_drawings/
+./images/letters/stimuli/

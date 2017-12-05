@@ -6,6 +6,7 @@ from tools import *
 import sys
 from itertools import product
 import csv
+import shutil
 
 np.random.seed(1)
 
@@ -17,8 +18,7 @@ class ExperimentPart(object):
 			setattr(self, name, value)
 
 		self.win = win
-		self.images = glob.glob(self.images_path + '/*.png')
-		self.images = [os.path.normpath(img) for img in self.images]
+		self.images = [os.path.normpath(img) for img in glob.glob(self.images_path + '/*.png')]
 		self.responses = []
 		self.finished = False
 		# self.keys = [self.pos_key, self.neg_key, 'escape']
@@ -114,7 +114,14 @@ class ContrastDetection(ExperimentPart):
 			alignHoriz = 'center',
 			alignVert = 'center')
 
-
+	@property
+	def output_col(self):
+		if not self.responses:
+			return None
+		values = [i[2] for i in self.responses if i[1] == 1]
+		return np.around(np.mean(values))
+	
+	
 	def run_trial(self, clock, kind):
 
 		if kind == 1: # if is experimental trial
@@ -218,8 +225,15 @@ class IsoluminanceDetection(ExperimentPart):
 			alignHoriz = 'center',
 			alignVert = 'center')
 
-
-
+	@property
+	def output_col(self):
+		if not self.responses:
+			return None
+			
+		values = [i[2] for i in self.responses]
+		return np.around(np.mean(values, axis = 0))
+		
+		
 	def run_trial(self, colour):
 		'''colour is the colour to be changed in the trial'''
 
@@ -296,6 +310,8 @@ class IsoluminanceDetection(ExperimentPart):
 			avg_col = self.run_block(kind, images_seq)
 			self.responses.append((i, kind, avg_col))
 			print self.responses[-1]
+			
+		self.finished = True
 
 
 			
@@ -304,6 +320,11 @@ class FreeChoiceExperiment(ExperimentPart):
 	def __init__(self, win, **params):
 
 		super(FreeChoiceExperiment, self).__init__(win=win, **params)
+		
+		self.fg_col = None
+		self.bg_col = None
+		self.fg_grey = None
+		self.bg_grey = None
 		
 		self.global_resp = visual.TextStim(
 			win = self.win,
@@ -319,10 +340,26 @@ class FreeChoiceExperiment(ExperimentPart):
 			text = '',
 			pos = (-10, 10))
 			
+
+	def define_colours(self, fg_col, bg_col, fg_grey, bg_grey):
+	
+		self.fg_col = fg_col
+		self.bg_col = bg_col
+		self.fg_grey = fg_grey
+		self.bg_grey = bg_grey
+		
 			
 	def make_images(self):
+			
+		try:
+			shutil.rmtree('./images/letters/stimuli')
+		except:
+			pass
+			
+		os.mkdir('./images/letters/stimuli')
+
 		for img in self.images:
-			MyImage(img).apply_colours(fg_col, bg_col, fg_grey)
+			MyImage(img).apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
 	
 	def make_images_sequence(self):
 	
@@ -349,68 +386,73 @@ class FreeChoiceExperiment(ExperimentPart):
 		return seq
 		
 		
-	def run_trial(self, kind, clock):
+	def run_trial(self, kind, clock, image):
 		
-		if cond == 'parvo':
-			self.stim = self.cur_img.parvo_path
-		elif cond == 'magno':
-			self.stim = self.cur_img.magno_path
-		elif cond == 'unbiased':
-			self.stim = self.cur_img.unbiased_path
+		if kind == 'parvo':
+			self.stim = image.parvo_path
+		elif kind == 'magno':
+			self.stim = image.magno_path
+		elif kind == 'unbiased':
+			self.stim = image.unbiased_path
 			
 		self.fixation_cross.draw()
-		win.flip()
+		self.win.flip()
 		clock.reset()
 		while clock.getTime < self.t_fix:
 			pass
 		
 		self.stim.draw()
-		win.flip()
+		self.win.flip()
 		clock.reset()
 		while clock.getTime() < self.t_stim:
 			pass
 			
 		win.flip()
-		self.get_response()
 		
 		
-	def get_response(self):
+	def get_response(self, image):
 		
-		self.global_resp.text = self.cur_img.global_letter.upper()
+		self.global_resp.text = image.global_letter.upper()
 		self.global_resp.color = 255
-		self.local_resp.text = self.cur_img.local_letter.upper()
+		self.local_resp.text = image.local_letter.upper()
 		self.local_resp.color = 255
 	
 		self.global_resp.draw()
 		self.local_resp.draw()
 		self.win.flip()
 		
-		keylist = [self.cur_img.global_letter, self.cur_img.local_letter]
-		key = event.waitKeys(keyList = keylist)
+		keys = [self.cur_img.global_letter, self.cur_img.local_letter]
+		key = event.waitKeys(keyList = keys)
 		
 		if key[0] == self.cur_img.global_letter:
 			response = 'global'
+			self.global_resp.color = 150
 		elif key[0] == self.cur_img.local_letter:
 			response = 'local'
+			self.local_resp.color = 150
 			
+		self.global_resp.draw()
+		self.local_resp.draw()
+		self.win.flip()
+		
 		return response
 		
 		
 	
 	def main_sequence(self):
-		self.show_instrucitons(self.instructions_text)
+		self.show_instructions(self.instructions_text)
 		clock = core.Clock()
 		core.wait(1)
 		
 		images_seq = self.read_images_sequence(self.seq_file)
-		# self.make_images()
+		self.make_images()
 		
 		for cond, img in images_seq:
 			
-			self.cur_img = img
-			self.run_trial(cond, clock)
-			resp = self.get_response()
-			self.responses.append( (cond, img.name, response) )
+			self.run_trial(cond, clock, img)
+			resp = self.get_response(img)
+			self.responses.append( (cond, img.name, resp) )
+			print self.responses[-1]
 			
 			
 			
