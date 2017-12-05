@@ -18,7 +18,7 @@ class ExperimentPart(object):
 			setattr(self, name, value)
 
 		self.win = win
-		self.images = [os.path.normpath(img) for img in glob.glob(self.images_path + '/*.png')]
+		self.images = [os.path.abspath(img) for img in glob.glob(self.images_path + '\*.png')]
 		self.responses = []
 		self.finished = False
 		# self.keys = [self.pos_key, self.neg_key, 'escape']
@@ -54,7 +54,7 @@ class ExperimentPart(object):
 			size = 5,
 			colorSpace = 'rgb255',
 			color = 0)
-			
+
 		self.fixation_cross = visual.GratingStim(
 			win = self.win,
 			tex = None,
@@ -63,7 +63,7 @@ class ExperimentPart(object):
 			units = 'deg',
 			colorSpace = 'rgb255',
 			color = 0)
-			
+
 
 	def show_instructions(self, text):
 
@@ -120,8 +120,8 @@ class ContrastDetection(ExperimentPart):
 			return None
 		values = [i[2] for i in self.responses if i[1] == 1]
 		return np.around(np.mean(values))
-	
-	
+
+
 	def run_trial(self, clock, kind):
 
 		if kind == 1: # if is experimental trial
@@ -142,7 +142,7 @@ class ContrastDetection(ExperimentPart):
 		self.negative.draw()
 		self.win.flip()
 		key = event.waitKeys(keyList = self.keys)
-		
+
 		if key[0] == self.pos_key:
 			response = 1
 			increment = -self.colour_delta
@@ -197,7 +197,7 @@ class ContrastDetection(ExperimentPart):
 			# Adjust grey if experimental trial
 			if kind == 1:
 				self.grey += increment * self.colour_delta
-				
+
 		self.finished = True
 
 
@@ -229,11 +229,11 @@ class IsoluminanceDetection(ExperimentPart):
 	def output_col(self):
 		if not self.responses:
 			return None
-			
+
 		values = [i[2] for i in self.responses]
 		return np.around(np.mean(values, axis = 0))
-		
-		
+
+
 	def run_trial(self, colour):
 		'''colour is the colour to be changed in the trial'''
 
@@ -265,7 +265,7 @@ class IsoluminanceDetection(ExperimentPart):
 					sys.exit()
 
 
- 
+
 	def run_block(self, kind, images_seq):
 
 		if kind == 'up':
@@ -297,7 +297,7 @@ class IsoluminanceDetection(ExperimentPart):
 
 
 	def main_sequence(self):
-	
+
 		self.show_instructions(self.instructions_text)
 
 		assert len(self.blocks_seq) == self.n_blocks
@@ -310,149 +310,150 @@ class IsoluminanceDetection(ExperimentPart):
 			avg_col = self.run_block(kind, images_seq)
 			self.responses.append((i, kind, avg_col))
 			print self.responses[-1]
-			
+
 		self.finished = True
 
 
-			
+
 class FreeChoiceExperiment(ExperimentPart):
-	
+
 	def __init__(self, win, **params):
 
 		super(FreeChoiceExperiment, self).__init__(win=win, **params)
-		
+
 		self.fg_col = None
 		self.bg_col = None
 		self.fg_grey = None
 		self.bg_grey = None
-		
+
 		self.global_resp = visual.TextStim(
 			win = self.win,
 			colorSpace = 'rgb255',
 			color = 255,
 			text = '',
 			pos = (-10, -10))
-			
+
 		self.local_resp = visual.TextStim(
 			win = self.win,
 			colorSpace = 'rgb255',
 			color = 255,
 			text = '',
 			pos = (-10, 10))
-			
+
 
 	def define_colours(self, fg_col, bg_col, fg_grey, bg_grey):
-	
+
 		self.fg_col = fg_col
 		self.bg_col = bg_col
 		self.fg_grey = fg_grey
 		self.bg_grey = bg_grey
-		
-			
+
+
 	def make_images(self):
-			
+
 		try:
-			shutil.rmtree('./images/letters/stimuli')
+			shutil.rmtree('./images/letters/stimuli/')
 		except:
 			pass
-			
-		os.mkdir('./images/letters/stimuli')
+
+		os.mkdir('./images/letters/stimuli/')
 
 		for img in self.images:
 			MyImage(img).apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
-	
+			print 'aha!'
+
 	def make_images_sequence(self):
-	
+
 		perm = list(product(self.conditions, self.images))
 		perm = perm * self.n_trials
 		np.random.shuffle(perm)
-		
+
 		with open('./images_sequence.csv', 'wb') as f:
 			writer = csv.writer(f)
 			for line in perm:
 				writer.writerow(line)
-		
-		
+
+
 	def read_images_sequence(self, file):
-		
+
 		seq = []
-		
+
 		with open(file, 'rb') as f:
 			reader = csv.reader(f)
 			for cond, path in reader:
 				img = MyImage(path)
 				seq.append((cond, img))
-				
+
 		return seq
-		
-		
+
+
 	def run_trial(self, kind, clock, image):
-		
+
 		if kind == 'parvo':
-			self.stim = image.parvo_path
+			self.stim.image = image.parvo_path
 		elif kind == 'magno':
-			self.stim = image.magno_path
+			self.stim.image = image.magno_path
 		elif kind == 'unbiased':
-			self.stim = image.unbiased_path
-			
+			self.stim.image = image.unbiased_path
+
 		self.fixation_cross.draw()
 		self.win.flip()
 		clock.reset()
 		while clock.getTime < self.t_fix:
 			pass
-		
+
 		self.stim.draw()
 		self.win.flip()
 		clock.reset()
 		while clock.getTime() < self.t_stim:
 			pass
-			
+
 		win.flip()
-		
-		
+
+
 	def get_response(self, image):
-		
+
 		self.global_resp.text = image.global_letter.upper()
 		self.global_resp.color = 255
 		self.local_resp.text = image.local_letter.upper()
 		self.local_resp.color = 255
-	
+
 		self.global_resp.draw()
 		self.local_resp.draw()
 		self.win.flip()
-		
+
 		keys = [self.cur_img.global_letter, self.cur_img.local_letter]
 		key = event.waitKeys(keyList = keys)
-		
+
 		if key[0] == self.cur_img.global_letter:
 			response = 'global'
 			self.global_resp.color = 150
 		elif key[0] == self.cur_img.local_letter:
 			response = 'local'
 			self.local_resp.color = 150
-			
+
 		self.global_resp.draw()
 		self.local_resp.draw()
 		self.win.flip()
-		
+
 		return response
-		
-		
-	
+
+
+
 	def main_sequence(self):
 		self.show_instructions(self.instructions_text)
 		clock = core.Clock()
 		core.wait(1)
-		
-		images_seq = self.read_images_sequence(self.seq_file)
+
 		self.make_images()
-		
+		images_seq = self.read_images_sequence(self.seq_file)
+
 		for cond, img in images_seq:
-			
+
 			self.run_trial(cond, clock, img)
 			resp = self.get_response(img)
 			self.responses.append( (cond, img.name, resp) )
 			print self.responses[-1]
-			
-			
-			
+
+
+

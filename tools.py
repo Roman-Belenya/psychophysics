@@ -72,57 +72,59 @@ def find_frames_in_cycle(flicker_fs, monitor_fs):
 
 
 def FFT(image):
-	img = Image.open(image)
-	f = np.fft.fft2(img)
-	fshift = np.fft.fftshift(f)
-	mag = 20 * np.log(np.abs(fshift))
-	
-	fig = plt.figure()
-	ax1 = fig.add_subplot(121)
-	ax1.imshow(img)
-	ax1.set_title('Image')
-	ax2 = fig.add_subplot(122)
-	ax2.imshow(mag, cmap = 'gray')
-	ax2.set_title('Magnitude spectrum')
-	
-	plt.show()
-	
-	
+    img = Image.open(image)
+    f = np.fft.fft2(img)
+    fshift = np.fft.fftshift(f)
+    mag = 20 * np.log(np.abs(fshift))
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(121)
+    ax1.imshow(img)
+    ax1.set_title('Image')
+    ax2 = fig.add_subplot(122)
+    ax2.imshow(mag, cmap = 'gray')
+    ax2.set_title('Magnitude spectrum')
+
+    plt.show()
+
+
 class MyImage(object):
-	
-	def __init__(self, path):
-	
-		self.filepath = os.path.abspath(path)
-		
-		self.path, name = os.path.split(path)
-		self.name, self.ext = os.path.splitext(name)
-		
-		self.parvo_path = os.path.join(self.path, 'stimuli', self.name + '_parvo' + self.ext)
-		self.magno_path = os.path.join(self.path, 'stimuli', self.name + '_magno' + self.ext)
-		self.unbiased_path = os.path.join(self.path, 'stimuli', self.name + '_unbiased' + self.ext)
 
-		assert len(os.path.splitext(self.name)[0]) == 2, 'Image name should be 2 characters'
-		
-		self.global_letter = self.name[0].lower()
-		self.local_letter = self.name[1].lower()
-		
+    def __init__(self, path):
 
-	def apply_colours(self, fg_col, bg_col, fg_grey, bg_grey):
-	
-		img = np.array(Image.open(self.filepath))
-		fg = img[:, :, 0] == 0
-		
-		img[fg] = fg_col
-		img[~fg] = bg_col
-		Image.fromarray(img).save(self.parvo_path)
-		
-		img[fg] = fg_grey
-		img[~fg] = bg_grey
-		Image.fromarray(img).save(self.magno_path)
-		
-		img[fg] = [0]*3
-		# img[~fg] = bg_grey
-		Image.fromarray(img).save(self.unbiased_path)
-		
-	
-		
+        self.filepath = os.path.abspath(path)
+
+        self.path, name = os.path.split(path)
+        self.name, self.ext = os.path.splitext(name)
+
+        self.parvo_path = os.path.join(self.path, 'stimuli', self.name + '_parvo' + self.ext)
+        print self.parvo_path, 'here!!!!!!!!!!!!'
+        self.magno_path = os.path.join(self.path, 'stimuli', self.name + '_magno' + self.ext)
+        self.unbiased_path = os.path.join(self.path, 'stimuli', self.name + '_unbiased' + self.ext)
+
+        assert len(self.name) == 2, 'Image name should be 2 characters'
+
+        self.global_letter = self.name[0].lower()
+        self.local_letter = self.name[1].lower()
+
+
+    def apply_colours(self, fg_col, bg_col, fg_grey, bg_grey):
+
+        img = np.array(Image.open(self.filepath))
+        fg = img[:, :, 0] == 0
+
+        img[fg] = fg_col
+        img[~fg] = bg_col
+        Image.fromarray(img).save(self.parvo_path)
+        print self.parvo_path
+
+        img[fg] = fg_grey
+        img[~fg] = bg_grey
+        Image.fromarray(img).save(self.magno_path)
+
+        img[fg] = [0]*3
+        # img[~fg] = bg_grey
+        Image.fromarray(img).save(self.unbiased_path)
+
+
+
