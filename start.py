@@ -4,16 +4,27 @@ from psychopy import visual, core
 from tools import *
 import Tkinter as tk
 
+imgs = glob.glob('./images/letters/stimuli/*.png')
+if imgs:
+    print 'remove stimuli folder'
+    sys.exit()
+
 with open('parameters.json', 'rb') as f:
-	params = json.load(f)
+    params = json.load(f)
+    for i, j in params.items():
+        for name, value in j.items():
+            if type(value) is list:
+                
+                params[i][name] = np.array(value)
+    
 
 win = visual.Window(
-	size = [1920, 1080],
-	monitor = 'labBENQ',
-	fullscr = True,
-	colorSpace = 'rgb255',
-	color = 128,
-	units = 'deg')
+    size = [1920, 1080],
+    monitor = 'labBENQ',
+    fullscr = True,
+    colorSpace = 'rgb255',
+    color = 128,
+    units = 'deg')
 
 contrast = ContrastDetection(win, **params['ContrastDetection'])
 isolum = IsoluminanceDetection(win, **params['IsoluminanceDetection'])
@@ -23,7 +34,7 @@ free_choice = FreeChoiceExperiment(win, **params['FreeChoiceExperiment'])
 # isolum.main_sequence()
 
 fg_col = params['IsoluminanceDetection']['fix_col']
-bg_col = [100, 120, 30]
+bg_col = [0, 100, 0]
 fg_grey = 130
 bg_grey = params['ContrastDetection']['grey']
 
@@ -41,17 +52,17 @@ free_choice.main_sequence()
 
 
 class Applicaiton(object):
-	
-	def __init__(self, root):
-	
-		self.root = root
-		self.program_path = os.getcwd()
-		self.frame = tk.Frame(root)
-		self.frame.grid(row = 0, column = 0, sticky = 'wns', padx=  30, pady = 30)
-		
-		tk.Label(self.frame, text = 'Participant id', row = 1, column = 0)
-		self.subject_id = tk.Entry(self.frame)
-		self.subject_id.grid(row = 1, column = 1)
-		
-	def start_experiment(self):
-		pass
+    
+    def __init__(self, root):
+    
+        self.root = root
+        self.program_path = os.getcwd()
+        self.frame = tk.Frame(root)
+        self.frame.grid(row = 0, column = 0, sticky = 'wns', padx=  30, pady = 30)
+        
+        tk.Label(self.frame, text = 'Participant id', row = 1, column = 0)
+        self.subject_id = tk.Entry(self.frame)
+        self.subject_id.grid(row = 1, column = 1)
+        
+    def start_experiment(self):
+        pass

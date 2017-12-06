@@ -45,7 +45,9 @@
 		"seq_file": "./images_sequence.csv",
 		"t_fix": 1,
 		"t_stim": 0.25,
-		"stim_size": []
+        "t_prestim": 0.5,
+        "t_poststim": 1,
+		"stim_size": [7.84, 9.26]
 	}
 
 }

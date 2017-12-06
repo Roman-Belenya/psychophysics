@@ -3,6 +3,7 @@ import numpy as np
 from psychopy import monitors
 import matplotlib.pyplot as plt
 import os
+import time
 
 
 def create_monitor(name, distance, width_cm, dim_pix):
@@ -98,7 +99,6 @@ class MyImage(object):
         self.name, self.ext = os.path.splitext(name)
 
         self.parvo_path = os.path.join(self.path, 'stimuli', self.name + '_parvo' + self.ext)
-        print self.parvo_path, 'here!!!!!!!!!!!!'
         self.magno_path = os.path.join(self.path, 'stimuli', self.name + '_magno' + self.ext)
         self.unbiased_path = os.path.join(self.path, 'stimuli', self.name + '_unbiased' + self.ext)
 
@@ -115,16 +115,24 @@ class MyImage(object):
 
         img[fg] = fg_col
         img[~fg] = bg_col
-        Image.fromarray(img).save(self.parvo_path)
+        image = Image.fromarray(img)
+        image.save(self.parvo_path)
         print self.parvo_path
+        # time.sleep(1)
 
         img[fg] = fg_grey
         img[~fg] = bg_grey
-        Image.fromarray(img).save(self.magno_path)
-
+        image = Image.fromarray(img)
+        image.save(self.magno_path)
+        print self.magno_path
+        # time.sleep(1)
+        
         img[fg] = [0]*3
         # img[~fg] = bg_grey
-        Image.fromarray(img).save(self.unbiased_path)
+        image = Image.fromarray(img)
+        image.save(self.unbiased_path)
+        print self.unbiased_path
+        # time.sleep(1)
 
 
 
