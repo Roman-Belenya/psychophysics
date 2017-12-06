@@ -4,11 +4,6 @@ from psychopy import visual, core
 from tools import *
 import Tkinter as tk
 
-imgs = glob.glob('./images/letters/stimuli/*.png')
-if imgs:
-    print 'remove stimuli folder'
-    sys.exit()
-
 with open('parameters.json', 'rb') as f:
     params = json.load(f)
     for i, j in params.items():

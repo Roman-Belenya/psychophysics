@@ -359,11 +359,10 @@ class FreeChoiceExperiment(ExperimentPart):
 
 
     def make_images(self):
-
-        # if not os.path.isdir('./images/letters/stimuli'):
-            # os.mkdir('./images/letters/stimuli/')
-            
-        # shutil.rmtree('./images/letters/stimuli/')
+        
+        # remove old stimuli
+        if os.listdir('.\images\letters\stimuli'):
+            os.system(r'del ".\images\letters\stimuli\*.png"')
 
         for img in self.images:
             i = MyImage(img)
