@@ -44,7 +44,7 @@
 		"images_path": "./images/letters", 
 		"n_trials": 5,
 		"t_fix": 1,
-		"t_stim": 0.25,
+		"t_stim": 3,
         "t_prestim": 0.5,
         "t_poststim": 0.5,
 		"stim_size": [7.84, 9.26]

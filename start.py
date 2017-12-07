@@ -24,14 +24,14 @@ contrast = ContrastDetection(win, **params['ContrastDetection'])
 isolum = IsoluminanceDetection(win, **params['IsoluminanceDetection'])
 free_choice = FreeChoiceExperiment(win, **params['FreeChoiceExperiment'])
 
-contrast.main_sequence()
-isolum.main_sequence()
+# contrast.main_sequence()
+# isolum.main_sequence()
 
 fg_col = params['IsoluminanceDetection']['fix_col']
-# bg_col = [0, 100, 0]
-bg_col = isolum.output_col
+bg_col = [0, 100, 0]
+# bg_col = isolum.output_col
 fg_grey = 130
-fg_grey = contrast.output_col
+# fg_grey = contrast.output_col
 bg_grey = params['ContrastDetection']['grey']
 
 
