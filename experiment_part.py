@@ -319,7 +319,7 @@ class FreeChoiceExperiment(ExperimentPart):
     def __init__(self, win, **params):
 
         super(FreeChoiceExperiment, self).__init__(win=win, **params)
-        
+
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours otherwise
         self.stim.size = self.stim_size
 
@@ -341,7 +341,7 @@ class FreeChoiceExperiment(ExperimentPart):
             color = 255,
             text = '',
             pos = (5, -5))
-            
+
         self.question = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
@@ -359,15 +359,19 @@ class FreeChoiceExperiment(ExperimentPart):
 
 
     def make_images(self):
-        
+        print 'start'
         # remove old stimuli
-        if os.listdir('.\images\letters\stimuli'):
-            os.system(r'del ".\images\letters\stimuli\*.png"')
+        if os.listdir('./images/letters/stimuli'):
+            if 'linux' in sys.platform:
+                os.system(r'rm ./images/letters/stimuli/*.png')
+            elif 'win' in sys.platform:
+                os.system(r'del ".\images\letters\stimuli\*.png"')
 
         for img in self.images:
             i = MyImage(img)
             i.apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
-            
+        print 'end'
+
 
     def make_images_sequence(self):
 
@@ -424,7 +428,7 @@ class FreeChoiceExperiment(ExperimentPart):
         self.global_resp.color = 255
         self.local_resp.text = image.local_letter.upper()
         self.local_resp.color = 255
-        
+
         self.question.draw()
         self.global_resp.draw()
         self.local_resp.draw()
@@ -433,7 +437,7 @@ class FreeChoiceExperiment(ExperimentPart):
         keys = [image.global_letter, image.local_letter, 'escape']
         clock.reset()
         key = event.waitKeys(keyList = keys, timeStamped = clock)
-        
+
         key, = key
         latency = key[1]
         if key[0] == image.global_letter:
@@ -444,7 +448,7 @@ class FreeChoiceExperiment(ExperimentPart):
             self.local_resp.color = 150
         elif key[0] == 'escape':
             sys.exit()
-        
+
         self.question.draw()
         self.global_resp.draw()
         self.local_resp.draw()
@@ -468,13 +472,13 @@ class FreeChoiceExperiment(ExperimentPart):
             core.wait(self.t_prestim)
             self.run_trial(cond, clock, img)
             core.wait(self.t_poststim)
-            
+
             # Collect the response
             resp, lat = self.get_response(clock, img)
             core.wait(1)
             self.responses.append( (cond, img.name, resp, lat) )
             print self.responses[-1]
-            
+
         self.finished = True
 
 

@@ -9,14 +9,14 @@ with open('parameters.json', 'rb') as f:
     for i, j in params.items():
         for name, value in j.items():
             if type(value) is list:
-                
+
                 params[i][name] = np.array(value)
-    
+
 
 win = visual.Window(
     size = [1920, 1080],
     monitor = 'labBENQ',
-    fullscr = True,
+    fullscr = False,
     colorSpace = 'rgb255',
     color = 128,
     units = 'deg')
@@ -47,17 +47,17 @@ free_choice.main_sequence()
 
 
 class Applicaiton(object):
-    
+
     def __init__(self, root):
-    
+
         self.root = root
         self.program_path = os.getcwd()
         self.frame = tk.Frame(root)
         self.frame.grid(row = 0, column = 0, sticky = 'wns', padx=  30, pady = 30)
-        
+
         tk.Label(self.frame, text = 'Participant id', row = 1, column = 0)
         self.subject_id = tk.Entry(self.frame)
         self.subject_id.grid(row = 1, column = 1)
-        
+
     def start_experiment(self):
         pass
