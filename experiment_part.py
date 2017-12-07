@@ -18,7 +18,7 @@ class ExperimentPart(object):
             setattr(self, name, value)
 
         self.win = win
-        self.images = [os.path.abspath(img) for img in glob.glob(self.images_path + '\*.png')]
+        self.images = [os.path.abspath(img) for img in glob.glob(os.path.join(self.images_path, '*.png'))]
         self.responses = []
         self.finished = False
         # self.keys = [self.pos_key, self.neg_key, 'escape']
@@ -251,15 +251,13 @@ class IsoluminanceDetection(ExperimentPart):
 
             ans = event.getKeys(keyList = self.keys)
             if ans:
-                ans, = ans # unpack from the list
-                if ans == 'up':
+                if ans[0] == 'up':
                     colour = change_colour(colour, self.col_delta)
-                elif ans == 'down':
+                elif ans[0] == 'down':
                     colour = change_colour(colour, -1*self.col_delta)
-                elif ans == 'return':
-                    print colour
+                elif ans[0] == 'return':
                     return colour
-                elif ans == 'escape':
+                elif ans[0] == 'escape':
                     # skip to the next trial, do not increment trial no
                     sys.exit()
 
@@ -275,24 +273,19 @@ class IsoluminanceDetection(ExperimentPart):
             colour = self.var_col_hi
         self.show_instructions(text)
 
-        values = []
-
         for i in range(self.n_trials):
 
             img = images_seq[i]
             fg = get_fg_mask(img)
             self.stim.mask = fg
 
-            iso_colour = self.run_trial(colour)
-
-            values.append(iso_colour)
+            iso_col = self.run_trial(colour)
+            self.responses.append( (i, kind, iso_col) )
+            print self.responses[-1]
 
             self.done.draw()
             self.win.flip()
             core.wait(1)
-
-        avg_colour = np.around(np.mean(values, axis = 0), 0)
-        return avg_colour
 
 
     def main_sequence(self):
@@ -306,9 +299,7 @@ class IsoluminanceDetection(ExperimentPart):
         for i, kind in zip(range(self.n_blocks), self.blocks_seq):
 
             np.random.shuffle(images_seq)
-            avg_col = self.run_block(kind, images_seq)
-            self.responses.append((i, kind, avg_col))
-            print self.responses[-1]
+            self.run_block(kind, images_seq)
 
         self.finished = True
 
