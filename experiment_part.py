@@ -7,6 +7,8 @@ import sys
 from itertools import product
 import csv
 import shutil
+import datetime
+
 
 np.random.seed(1)
 
@@ -16,7 +18,10 @@ class ExperimentPart(object):
 
         for name, value in params.items():
             setattr(self, name, value)
-
+            
+        self.datetime = datetime.datetime.now()
+        # self.datetime.strftime('%d-%b-%y_%H-%M-%S')
+        
         self.win = win
         self.images = [os.path.abspath(img) for img in glob.glob(os.path.join(self.images_path, '*.png'))]
         self.responses = []
@@ -350,7 +355,7 @@ class FreeChoiceExperiment(ExperimentPart):
 
 
     def make_images(self):
-        print 'start'
+
         # remove old stimuli
         if os.listdir('./images/letters/stimuli'):
             if 'linux' in sys.platform:
@@ -361,16 +366,17 @@ class FreeChoiceExperiment(ExperimentPart):
         for img in self.images:
             i = MyImage(img)
             i.apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
-        print 'end'
+
 
 
     def make_images_sequence(self):
-
-        perm = list(product(self.conditions, self.images))
+    
+        names = [os.path.split(os.path.splitext(i)[0])[1] for i in self.images]
+        perm = list(product(self.conditions, names))
         perm = perm * self.n_trials
         np.random.shuffle(perm)
 
-        with open('./images_sequence.csv', 'wb') as f:
+        with open(self.seq_file, 'wb') as f:
             writer = csv.writer(f)
             for line in perm:
                 writer.writerow(line)
@@ -382,7 +388,8 @@ class FreeChoiceExperiment(ExperimentPart):
 
         with open(file, 'rb') as f:
             reader = csv.reader(f)
-            for cond, path in reader:
+            for cond, stim in reader:
+                path = os.path.join('./images/letters', stim + '.png')
                 img = MyImage(path)
                 seq.append((cond, img))
 
@@ -425,8 +432,8 @@ class FreeChoiceExperiment(ExperimentPart):
         self.local_resp.draw()
         self.win.flip()
 
-        keys = [image.global_letter, image.local_letter, 'escape']
         clock.reset()
+        keys = [image.global_letter, image.local_letter, 'escape']
         key = event.waitKeys(keyList = keys, timeStamped = clock)
 
         key, = key

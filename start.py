@@ -9,7 +9,6 @@ with open('parameters.json', 'rb') as f:
     for i, j in params.items():
         for name, value in j.items():
             if type(value) is list:
-
                 params[i][name] = np.array(value)
 
 

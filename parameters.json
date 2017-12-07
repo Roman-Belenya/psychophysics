@@ -37,12 +37,12 @@
 	},
 	
 	"FreeChoiceExperiment":{
+        "seq_file": "./imgs_seq.csv",
 		"instructions_text": "Free choice experiment",
 		"question_text": "What letter did you see?",
 		"conditions": ["unbiased", "parvo", "magno"],
 		"images_path": "./images/letters", 
 		"n_trials": 5,
-		"seq_file": "./images_sequence.csv",
 		"t_fix": 1,
 		"t_stim": 0.25,
         "t_prestim": 0.5,
