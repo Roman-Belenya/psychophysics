@@ -13,7 +13,7 @@ with open('parameters.json', 'rb') as f:
 
 
 win = visual.Window(
-    size = [1920, 1080],
+    size = [1920/2., 1080/2.],
     monitor = 'labBENQ',
     fullscr = False,
     colorSpace = 'rgb255',
