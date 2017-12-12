@@ -18,10 +18,10 @@ class ExperimentPart(object):
 
         for name, value in params.items():
             setattr(self, name, value)
-            
+
         self.datetime = datetime.datetime.now()
         # self.datetime.strftime('%d-%b-%y_%H-%M-%S')
-        
+
         self.win = win
         self.images = [os.path.abspath(img) for img in glob.glob(os.path.join(self.images_path, '*.png'))]
         self.responses = []
@@ -394,7 +394,7 @@ class FreeChoiceExperiment(ExperimentPart):
 
 
     def make_images_sequence(self):
-    
+
         names = [os.path.split(os.path.splitext(i)[0])[1] for i in self.images]
         perm = list(product(self.conditions, names))
         perm = perm * self.n_trials
@@ -428,13 +428,15 @@ class FreeChoiceExperiment(ExperimentPart):
             self.stim.setImage(image.magno_path)
         elif kind == 'unbiased':
             self.stim.setImage(image.unbiased_path)
-            
+
         self.global_resp.text = image.global_letter.upper()
         self.global_resp.color = 255
         self.local_resp.text = image.local_letter.upper()
         self.local_resp.color = 255
-        
+
         keylist = [image.global_letter, image.local_letter, 'escape']
+        event.clearEvents()
+        key = None
 
         self.fixation_cross.draw()
         self.win.flip()
@@ -442,22 +444,22 @@ class FreeChoiceExperiment(ExperimentPart):
         while clock.getTime() < self.t_fix:
             pass
 
+        core.wait(self.t_prestim)
         self.stim.draw()
         self.win.flip()
         clock.reset() # starts counting time from here
-        
-        key = None
+
         while clock.getTime() < self.t_stim:
             if not key:
-                key = event.getKeys(keyList = keylist, timeStamped = clock)
-                
+        		key = event.getKeys(keyList = keylist, timeStamped = clock)
+
         if not key:
             self.question.draw()
             self.global_resp.draw()
             self.local_resp.draw()
             self.win.flip()
             key = event.waitKeys(keyList = keylist, timeStamped = clock)
-                
+
         key, = key
         latency = key[1]
         if key[0] == image.global_letter:
@@ -475,42 +477,6 @@ class FreeChoiceExperiment(ExperimentPart):
         self.win.flip()
 
         return response, latency
-        
-
-    # def get_response(self, clock, image):
-
-        # self.global_resp.text = image.global_letter.upper()
-        # self.global_resp.color = 255
-        # self.local_resp.text = image.local_letter.upper()
-        # self.local_resp.color = 255
-
-        # self.question.draw()
-        # self.global_resp.draw()
-        # self.local_resp.draw()
-        # self.win.flip()
-
-        # clock.reset()
-        # keylist = [image.global_letter, image.local_letter, 'escape']
-        # key = event.waitKeys(keyList = keylist, timeStamped = clock)
-
-        # key, = key
-        # latency = key[1]
-        # if key[0] == image.global_letter:
-            # response = 'global'
-            # self.global_resp.color = 150
-        # elif key[0] == image.local_letter:
-            # response = 'local'
-            # self.local_resp.color = 150
-        # elif key[0] == 'escape':
-            # sys.exit()
-
-        # self.question.draw()
-        # self.global_resp.draw()
-        # self.local_resp.draw()
-        # self.win.flip()
-
-        # return response, latency
-
 
 
     def main_sequence(self):
@@ -524,7 +490,6 @@ class FreeChoiceExperiment(ExperimentPart):
         for cond, img in images_seq:
 
             # Run trial
-            core.wait(self.t_prestim)
             resp, lat = self.run_trial(cond, clock, img)
             core.wait(1)
             self.responses.append( (cond, img.name, resp, lat) )
