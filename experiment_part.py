@@ -25,6 +25,7 @@ class ExperimentPart(object):
         self.win = win
         self.images = [os.path.abspath(img) for img in glob.glob(os.path.join(self.images_path, '*.png'))]
         self.responses = []
+        self.colheaders = []
         self.finished = False
         # self.keys = [self.pos_key, self.neg_key, 'escape']
 
@@ -67,6 +68,9 @@ class ExperimentPart(object):
             units = 'deg',
             colorSpace = 'rgb255',
             color = 0)
+            
+    def __str__(self):
+        return self.__class__.__name__
 
 
     def show_instructions(self, text):
@@ -79,8 +83,23 @@ class ExperimentPart(object):
         event.waitKeys()
 
 
-    def export_results():
-        pass
+    def export_results(self, filename, *extralines):
+    
+        with open(filename, 'wb') as f:
+            writer = csv.writer(f, delimiter = '\t')
+            
+            writer.writerow( ['Experiment:', str(self)] )
+            writer.writerow( ['Date:', self.datetime.strftime('%d %B %Y')] )
+            writer.writerow( ['Time:', self.datetime.strftime('%H:%M:%S')] )
+            for line in extralines:
+                writer.writerow(line)            
+            writer.writerow('')            
+            writer.writerow( self.colheaders )
+
+            for line in self.responses:
+                writer.writerow(line)
+                
+
 
 
 class ContrastDetection(ExperimentPart):
@@ -99,6 +118,7 @@ class ContrastDetection(ExperimentPart):
         self.trial_seq = [1, 1, 1] + seq
 
         self.keys = [self.pos_key, self.neg_key, 'escape']
+        self.colheaders = ['#', 'Kind', 'Grey_value', 'Response']
 
         self.positive = visual.TextStim(
             win = self.win,
@@ -117,6 +137,7 @@ class ContrastDetection(ExperimentPart):
             pos = (7, 0),
             alignHoriz = 'center',
             alignVert = 'center')
+
 
     @property
     def output_col(self):
@@ -219,6 +240,7 @@ class IsoluminanceDetection(ExperimentPart):
         self.col_delta = np.array(self.col_delta)
 
         self.keys = [self.up_key, self.down_key, 'escape', 'return']
+        self.colheaders = ['#', 'Kind', 'Colour']
 
         self.done = visual.TextStim(
             win = self.win,
@@ -318,6 +340,8 @@ class FreeChoiceExperiment(ExperimentPart):
 
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours otherwise
         self.stim.size = self.stim_size
+        
+        self.colheaders = ['Condition', 'Stimulus', 'Responce', 'Latency']
 
         self.fg_col = None
         self.bg_col = None

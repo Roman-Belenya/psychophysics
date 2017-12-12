@@ -24,19 +24,21 @@ contrast = ContrastDetection(win, **params['ContrastDetection'])
 isolum = IsoluminanceDetection(win, **params['IsoluminanceDetection'])
 free_choice = FreeChoiceExperiment(win, **params['FreeChoiceExperiment'])
 
-# contrast.main_sequence()
-# isolum.main_sequence()
+contrast.main_sequence()
+contrast.export_results('contrast.exp', ['Mean colour:', contrast.output_col])
+isolum.main_sequence()
+isolum.export_results('isoluminance.exp', ['Mean colour:', isolum.output_col])
 
 fg_col = params['IsoluminanceDetection']['fix_col']
-bg_col = [0, 100, 0]
-# bg_col = isolum.output_col
-fg_grey = 130
-# fg_grey = contrast.output_col
+# bg_col = [0, 100, 0]
+bg_col = isolum.output_col
+# fg_grey = 130
+fg_grey = contrast.output_col
 bg_grey = params['ContrastDetection']['grey']
-
 
 free_choice.define_colours(fg_col, bg_col, fg_grey, bg_grey)
 free_choice.main_sequence()
+free_choice.export_results('free_choice.exp')
 
 # exp = ExperimentPart(win, **params['Global'])
 # exp.fixation_cross.draw()
