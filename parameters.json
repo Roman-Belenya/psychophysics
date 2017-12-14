@@ -21,8 +21,8 @@
 	"IsoluminanceDetection":{
 		"images_path": "./images/line_drawings",
 		"instructions_text": "Isoluminance detection part",
-		"instructions_text_up": "adjust up",
-		"instructions_text_down": "adjust down",
+		"instructions_text_up": "Preess UP key until the image stops flickering",
+		"instructions_text_down": "Preess DOWN key until the image stops flickering",
 		"n_blocks": 4,
 		"blocks_seq": ["up", "down", "up", "down"],
 		"n_trials": 5,

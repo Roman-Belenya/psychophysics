@@ -1,0 +1,8 @@
+The images were adapted from the BOSS image database https://sites.google.com/site/bosstimuli/
+
+The original jpg images were converted to binary black & white png files.
+
+The BOSS was created by Dr. Mathieu Brodeur with the participation of Dr. Martin Lepage and Dr. Katherine Guérard
+
+The images in this directory are subject to Creative Commons Attribution-Share Alike 3.0 license.
+https://creativecommons.org/licenses/by-sa/3.0/legalcode

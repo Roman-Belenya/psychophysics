@@ -57,7 +57,7 @@ class ExperimentPart(object):
             image = None,
             mask = None,
             units = 'deg',
-            size = 5,
+            size = 9.26,
             colorSpace = 'rgb255')
 
         self.fixation_cross = visual.GratingStim(

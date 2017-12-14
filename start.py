@@ -13,9 +13,9 @@ with open('parameters.json', 'rb') as f:
 
 
 win = visual.Window(
-    size = [1920/2., 1080/2.],
+    size = [1920, 1080],
     monitor = 'labBENQ',
-    fullscr = False,
+    fullscr = True,
     colorSpace = 'rgb255',
     color = 128,
     units = 'deg')

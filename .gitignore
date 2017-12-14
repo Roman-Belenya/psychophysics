@@ -1,3 +1,5 @@
 *.pyc
-images/line_drawings/
 images/letters/stimuli/*
+images/line_drawings_old
+*.exp
+*.pkl
