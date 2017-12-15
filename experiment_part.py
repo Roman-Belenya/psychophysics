@@ -14,20 +14,19 @@ np.random.seed(1)
 
 class ExperimentPart(object):
 
-    def __init__(self, win, **params):
+    def __init__(self, win, id, **params):
 
         for name, value in params.items():
             setattr(self, name, value)
 
         self.datetime = datetime.datetime.now()
-        # self.datetime.strftime('%d-%b-%y_%H-%M-%S')
 
         self.win = win
+        self.id = id
         self.images = [os.path.abspath(img) for img in glob.glob(os.path.join(self.images_path, '*.png'))]
         self.responses = []
         self.colheaders = []
         self.finished = False
-        # self.keys = [self.pos_key, self.neg_key, 'escape']
 
         self.instructions = visual.TextStim(
             win = self.win,
@@ -35,15 +34,6 @@ class ExperimentPart(object):
             color = 255,
             text = '',
             pos = (0, 0))
-
-        # self.instructions = visual.TextBox(
-        #     window = self.win,
-        #     color_space = 'rgb255',
-        #     font_color = [255]*3,
-        #     text = 'ahaha',
-        #     size = (2,2),
-        #     grid_horz_justification='center', grid_vert_justification='center',
-        #     pos = (0, 0))
 
         self.press_any = visual.TextStim(
             win = self.win,
@@ -105,9 +95,9 @@ class ExperimentPart(object):
 class ContrastDetection(ExperimentPart):
 
 
-    def __init__(self, win, **params):
+    def __init__(self, win, id, **params):
 
-        super(ContrastDetection, self).__init__(win = win, **params)
+        super(ContrastDetection, self).__init__(win, id, **params)
 
         # self.stim.color = invert(self.grey)
         self.stim.color = self.grey
@@ -224,15 +214,16 @@ class ContrastDetection(ExperimentPart):
                 self.grey += increment * self.colour_delta
 
         self.finished = True
+        self.export_results('contrast.exp', ['Mean colour:', self.output_col])
 
 
 
 
 class IsoluminanceDetection(ExperimentPart):
 
-    def __init__(self, win, **params):
+    def __init__(self, win, id, **params):
 
-        super(IsoluminanceDetection, self).__init__(win=win, **params)
+        super(IsoluminanceDetection, self).__init__(win, id, **params)
 
         self.fix_col = np.array(self.fix_col)
         self.var_col_lo = np.array(self.var_col_lo)
@@ -334,9 +325,9 @@ class IsoluminanceDetection(ExperimentPart):
 
 class FreeChoiceExperiment(ExperimentPart):
 
-    def __init__(self, win, **params):
+    def __init__(self, win, id, **params):
 
-        super(FreeChoiceExperiment, self).__init__(win=win, **params)
+        super(FreeChoiceExperiment, self).__init__(win, id, **params)
 
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours otherwise
         self.stim.size = self.stim_size

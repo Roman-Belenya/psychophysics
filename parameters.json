@@ -25,7 +25,7 @@
 		"instructions_text_down": "Preess DOWN key until the image stops flickering",
 		"n_blocks": 4,
 		"blocks_seq": ["up", "down", "up", "down"],
-		"n_trials": 5,
+		"n_trials": 2,
 		"fix_col": [225, 0, 0],
 		"var_col_lo": [0, 50, 0],
 		"var_col_hi": [0, 200, 0],
