@@ -133,7 +133,8 @@ class ContrastDetection(ExperimentPart):
     def output_col(self):
         if not self.responses:
             return None
-        values = [i[2] for i in self.responses if i[1] == 1]
+        # take average of positive responses to exprimental trials (exclude catch)
+        values = [i[2] for i in self.responses if i[1] and i[3]]
         return np.around(np.mean(values))
 
 
@@ -237,7 +238,7 @@ class IsoluminanceDetection(ExperimentPart):
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            text = 'done',
+            text = 'Done!',
             pos = (0, 0),
             alignHoriz = 'center',
             alignVert = 'center')
@@ -301,9 +302,9 @@ class IsoluminanceDetection(ExperimentPart):
             self.responses.append( (i, kind, iso_col) )
             print self.responses[-1]
 
-            self.done.draw()
+            # self.done.draw()
             self.win.flip()
-            core.wait(1)
+            core.wait(0.5)
 
 
     def main_sequence(self):
@@ -420,10 +421,14 @@ class FreeChoiceExperiment(ExperimentPart):
         elif kind == 'unbiased':
             self.stim.setImage(image.unbiased_path)
 
+        
         self.global_resp.text = image.global_letter.upper()
         self.global_resp.color = 255
+        x = 5 * np.random.choice([-1, 1])
+        self.global_resp.pos = (x, -5)
         self.local_resp.text = image.local_letter.upper()
         self.local_resp.color = 255
+        self.local_resp.pos = (-x, -5)
 
         keylist = [image.global_letter, image.local_letter, 'escape']
         event.clearEvents()
@@ -440,17 +445,19 @@ class FreeChoiceExperiment(ExperimentPart):
         self.win.flip()
         clock.reset() # starts counting time from here
 
-        while clock.getTime() < self.t_stim:
-            if not key:
-        		key = event.getKeys(keyList = keylist, timeStamped = clock)
+        # while clock.getTime() < self.t_stim:
+            # if not key:
+        		# key = event.getKeys(keyList = keylist, timeStamped = clock)
 
-        if not key:
-            self.question.draw()
-            self.global_resp.draw()
-            self.local_resp.draw()
-            self.win.flip()
-            key = event.waitKeys(keyList = keylist, timeStamped = clock)
+        # if not key:
+            # self.question.draw()
+            # self.global_resp.draw()
+            # self.local_resp.draw()
+            # self.win.flip()
+            # key = event.waitKeys(keyList = keylist, timeStamped = clock)
 
+        key = event.waitKeys(keyList = keylist, timeStamped = clock)
+            
         key, = key
         latency = key[1]
         if key[0] == image.global_letter:

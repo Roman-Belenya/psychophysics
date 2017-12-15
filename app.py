@@ -72,9 +72,9 @@ class Application(object):
 
         # Contrast detection
         self.contrast = ContrastDetection(self.win, id, **self.params['ContrastDetection'])
-        self.contrast.main_sequence()
-        filename = os.path.join(dir, 'contrast.exp')
-        self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
+        # self.contrast.main_sequence()
+        # filename = os.path.join(dir, 'contrast.exp')
+        # self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
         
         # Isoluminance detection
         self.isolum = IsoluminanceDetection(self.win, id, **self.params['IsoluminanceDetection'])
@@ -87,8 +87,10 @@ class Application(object):
         self.free_choice = FreeChoiceExperiment(self.win, id, **self.params['FreeChoiceExperiment'])
         
         fg_col = self.params['IsoluminanceDetection']['fix_col']
-        bg_col = self.isolum.output_col
-        fg_grey = self.contrast.output_col
+        # bg_col = self.isolum.output_col
+        bg_col = np.array([0, 119, 0])
+        # fg_grey = self.contrast.output_col
+        fg_grey = 131
         bg_grey = self.params['ContrastDetection']['grey']
         
         self.free_choice.define_colours(fg_col, bg_col, fg_grey, bg_grey)
