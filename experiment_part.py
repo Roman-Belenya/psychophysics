@@ -3,6 +3,7 @@ import glob
 import os
 from psychopy import visual, core, event
 from tools import *
+from my_image import MyImage
 import sys
 from itertools import product
 import csv
@@ -99,9 +100,7 @@ class ContrastDetection(ExperimentPart):
 
         super(ContrastDetection, self).__init__(win, id, **params)
 
-        # self.stim.color = invert(self.grey)
-        self.stim.color = self.grey
-
+        self.stim.color = self.bg_grey
 
         seq = [1]*(self.n_trials - 3) + [0]*self.n_catch_trials # 1=trial, 0=catch trial
         np.random.shuffle(seq) # randomise the seq array
@@ -187,15 +186,19 @@ class ContrastDetection(ExperimentPart):
         core.wait(1)
 
         image_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
-        # i = trial number, trial = type (1=exp, 0=catch)
-        for i, kind in zip(range(self.n_trials), self.trial_seq):
+        img_n = 0
+        
+        print len(image_seq), len(self.trial_seq)
+
+        for i, kind in enumerate(self.trial_seq):
 
             # Process the image
-            img = image_seq[i]
-            fg = get_fg_mask(img)
-            self.stim.mask = fg
-            # self.stim.color = invert(self.grey)
-            self.stim.color = self.grey
+            if kind:
+                img = image_seq[img_n]
+                fg = get_fg_mask(img)
+                self.stim.mask = fg
+                self.stim.color = self.fg_grey
+                img_n += 1
 
 
             #Run the trial
@@ -205,14 +208,14 @@ class ContrastDetection(ExperimentPart):
 
             # Get the response
             response, increment = self.get_response()
-            self.responses.append( (i, kind, self.grey, response) )
+            self.responses.append( (i, kind, self.fg_grey, response) )
             print self.responses[-1]
             if response == 'stop':
-                break
+                sys.exit()
 
             # Adjust grey if experimental trial
-            if kind == 1:
-                self.grey += increment * self.colour_delta
+            if kind:
+                self.fg_grey += increment
 
         self.finished = True
         self.export_results('contrast.exp', ['Mean colour:', self.output_col])
@@ -344,14 +347,12 @@ class FreeChoiceExperiment(ExperimentPart):
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            text = '',
             pos = (-5, -5))
 
         self.local_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            text = '',
             pos = (5, -5))
 
         self.question = visual.TextStim(
@@ -362,26 +363,20 @@ class FreeChoiceExperiment(ExperimentPart):
             pos = (0, 0))
 
 
-    def define_colours(self, fg_col, bg_col, fg_grey, bg_grey):
+    def define_colours(self, col_dict):
 
-        self.fg_col = fg_col
-        self.bg_col = bg_col
-        self.fg_grey = fg_grey
-        self.bg_grey = bg_grey
+        for name, value in col_dict.items():
+            setattr(self, name, value)
 
 
     def make_images(self):
 
-        # remove old stimuli
-        if os.listdir('./images/letters/stimuli'):
-            if 'linux' in sys.platform:
-                os.system(r'rm ./images/letters/stimuli/*.png')
-            elif 'win' in sys.platform:
-                os.system(r'del ".\images\letters\stimuli\*.png"')
+        out_dir = os.path.join('.', self.id, 'stimuli')
+        os.mkdir(out_dir)
 
-        for img in self.images:
-            i = MyImage(img)
-            i.apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
+        for img_path in self.images:
+            img = MyImage(img_path, out_dir)
+            img.apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
 
 
 
@@ -401,12 +396,13 @@ class FreeChoiceExperiment(ExperimentPart):
     def read_images_sequence(self, file):
 
         seq = []
+        out_dir = os.path.join('.', self.id, 'stimuli')
 
         with open(file, 'rb') as f:
             reader = csv.reader(f)
             for cond, stim in reader:
-                path = os.path.join('./images/letters', stim + '.png')
-                img = MyImage(path)
+                path = os.path.join(self.images_path, stim + '.png')
+                img = MyImage(path, out_dir)
                 seq.append((cond, img))
 
         return seq
@@ -424,7 +420,7 @@ class FreeChoiceExperiment(ExperimentPart):
         
         self.global_resp.text = image.global_letter.upper()
         self.global_resp.color = 255
-        x = 5 * np.random.choice([-1, 1])
+        x = np.random.choice([-5, 5])
         self.global_resp.pos = (x, -5)
         self.local_resp.text = image.local_letter.upper()
         self.local_resp.color = 255
@@ -445,18 +441,18 @@ class FreeChoiceExperiment(ExperimentPart):
         self.win.flip()
         clock.reset() # starts counting time from here
 
-        # while clock.getTime() < self.t_stim:
-            # if not key:
-        		# key = event.getKeys(keyList = keylist, timeStamped = clock)
+        while clock.getTime() < self.t_stim:
+            if not key:
+        		key = event.getKeys(keyList = keylist, timeStamped = clock)
 
-        # if not key:
-            # self.question.draw()
-            # self.global_resp.draw()
-            # self.local_resp.draw()
-            # self.win.flip()
-            # key = event.waitKeys(keyList = keylist, timeStamped = clock)
+        if not key:
+            self.question.draw()
+            self.global_resp.draw()
+            self.local_resp.draw()
+            self.win.flip()
+            key = event.waitKeys(keyList = keylist, timeStamped = clock)
 
-        key = event.waitKeys(keyList = keylist, timeStamped = clock)
+        # key = event.waitKeys(keyList = keylist, timeStamped = clock)
             
         key, = key
         latency = key[1]

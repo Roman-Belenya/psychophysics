@@ -68,13 +68,19 @@ class Application(object):
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
-           
+        
+        colours = {}
 
         # Contrast detection
         self.contrast = ContrastDetection(self.win, id, **self.params['ContrastDetection'])
-        # self.contrast.main_sequence()
-        # filename = os.path.join(dir, 'contrast.exp')
-        # self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
+        self.contrast.main_sequence()
+        filename = os.path.join(dir, 'contrast.exp')
+        self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
+        
+        colours['bg_grey'] = self.params['ContrastDetection']['bg_grey']
+        colours['fg_grey'] = self.contrast.output_col
+        
+        self.save_colours(colours)
         
         # Isoluminance detection
         self.isolum = IsoluminanceDetection(self.win, id, **self.params['IsoluminanceDetection'])
@@ -82,29 +88,20 @@ class Application(object):
         filename = os.path.join(dir, 'isoluminance.exp')
         self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
         
+        colours['bg_col'] = self.isolum.output_col
+        colours['fg_col'] = self.params['IsoluminanceDetection']['fix_col']
         
         # Free choice experiment
         self.free_choice = FreeChoiceExperiment(self.win, id, **self.params['FreeChoiceExperiment'])
         
-        fg_col = self.params['IsoluminanceDetection']['fix_col']
-        # bg_col = self.isolum.output_col
-        bg_col = np.array([0, 119, 0])
-        # fg_grey = self.contrast.output_col
-        fg_grey = 131
-        bg_grey = self.params['ContrastDetection']['grey']
-        
-        self.free_choice.define_colours(fg_col, bg_col, fg_grey, bg_grey)
-        
+        self.free_choice.define_colours(colours)
         self.free_choice.main_sequence()
         
         filename = os.path.join(dir, 'free_choice.exp')
         self.free_choice.export_results(filename)
         
-        stimdir = os.path.join(self.params['FreeChoiceExperiment']['images_path'], 'stimuli')
-        dest = os.path.join(dir, 'stimuli')
-        shutil.copytree(stimdir, dest)
-        
-        showinfo('Experiment', 'Finished!')    
+        self.win.close()
+        showinfo('Experiment', 'Finished!')
             
             
     def load_params(self, file):
@@ -112,6 +109,12 @@ class Application(object):
         with open(file, 'rb') as f:
             params = json.load(f)
         return params
+        
+    def save_colours(self, col_dict):
+    
+        path = os.path.join(dir, 'colours.json')
+        with open(path, 'wb') as f:
+            json.dump(col_dict, f)
         
 
         
