@@ -46,19 +46,19 @@ class Application(object):
             showwarning('Missing id', "Enter participant's id")
             return
         
-        dir = os.path.join('.', id)
-        if os.path.isdir(dir):
+        self.dir = os.path.join('.', id)
+        if os.path.isdir(self.dir):
             ans = askyesno('Participant id', 'This participant exists. Overwrite?')
             if ans == 0:
                 return
             else:
-                shutil.rmtree(dir)
-        os.mkdir(dir)
+                shutil.rmtree(self.dir)
+        os.mkdir(self.dir)
+        os.mkdir(os.path.join(self.dir, 'stimuli'))
             
         if not os.path.isfile('./parameters.json'):
             showwarning('Parameters', 'Missing parameters file')
-            return
-            
+            return  
         self.params = self.load_params('./parameters.json')
             
         self.win = visual.Window(
@@ -71,10 +71,10 @@ class Application(object):
         
         colours = {}
 
-        # Contrast detection
+        # # Contrast detection
         self.contrast = ContrastDetection(self.win, id, **self.params['ContrastDetection'])
         self.contrast.main_sequence()
-        filename = os.path.join(dir, 'contrast.exp')
+        filename = os.path.join(self.dir, 'contrast.exp')
         self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
         
         colours['bg_grey'] = self.params['ContrastDetection']['bg_grey']
@@ -82,22 +82,24 @@ class Application(object):
         
         self.save_colours(colours)
         
-        # Isoluminance detection
+        # # Isoluminance detection
         self.isolum = IsoluminanceDetection(self.win, id, **self.params['IsoluminanceDetection'])
         self.isolum.main_sequence()
-        filename = os.path.join(dir, 'isoluminance.exp')
+        filename = os.path.join(self.dir, 'isoluminance.exp')
         self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
         
         colours['bg_col'] = self.isolum.output_col
         colours['fg_col'] = self.params['IsoluminanceDetection']['fix_col']
         
+        self.save_colours(colours)
+        
+        
         # Free choice experiment
         self.free_choice = FreeChoiceExperiment(self.win, id, **self.params['FreeChoiceExperiment'])
-        
         self.free_choice.define_colours(colours)
         self.free_choice.main_sequence()
         
-        filename = os.path.join(dir, 'free_choice.exp')
+        filename = os.path.join(self.dir, 'free_choice.exp')
         self.free_choice.export_results(filename)
         
         self.win.close()
@@ -112,7 +114,7 @@ class Application(object):
         
     def save_colours(self, col_dict):
     
-        path = os.path.join(dir, 'colours.json')
+        path = os.path.join(self.dir, 'colours.json')
         with open(path, 'wb') as f:
             json.dump(col_dict, f)
         

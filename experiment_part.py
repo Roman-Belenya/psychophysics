@@ -15,7 +15,7 @@ np.random.seed(1)
 
 class ExperimentPart(object):
 
-    def __init__(self, win, id, **params):
+    def __init__(self, win, id, params):
 
         for name, value in params.items():
             setattr(self, name, value)
@@ -96,9 +96,9 @@ class ExperimentPart(object):
 class ContrastDetection(ExperimentPart):
 
 
-    def __init__(self, win, id, **params):
+    def __init__(self, win, id, params):
 
-        super(ContrastDetection, self).__init__(win, id, **params)
+        super(ContrastDetection, self).__init__(win, id, params)
 
         self.stim.color = self.bg_grey
 
@@ -225,9 +225,9 @@ class ContrastDetection(ExperimentPart):
 
 class IsoluminanceDetection(ExperimentPart):
 
-    def __init__(self, win, id, **params):
+    def __init__(self, win, id, params):
 
-        super(IsoluminanceDetection, self).__init__(win, id, **params)
+        super(IsoluminanceDetection, self).__init__(win, id, params)
 
         self.fix_col = np.array(self.fix_col)
         self.var_col_lo = np.array(self.var_col_lo)
@@ -252,7 +252,7 @@ class IsoluminanceDetection(ExperimentPart):
             return None
 
         values = [i[2] for i in self.responses]
-        return np.around(np.mean(values, axis = 0))
+        return list(np.around(np.mean(values, axis = 0)))
 
 
     def run_trial(self, colour):
@@ -302,20 +302,27 @@ class IsoluminanceDetection(ExperimentPart):
             self.stim.mask = fg
 
             iso_col = self.run_trial(colour)
-            self.responses.append( (i, kind, iso_col) )
+            self.responses.append( (i, kind, list(iso_col)) )
             print self.responses[-1]
 
             # self.done.draw()
             self.win.flip()
             core.wait(0.5)
+          
+          
+    def test_iso_colours(self, bg_col):
+        img = os.path.join('.', 'images', 'circle.png')
+        fg = get_fg_mask(img)
+        self.stim.mask = fg
+        self.col_delta = np.array([0, 1, 0])
+        col = self.run_trial(bg_col)
+        error = bg_col[1] - col[1]
+        print 'Error: {}'.format(error)
 
 
     def main_sequence(self):
 
         self.show_instructions(self.instructions_text)
-
-        assert len(self.blocks_seq) == self.n_blocks
-
         images_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
 
         for i, kind in zip(range(self.n_blocks), self.blocks_seq):
@@ -329,14 +336,14 @@ class IsoluminanceDetection(ExperimentPart):
 
 class FreeChoiceExperiment(ExperimentPart):
 
-    def __init__(self, win, id, **params):
+    def __init__(self, win, id, params):
 
-        super(FreeChoiceExperiment, self).__init__(win, id, **params)
+        super(FreeChoiceExperiment, self).__init__(win, id, params)
 
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours otherwise
         self.stim.size = self.stim_size
         
-        self.colheaders = ['Condition', 'Stimulus', 'Responce', 'Latency']
+        self.colheaders = ['#', 'Condition', 'Stimulus', 'Responce', 'Latency']
 
         self.fg_col = None
         self.bg_col = None
@@ -372,7 +379,6 @@ class FreeChoiceExperiment(ExperimentPart):
     def make_images(self):
 
         out_dir = os.path.join('.', self.id, 'stimuli')
-        os.mkdir(out_dir)
 
         for img_path in self.images:
             img = MyImage(img_path, out_dir)
@@ -480,14 +486,16 @@ class FreeChoiceExperiment(ExperimentPart):
 
         self.make_images()
         images_seq = self.read_images_sequence(self.seq_file)
+        n = 0
 
         for cond, img in images_seq:
 
             # Run trial
             resp, lat = self.run_trial(cond, clock, img)
             core.wait(1)
-            self.responses.append( (cond, img.name, resp, lat) )
+            self.responses.append( (n, cond, img.name, resp, lat) )
             print self.responses[-1]
+            n += 1
 
         self.finished = True
 
