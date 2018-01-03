@@ -10,7 +10,6 @@ import csv
 import shutil
 import datetime
 
-
 np.random.seed(1)
 
 class ExperimentPart(object):
@@ -71,7 +70,9 @@ class ExperimentPart(object):
         self.instructions.draw()
         self.press_any.draw()
         self.win.flip()
-        event.waitKeys()
+        key = event.waitKeys()
+        if key == 'escape':
+            sys.exit()
 
 
     def export_results(self, filename, *extralines):
@@ -91,10 +92,8 @@ class ExperimentPart(object):
                 writer.writerow(line)
                 
 
-
-
+                
 class ContrastDetection(ExperimentPart):
-
 
     def __init__(self, win, id, params):
 
@@ -217,8 +216,8 @@ class ContrastDetection(ExperimentPart):
             if kind:
                 self.fg_grey += increment
 
+        core.wait(2)
         self.finished = True
-        self.export_results('contrast.exp', ['Mean colour:', self.output_col])
 
 
 
@@ -280,7 +279,6 @@ class IsoluminanceDetection(ExperimentPart):
                 elif ans[0] == 'return':
                     return colour
                 elif ans[0] == 'escape':
-                    # skip to the next trial, do not increment trial no
                     sys.exit()
 
 
@@ -305,7 +303,6 @@ class IsoluminanceDetection(ExperimentPart):
             self.responses.append( (i, kind, list(iso_col)) )
             print self.responses[-1]
 
-            # self.done.draw()
             self.win.flip()
             core.wait(0.5)
           
@@ -323,13 +320,16 @@ class IsoluminanceDetection(ExperimentPart):
     def main_sequence(self):
 
         self.show_instructions(self.instructions_text)
-        images_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
 
-        for i, kind in zip(range(self.n_blocks), self.blocks_seq):
-
+        for i, kind in enumerate(self.blocks_seq):
+        
+            # get new images on block 0, 2, 4 ...
+            if i % 2 == 0:
+                images_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
             np.random.shuffle(images_seq)
             self.run_block(kind, images_seq)
 
+        core.wait(2)
         self.finished = True
 
 
@@ -340,45 +340,43 @@ class FreeChoiceExperiment(ExperimentPart):
 
         super(FreeChoiceExperiment, self).__init__(win, id, params)
 
-        self.stim.colorSpace = 'rgb' # back to default, would show inverted colours otherwise
+        self.stim.colorSpace = 'rgb' # back to default, would show inverted colours with rgb255
         self.stim.size = self.stim_size
         
         self.colheaders = ['#', 'Condition', 'Stimulus', 'Responce', 'Latency']
-
-        self.fg_col = None
-        self.bg_col = None
-        self.fg_grey = None
-        self.bg_grey = None
 
         self.global_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            pos = (-5, -5))
+            pos = [-3, -7])
 
         self.local_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            pos = (5, -5))
+            pos = [3, -7])
 
         self.question = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
             text = self.question_text,
-            pos = (0, 0))
+            pos = (0, -4))
 
 
     def define_colours(self, col_dict):
 
         for name, value in col_dict.items():
+            assert name in ['bg_grey', 'fg_grey', 'bg_col', 'fg_col'], 'Invalid colour name'
             setattr(self, name, value)
 
 
     def make_images(self):
 
         out_dir = os.path.join('.', self.id, 'stimuli')
+        if not os.path.isdir(out_dir):
+            os.makedirs(out_dir)
 
         for img_path in self.images:
             img = MyImage(img_path, out_dir)
@@ -426,11 +424,11 @@ class FreeChoiceExperiment(ExperimentPart):
         
         self.global_resp.text = image.global_letter.upper()
         self.global_resp.color = 255
-        x = np.random.choice([-5, 5])
-        self.global_resp.pos = (x, -5)
+        x = np.random.choice([-1, 1])
+        self.global_resp.pos[0] *= x
         self.local_resp.text = image.local_letter.upper()
         self.local_resp.color = 255
-        self.local_resp.pos = (-x, -5)
+        self.local_resp.pos[0] *= x
 
         keylist = [image.global_letter, image.local_letter, 'escape']
         event.clearEvents()
@@ -496,7 +494,8 @@ class FreeChoiceExperiment(ExperimentPart):
             self.responses.append( (n, cond, img.name, resp, lat) )
             print self.responses[-1]
             n += 1
-
+            
+        core.wait(2)
         self.finished = True
 
 

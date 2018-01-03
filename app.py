@@ -25,6 +25,8 @@ class Application(object):
             width = 15)
         self.id_entry.grid(row = 0, column = 0, padx = 10)
         
+        
+        
         self.start_button = tk.Button(self.frame,
             text = 'Start experiment',
             command = self.start_experiment,
@@ -53,8 +55,7 @@ class Application(object):
                 return
             else:
                 shutil.rmtree(self.dir)
-        os.mkdir(self.dir)
-        os.mkdir(os.path.join(self.dir, 'stimuli'))
+        os.makedirs(os.path.join(self.dir, 'stimuli'))
             
         if not os.path.isfile('./parameters.json'):
             showwarning('Parameters', 'Missing parameters file')
@@ -72,7 +73,7 @@ class Application(object):
         colours = {}
 
         # # Contrast detection
-        self.contrast = ContrastDetection(self.win, id, **self.params['ContrastDetection'])
+        self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
         self.contrast.main_sequence()
         filename = os.path.join(self.dir, 'contrast.exp')
         self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
@@ -83,7 +84,7 @@ class Application(object):
         self.save_colours(colours)
         
         # # Isoluminance detection
-        self.isolum = IsoluminanceDetection(self.win, id, **self.params['IsoluminanceDetection'])
+        self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
         self.isolum.main_sequence()
         filename = os.path.join(self.dir, 'isoluminance.exp')
         self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
@@ -95,7 +96,7 @@ class Application(object):
         
         
         # Free choice experiment
-        self.free_choice = FreeChoiceExperiment(self.win, id, **self.params['FreeChoiceExperiment'])
+        self.free_choice = FreeChoiceExperiment(self.win, id, self.params['FreeChoiceExperiment'])
         self.free_choice.define_colours(colours)
         self.free_choice.main_sequence()
         

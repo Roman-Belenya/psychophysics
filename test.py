@@ -7,6 +7,12 @@ import sys
 id = 'test'
 params = json.load(open('./parameters.json'))
 
+if os.path.isdir('./test/'):
+    raise Exception('delete test folder')
+    
+os.makedirs('./test/stimuli')
+    
+
 colours = {"fg_col": [225, 0, 0],
            "bg_grey": 128,
            "bg_col": [0, 116, 0],
@@ -40,4 +46,5 @@ if __name__ == '__main__':
         
     if 'u' in arg:
         pass
+        
     

@@ -6,7 +6,7 @@
 
 	"ContrastDetection":{
 		"images_path": "./images/line_drawings",
-		"n_trials":	 20,
+		"n_trials":	 10,
 		"n_catch_trials": 5,
 		"fg_grey": 128,
         "bg_grey": 128,
@@ -22,13 +22,12 @@
 	"IsoluminanceDetection":{
 		"images_path": "./images/line_drawings",
 		"instructions_text": "Isoluminance detection part",
-		"instructions_text_up": "Preess UP key until the image stops flickering",
-		"instructions_text_down": "Preess DOWN key until the image stops flickering",
-		"n_blocks": 4,
+		"instructions_text_up": "Preess up key until the image stops flickering",
+		"instructions_text_down": "Preess down key until the image stops flickering",
 		"blocks_seq": ["up", "down", "up", "down"],
-		"n_trials": 10,
+		"n_trials": 3,
 		"fix_col": [225, 0, 0],
-		"var_col_lo": [0, 40, 0],
+		"var_col_lo": [0, 30, 0],
 		"var_col_hi": [0, 200, 0],
 		"col_delta": [0, 2, 0],
 		"up_key": "up",
