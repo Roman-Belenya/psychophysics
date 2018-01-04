@@ -71,8 +71,9 @@ class ExperimentPart(object):
         self.press_any.draw()
         self.win.flip()
         key = event.waitKeys()
-        if key == 'escape':
-            sys.exit()
+        if key[0] == 'escape':
+            return False
+        return True
 
 
     def export_results(self, filename, *extralines):
@@ -180,7 +181,10 @@ class ContrastDetection(ExperimentPart):
 
     def main_sequence(self):
 
-        self.show_instructions(self.instructions_text)
+        start = self.show_instructions(self.instructions_text)
+        if not start:
+            return
+            
         clock = core.Clock()
         core.wait(1)
 
@@ -207,10 +211,11 @@ class ContrastDetection(ExperimentPart):
 
             # Get the response
             response, increment = self.get_response()
+            if response == 'stop':
+                break            
             self.responses.append( (i, kind, self.fg_grey, response) )
             print self.responses[-1]
-            if response == 'stop':
-                sys.exit()
+
 
             # Adjust grey if experimental trial
             if kind:
@@ -279,7 +284,7 @@ class IsoluminanceDetection(ExperimentPart):
                 elif ans[0] == 'return':
                     return colour
                 elif ans[0] == 'escape':
-                    sys.exit()
+                    return 'stop'
 
 
 
@@ -300,12 +305,15 @@ class IsoluminanceDetection(ExperimentPart):
             self.stim.mask = fg
 
             iso_col = self.run_trial(colour)
+            if iso_col == 'stop':
+                return
             self.responses.append( (i, kind, list(iso_col)) )
             print self.responses[-1]
 
             self.win.flip()
             core.wait(0.5)
-          
+            
+
           
     def test_iso_colours(self, bg_col):
         img = os.path.join('.', 'images', 'circle.png')
@@ -319,7 +327,9 @@ class IsoluminanceDetection(ExperimentPart):
 
     def main_sequence(self):
 
-        self.show_instructions(self.instructions_text)
+        start = self.show_instructions(self.instructions_text)
+        if not start:
+            return
 
         for i, kind in enumerate(self.blocks_seq):
         
@@ -467,7 +477,7 @@ class FreeChoiceExperiment(ExperimentPart):
             response = 'local'
             self.local_resp.color = 150
         elif key[0] == 'escape':
-            sys.exit()
+            response, latency = ('stop', 0)
 
         self.question.draw()
         self.global_resp.draw()
@@ -478,7 +488,11 @@ class FreeChoiceExperiment(ExperimentPart):
 
 
     def main_sequence(self):
-        self.show_instructions(self.instructions_text)
+        
+        start = self.show_instructions(self.instructions_text)
+        if not start:
+            return
+            
         clock = core.Clock()
         core.wait(1)
 
@@ -490,10 +504,13 @@ class FreeChoiceExperiment(ExperimentPart):
 
             # Run trial
             resp, lat = self.run_trial(cond, clock, img)
+            if resp == 'stop':
+                break            
             core.wait(1)
             self.responses.append( (n, cond, img.name, resp, lat) )
             print self.responses[-1]
             n += 1
+
             
         core.wait(2)
         self.finished = True
