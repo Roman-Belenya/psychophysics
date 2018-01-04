@@ -5,21 +5,23 @@ from tools import *
 import Tkinter as tk
 import ast
 from tkMessageBox import showwarning, showinfo, askyesno
+import subprocess
 
 class PopupEntries(object):
-    def __init__(self, master, grey = True, col = True):
+
+    def __init__(self, master, def_grey = True, def_col = True):
     
         self.master = master
         self.top = tk.Toplevel(master.root, padx = 20, pady = 20)
         self.top.title('Define colours')
-        self.grey = grey
-        self.col = col
+        self.def_grey = def_grey
+        self.def_col = def_col
         self.finished = False
         
         self.grey_var = tk.StringVar(); self.grey_var.set('0')
         self.col_var = tk.StringVar(); self.col_var.set('[0, 0, 0]')
         
-        if grey:
+        if def_grey:
             tk.Label(self.top, text = 'FG grey:').grid(row = 0, column = 0, sticky = 'E', pady = 5)
             self.grey_entry = tk.Entry(self.top,
                 textvariable = self.grey_var,
@@ -28,7 +30,7 @@ class PopupEntries(object):
                 relief = tk.FLAT)
             self.grey_entry.grid(row = 0, column = 1, padx = (10, 0), pady = 5)
             
-        if col:
+        if def_col:
             tk.Label(self.top, text = 'BG [r, g, b]:').grid(row = 1, column = 0, sticky = 'E', pady = 5)
             self.col_entry = tk.Entry(self.top,
                 textvariable = self.col_var, 
@@ -47,8 +49,7 @@ class PopupEntries(object):
     def ok(self):
     
         try:
-            grey = ast.literal_eval(self.grey_var.get())
-            assert type(grey) is int
+            grey = int(self.grey_var.get())
             assert 0 <= grey <= 255
             col = ast.literal_eval(self.col_var.get())
             assert type(col) is list
@@ -59,10 +60,10 @@ class PopupEntries(object):
             showwarning('Entry', 'Incorrect value')
             return
     
-        if self.grey:
+        if self.def_grey:
             self.master.colours['fg_grey'] = grey
             
-        if self.col:
+        if self.def_col:
             self.master.colours['bg_col'] = col
             
         self.finished = True    
@@ -128,14 +129,24 @@ class Application(object):
             text = 'Selective attention',
             variable = self.selective_var).grid(row = 5, column = 0, sticky = 'W')
         
-        # Start button
+        # Buttons
+        self.tests_button = tk.Button(self.frame,
+            text = 'Run tests',
+            command = self.run_tests,
+            height = 2,
+            width = 10,
+            relief = tk.GROOVE)
+        self.tests_button.grid(row = 6, column = 0, columnspan = 2, sticky = 'EW', pady = (20, 0))        
+        
         self.start_button = tk.Button(self.frame,
             text = 'Start experiment',
             command = self.start_experiment,
             height = 2,
             width = 10,
             relief = tk.GROOVE)
-        self.start_button.grid(row = 6, column = 0, columnspan = 2, sticky = 'EW', pady = (20, 0))
+        self.start_button.grid(row = 7, column = 0, columnspan = 2, sticky = 'EW', pady = (10, 0))
+        
+
         
 
     def start_experiment(self):
@@ -172,27 +183,40 @@ class Application(object):
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
+        self.win.mouseVisible = False
         
 
         # Contrast detection
         if contrast:
             self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
-            self.contrast.main_sequence()
-            filename = os.path.join(self.dir, 'contrast.exp')
-            self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
+            try:
+                self.contrast.main_sequence()
+            except:
+                showwarning('Experiment', 'An error occured during experiment')
+                self.win.close()
+                raise
+            finally:
+                filename = os.path.join(self.dir, 'contrast.exp')
+                self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
             
-            self.colours['fg_grey'] = self.contrast.output_col
-            self.save_colours(self.colours)
+                self.colours['fg_grey'] = self.contrast.output_col
+                self.save_colours(self.colours)
         
         # Isoluminance detection
         if isolum:
             self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
-            self.isolum.main_sequence()
-            filename = os.path.join(self.dir, 'isoluminance.exp')
-            self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
-            
-            self.colours['bg_col'] = self.isolum.output_col
-            self.save_colours(self.colours)
+            try:
+                self.isolum.main_sequence()
+            except:
+                showwarning('Experiment', 'An error occured during experiment')
+                self.win.close()
+                raise
+            finally:
+                filename = os.path.join(self.dir, 'isoluminance.exp')
+                self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
+                
+                self.colours['bg_col'] = self.isolum.output_col
+                self.save_colours(self.colours)
         
         
         # Free choice experiment
@@ -201,15 +225,20 @@ class Application(object):
             correct = self.check_colours_dict(self.colours)
             if not correct:
                 self.win.close()
-                showwarning('Colours', 'Error with colours')
+                showwarning('Colours', 'Colours were not defined')
                 return
                 
             self.free_choice = FreeChoiceExperiment(self.win, id, self.params['FreeChoiceExperiment'])
-            self.free_choice.define_colours(self.colours)
-            self.free_choice.main_sequence()
-            
-            filename = os.path.join(self.dir, 'free_choice.exp')
-            self.free_choice.export_results(filename)
+            try:
+                self.free_choice.define_colours(self.colours)
+                self.free_choice.main_sequence()
+            except:
+                showwarning('Experiment', 'An error occured during experiment')
+                self.win.close()
+                raise
+            finally:
+                filename = os.path.join(self.dir, 'free_choice.exp')
+                self.free_choice.export_results(filename)
         
         
         self.win.close()
@@ -236,12 +265,20 @@ class Application(object):
                 if type(value) is int:
                     assert 0 <= value <= 255
                 elif type(value) is list:
-                    for v in list:
+                    for v in value:
                         assert 0 <= v <= 255
         except:
+            raise
             return False
         
         return True
+        
+        
+    def run_tests(self):
+        subprocess.call('python test_tools.py')
+        subprocess.call('python test_experiment_part.py')
+        
+        
         
 
         

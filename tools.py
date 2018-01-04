@@ -33,7 +33,7 @@ def from_rgb(value):
 
 
 def to_rgb(value):
-    if np.ny(value < -1) or np.any(value > 1):
+    if value < -1 or value > 1:
         raise Exception('Invalid input value: should be -1 to 1')
 
     v = 255 + np.around((value - 1) * 127.5)
@@ -43,15 +43,13 @@ def to_rgb(value):
 def change_colour(colour, by):
 
     new_colour = colour + by
-
     if np.any(new_colour < 0) or np.any(new_colour > 255):
-        print 'out of range'
         return colour
 
     return new_colour
 
 def invert(colour):
-    if isinstance(colour, list):
+    if not isinstance(colour, np.ndarray):
         colour = np.array(colour)
     inv = 255 - colour
     return inv

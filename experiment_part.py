@@ -1,7 +1,7 @@
+from psychopy import visual, core, event
 import numpy as np
 import glob
 import os
-from psychopy import visual, core, event
 from tools import *
 from my_image import MyImage
 import sys
@@ -312,17 +312,6 @@ class IsoluminanceDetection(ExperimentPart):
 
             self.win.flip()
             core.wait(0.5)
-            
-
-          
-    def test_iso_colours(self, bg_col):
-        img = os.path.join('.', 'images', 'circle.png')
-        fg = get_fg_mask(img)
-        self.stim.mask = fg
-        self.col_delta = np.array([0, 1, 0])
-        col = self.run_trial(bg_col)
-        error = bg_col[1] - col[1]
-        print 'Error: {}'.format(error)
 
 
     def main_sequence(self):
