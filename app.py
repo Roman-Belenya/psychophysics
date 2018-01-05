@@ -56,14 +56,13 @@ class PopupEntries(object):
                 assert all(0 <= i <= 255 for i in arr)
         except:
             showwarning('Entry', 'Incorrect value')
-            raise
             return
 
         if self.def_grey:
-            self.master.colours['fg_grey'] = np.array(grey)
+            self.master.colours['fg_grey'] = grey
 
         if self.def_col:
-            self.master.colours['bg_col'] = np.array(col)
+            self.master.colours['bg_col'] = col
 
         self.finished = True
         self.top.destroy()
@@ -84,7 +83,11 @@ class Application(object):
             showwarning('Parameters', 'Missing parameters file')
             return
         self.params = self.load_params('./parameters.json')
-        self.colours = {}
+        
+        self.colours = {
+            'bg_grey': self.params['ContrastDetection']['bg_grey'],
+            'fg_col': self.params['IsoluminanceDetection']['fix_col']
+            }
 
         self.id = tk.StringVar()
         self.id.set("Participant's id")
@@ -149,6 +152,7 @@ class Application(object):
 
     def start_experiment(self):
 
+        np.random.seed(1)
         id = self.id.get()
         if id == "Participant's id":
             showwarning('Missing id', "Enter participant's id")
@@ -198,8 +202,8 @@ class Application(object):
                 self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
 
                 self.colours['fg_grey'] = self.contrast.output_col
-                self.colours['bg_grey'] = self.contrast.bg_grey
                 self.save_colours(self.colours)
+
 
         # Isoluminance detection
         if isolum:
@@ -215,9 +219,8 @@ class Application(object):
                 self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
 
                 self.colours['bg_col'] = self.isolum.output_col
-                self.colours['fg_col'] = self.isolum.fix_col
                 self.save_colours(self.colours)
-
+         
 
         # Free choice experiment
         if free:
@@ -254,7 +257,8 @@ class Application(object):
 
     def save_colours(self, col_dict):
         for name, value in col_dict.items():
-            col_dict[name] = value.tolist() # cannot serialise np array
+            if type(value) is not list:
+                col_dict[name] = list(value)
         path = os.path.join(self.dir, 'colours.json')
         with open(path, 'wb') as f:
             json.dump(col_dict, f)
@@ -263,11 +267,10 @@ class Application(object):
         try:
             for name, value in col_dict.items():
                 assert name in ['bg_grey', 'fg_grey', 'bg_col', 'fg_col']
-                assert type(value) is np.ndarray
+                assert type(value) is list
                 for v in value:
                     assert 0 <= v <= 255
         except:
-            raise
             return False
 
         return True

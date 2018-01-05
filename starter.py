@@ -45,6 +45,7 @@ if __name__ == '__main__':
         choice.main_sequence()
         
     if 'u' in arg:
-        pass
+        print type(con.fg_grey)
+        print type(iso.fix_col)
         
     

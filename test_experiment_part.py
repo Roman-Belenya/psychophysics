@@ -33,6 +33,13 @@ class TestExperimentPart(unittest.TestCase):
         self.assertTrue(os.path.isfile('./parameters.json'))
         self.assertTrue(os.path.isdir('./images/letters'))
         self.assertTrue(os.path.isdir('./images/line_drawings'))
+        
+        imgs = glob.glob('./images/line_drawings/*.png')
+        n_contrast = self.params['ContrastDetection']['n_trials'] + self.params['ContrastDetection']['n_catch_trials']
+        n_isolum = self.params['IsoluminanceDetection']['n_trials'] * (len(self.params['IsoluminanceDetection']['blocks_seq']) / 2)
+        
+        self.assertGreater(len(imgs), n_contrast, 'Not enough images')
+        self.assertGreater(len(imgs), n_isolum, 'Not enough images')
 
 
     def test_frame_rate(self):
@@ -57,8 +64,8 @@ class TestExperimentPart(unittest.TestCase):
         fints = np.array(self.win.frameIntervals) * 1000
         t1 = fints.mean() - fints.std()
         t2 = fints.mean() + fints.std()
-        self.assertTrue(t1 < msperframe < t2), 'Strange refresh period ({}, should be {})'.format(fints.mean(), msperframe)
-        self.assertLess(self.win.nDroppedFrames, 5, 'Too many dropped frames')
+        self.assertTrue(t1 < msperframe < t2, 'Strange refresh period ({}, should be {})'.format(fints.mean(), msperframe))
+        self.assertLess(self.win.nDroppedFrames, 5, msg = 'Too many dropped frames')
 
     def test_image_creation(self):
         out_dir = './__test__/stimuli'

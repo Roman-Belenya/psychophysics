@@ -1,3 +1,4 @@
+import psychopy
 from psychopy import visual, core, event
 import numpy as np
 import glob
@@ -136,7 +137,10 @@ class ContrastDetection(ExperimentPart):
             return None
         # take average of positive responses to exprimental trials (exclude catch)
         values = [i[2] for i in self.responses if i[1] and i[3]]
-        return np.around(np.mean(values, axis = 0))
+        if not values:
+            return [None, None, None]
+  
+        return np.mean(values, axis = 0).tolist()
 
 
     def run_trial(self, clock, kind):
@@ -211,7 +215,8 @@ class ContrastDetection(ExperimentPart):
             response, increment = self.get_response()
             if response == 'stop':
                 break
-            self.responses.append( (i, kind, self.fg_grey, response) )
+
+            self.responses.append( (i, kind, list(self.fg_grey), response) )
             print self.responses[-1]
 
             # Adjust grey if experimental trial
@@ -220,8 +225,7 @@ class ContrastDetection(ExperimentPart):
 
         core.wait(2)
         self.finished = True
-        print self.responses
-        print self.output_col
+
 
 
 
@@ -247,10 +251,9 @@ class IsoluminanceDetection(ExperimentPart):
     @property
     def output_col(self):
         if not self.responses:
-            return None
-
+            return [None]*3
         values = [i[2] for i in self.responses]
-        return list(np.around(np.mean(values, axis = 0)))
+        return np.mean(values, axis = 0).tolist()
 
 
     def run_trial(self, colour):
@@ -299,7 +302,7 @@ class IsoluminanceDetection(ExperimentPart):
             self.stim.mask = fg
 
             iso_col = self.run_trial(colour)
-            if iso_col == 'stop':
+            if np.any(iso_col == 'stop'):
                 return
             self.responses.append( (i, kind, list(iso_col)) )
             print self.responses[-1]
@@ -361,7 +364,6 @@ class FreeChoiceExperiment(ExperimentPart):
     def define_colours(self, col_dict):
 
         for name, value in col_dict.items():
-            assert name in ['bg_grey', 'fg_grey', 'bg_col', 'fg_col'], 'Invalid colour name'
             setattr(self, name, value)
 
 
