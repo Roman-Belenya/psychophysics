@@ -17,6 +17,8 @@ class ExperimentPart(object):
     def __init__(self, win, id, params):
 
         for name, value in params.items():
+            if type(value) is list:
+                    value = np.array(value)
             setattr(self, name, value)
 
         self.datetime = datetime.datetime.now()
@@ -58,7 +60,7 @@ class ExperimentPart(object):
             units = 'deg',
             colorSpace = 'rgb255',
             color = 0)
-            
+
     def __str__(self):
         return self.__class__.__name__
 
@@ -77,23 +79,23 @@ class ExperimentPart(object):
 
 
     def export_results(self, filename, *extralines):
-    
+
         with open(filename, 'wb') as f:
             writer = csv.writer(f, delimiter = '\t')
-            
+
             writer.writerow( ['Experiment:', str(self)] )
             writer.writerow( ['Date:', self.datetime.strftime('%d %B %Y')] )
             writer.writerow( ['Time:', self.datetime.strftime('%H:%M:%S')] )
             for line in extralines:
-                writer.writerow(line)            
-            writer.writerow('')            
+                writer.writerow(line)
+            writer.writerow('')
             writer.writerow( self.colheaders )
 
             for line in self.responses:
                 writer.writerow(line)
-                
 
-                
+
+
 class ContrastDetection(ExperimentPart):
 
     def __init__(self, win, id, params):
@@ -134,7 +136,7 @@ class ContrastDetection(ExperimentPart):
             return None
         # take average of positive responses to exprimental trials (exclude catch)
         values = [i[2] for i in self.responses if i[1] and i[3]]
-        return np.around(np.mean(values))
+        return np.around(np.mean(values, axis = 0))
 
 
     def run_trial(self, clock, kind):
@@ -169,8 +171,7 @@ class ContrastDetection(ExperimentPart):
             self.negative.color = 150
 
         elif key[0] == 'escape':
-            response = 'stop'
-            increment = None
+            response, increment = ('stop', None)
 
         self.positive.draw()
         self.negative.draw()
@@ -184,14 +185,12 @@ class ContrastDetection(ExperimentPart):
         start = self.show_instructions(self.instructions_text)
         if not start:
             return
-            
+
         clock = core.Clock()
         core.wait(1)
 
         image_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
         img_n = 0
-        
-        print len(image_seq), len(self.trial_seq)
 
         for i, kind in enumerate(self.trial_seq):
 
@@ -203,7 +202,6 @@ class ContrastDetection(ExperimentPart):
                 self.stim.color = self.fg_grey
                 img_n += 1
 
-
             #Run the trial
             core.wait(self.stim_pre_delay)
             self.run_trial(clock, kind)
@@ -212,10 +210,9 @@ class ContrastDetection(ExperimentPart):
             # Get the response
             response, increment = self.get_response()
             if response == 'stop':
-                break            
+                break
             self.responses.append( (i, kind, self.fg_grey, response) )
             print self.responses[-1]
-
 
             # Adjust grey if experimental trial
             if kind:
@@ -223,6 +220,8 @@ class ContrastDetection(ExperimentPart):
 
         core.wait(2)
         self.finished = True
+        print self.responses
+        print self.output_col
 
 
 
@@ -232,11 +231,6 @@ class IsoluminanceDetection(ExperimentPart):
     def __init__(self, win, id, params):
 
         super(IsoluminanceDetection, self).__init__(win, id, params)
-
-        self.fix_col = np.array(self.fix_col)
-        self.var_col_lo = np.array(self.var_col_lo)
-        self.var_col_hi = np.array(self.var_col_hi)
-        self.col_delta = np.array(self.col_delta)
 
         self.keys = [self.up_key, self.down_key, 'escape', 'return']
         self.colheaders = ['#', 'Kind', 'Colour']
@@ -321,7 +315,7 @@ class IsoluminanceDetection(ExperimentPart):
             return
 
         for i, kind in enumerate(self.blocks_seq):
-        
+
             # get new images on block 0, 2, 4 ...
             if i % 2 == 0:
                 images_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
@@ -341,7 +335,7 @@ class FreeChoiceExperiment(ExperimentPart):
 
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours with rgb255
         self.stim.size = self.stim_size
-        
+
         self.colheaders = ['#', 'Condition', 'Stimulus', 'Responce', 'Latency']
 
         self.global_resp = visual.TextStim(
@@ -420,7 +414,7 @@ class FreeChoiceExperiment(ExperimentPart):
         elif kind == 'unbiased':
             self.stim.setImage(image.unbiased_path)
 
-        
+
         self.global_resp.text = image.global_letter.upper()
         self.global_resp.color = 255
         x = np.random.choice([-1, 1])
@@ -456,7 +450,7 @@ class FreeChoiceExperiment(ExperimentPart):
             key = event.waitKeys(keyList = keylist, timeStamped = clock)
 
         # key = event.waitKeys(keyList = keylist, timeStamped = clock)
-            
+
         key, = key
         latency = key[1]
         if key[0] == image.global_letter:
@@ -477,11 +471,11 @@ class FreeChoiceExperiment(ExperimentPart):
 
 
     def main_sequence(self):
-        
+
         start = self.show_instructions(self.instructions_text)
         if not start:
             return
-            
+
         clock = core.Clock()
         core.wait(1)
 
@@ -494,13 +488,13 @@ class FreeChoiceExperiment(ExperimentPart):
             # Run trial
             resp, lat = self.run_trial(cond, clock, img)
             if resp == 'stop':
-                break            
+                break
             core.wait(1)
             self.responses.append( (n, cond, img.name, resp, lat) )
             print self.responses[-1]
             n += 1
 
-            
+
         core.wait(2)
         self.finished = True
 

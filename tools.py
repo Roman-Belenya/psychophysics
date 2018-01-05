@@ -25,19 +25,25 @@ def get_fg_mask(image):
     return fg
 
 
-def from_rgb(value):
-    if np.any(value < 0) or np.any(value > 255):
+def from_rgb(rgb):
+    if type(rgb) is list:
+        rgb = np.array(rgb)
+    if np.any(rgb < 0) or np.any(rgb > 255):
         raise Exception('Invalid input rgb value')
-
-    return value / 127.5 - 1
+    return rgb / 127.5 - 1
 
 
 def to_rgb(value):
-    if value < -1 or value > 1:
+    if type(value) is list:
+        value = np.array(value)
+    if np.any(value < -1) or np.any(value > 1):
         raise Exception('Invalid input value: should be -1 to 1')
-
     v = 255 + np.around((value - 1) * 127.5)
-    return int(v)
+    if type(v) is not np.ndarray:
+        return int(v)
+    else:
+        v.dtype = int
+        return v
 
 
 def change_colour(colour, by):
