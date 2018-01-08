@@ -3,6 +3,7 @@ import json
 from psychopy import visual, core
 from tools import *
 import Tkinter as tk
+import tkFileDialog
 import ast
 from tkMessageBox import showwarning, showinfo, askyesno
 import subprocess
@@ -25,7 +26,7 @@ class PopupEntries(object):
             tk.Label(self.top, text = 'Contrast (FG):').grid(row = 0, column = 0, sticky = 'E', pady = 5)
             self.grey_entry = tk.Entry(self.top,
                 textvariable = self.grey_var,
-                width = 10,
+                width = 15,
                 justify = tk.CENTER,
                 relief = tk.FLAT)
             self.grey_entry.grid(row = 0, column = 1, padx = (10, 0), pady = 5)
@@ -34,7 +35,7 @@ class PopupEntries(object):
             tk.Label(self.top, text = 'Isoluminance (BG):').grid(row = 1, column = 0, sticky = 'E', pady = 5)
             self.col_entry = tk.Entry(self.top,
                 textvariable = self.col_var,
-                width = 10,
+                width = 15,
                 justify = tk.CENTER,
                 relief = tk.FLAT)
             self.col_entry.grid(row = 1, column = 1, padx = (10, 0), pady = 5)
@@ -43,7 +44,13 @@ class PopupEntries(object):
             text = 'OK',
             command = self.ok,
             width = 5,
-            relief = tk.GROOVE).grid(row = 2, column = 0, columnspan = 2, pady = (10, 0))
+            relief = tk.GROOVE).grid(row = 2, column = 1, pady = (10, 0))
+            
+        tk.Button(self.top,
+            text = 'Load colours',
+            command = self.load_colours,
+            width = 10,
+            relief = tk.GROOVE).grid(row = 2, column = 0, pady = (10,0))
 
 
     def ok(self):
@@ -66,6 +73,21 @@ class PopupEntries(object):
 
         self.finished = True
         self.top.destroy()
+        
+    def load_colours(self):
+        
+        file = tkFileDialog.askopenfilename(filetypes = [('json files', '.json')])
+        if not file:
+            return
+        with open(file, 'rb') as f:
+            d = json.load(f)
+            
+        try:    
+            self.grey_var.set(str(d['fg_grey']))
+            self.col_var.set(str(d['bg_col']))
+        except:
+            showwarning('File error', 'bad colours file')
+            return
 
 
 class Application(object):
@@ -86,6 +108,8 @@ class Application(object):
         
         self.colours = {
             'bg_grey': self.params['ContrastDetection']['bg_grey'],
+            'fg_grey': None,
+            'bg_col': None,
             'fg_col': self.params['IsoluminanceDetection']['fix_col']
             }
 
