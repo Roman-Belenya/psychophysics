@@ -86,7 +86,7 @@ class PopupEntries(object):
             self.grey_var.set(str(d['fg_grey']))
             self.col_var.set(str(d['bg_col']))
         except:
-            showwarning('File error', 'bad colours file')
+            showwarning('File error', 'Bad colours file')
             return
 
 
@@ -217,10 +217,9 @@ class Application(object):
             self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
             try:
                 self.contrast.main_sequence()
-            except:
+            except Exception as e:
                 self.win.close()
-                showwarning('Experiment', 'An error occured during experiment')
-                raise
+                showwarning('Experiment error', str(e))
             finally:
                 filename = os.path.join(self.dir, 'contrast.exp')
                 self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
@@ -234,10 +233,9 @@ class Application(object):
             self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
             try:
                 self.isolum.main_sequence()
-            except:
+            except Exception as e:
                 self.win.close()
-                showwarning('Experiment', 'An error occured during experiment')
-                raise
+                showwarning('Experiment error', str(e))
             finally:
                 filename = os.path.join(self.dir, 'isoluminance.exp')
                 self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
@@ -259,10 +257,9 @@ class Application(object):
             try:
                 self.free_choice.define_colours(self.colours)
                 self.free_choice.main_sequence()
-            except:
+            except Exception as e:
                 self.win.close()
-                showwarning('Experiment', 'An error occured during experiment')
-                raise
+                showwarning('Experiment error', str(e))
             finally:
                 filename = os.path.join(self.dir, 'free_choice.exp')
                 self.free_choice.export_results(filename)
