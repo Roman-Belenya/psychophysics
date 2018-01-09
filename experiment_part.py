@@ -188,22 +188,30 @@ class ContrastDetection(ExperimentPart):
         clock = core.Clock()
         core.wait(1)
         
-        seq = [1]*(self.n_trials - 3) + [0]*self.n_catch_trials # 1=trial, 0=catch trial
-        np.random.shuffle(seq) # randomise the seq array
-        trial_seq = [1, 1, 1] + seq
+        # seq = [1]*(self.n_trials - 3) + [0]*self.n_catch_trials # 1=trial, 0=catch trial
+        # np.random.shuffle(seq) # randomise the seq array
+        # trial_seq = [1, 1, 1] + seq
 
-        image_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
-        img_n = 0
+        # image_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
+        # img_n = 0
 
-        for i, kind in enumerate(trial_seq):
-
+        # for i, kind in enumerate(trial_seq):
+        
+        i = 0
+        detects = 0 # number of times they detected the image when kind == 1
+        while detects < self.n_trials:
+            
+            if i < 5:
+                kind = 1
+            else:
+                kind = np.random.choice([0, 1], p = [self.p_catch, 1 - self.p_catch])
+                
             # Process the image
             if kind:
-                img = image_seq[img_n]
+                img = np.random.choice(self.images)
                 fg = get_fg_mask(img)
                 self.stim.mask = fg
                 self.stim.color = self.fg_grey
-                img_n += 1
 
             #Run the trial
             core.wait(self.stim_pre_delay)
@@ -221,6 +229,10 @@ class ContrastDetection(ExperimentPart):
             # Adjust grey if experimental trial
             if kind:
                 self.fg_grey += increment
+                if response:
+                    detects += 1
+            i += 1
+            
 
         core.wait(2)
         self.finished = True

@@ -225,7 +225,8 @@ class Application(object):
                 showwarning('Experiment error', str(e))
             finally:
                 filename = os.path.join(self.dir, 'contrast.exp')
-                self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
+                col = [round(i, 2) for i in self.contrast.output_col]
+                self.contrast.export_results(filename, ['Mean colour:', col])
 
                 self.colours['fg_grey'] = self.contrast.output_col
                 self.save_colours(self.colours)
@@ -241,7 +242,8 @@ class Application(object):
                 showwarning('Experiment error', str(e))
             finally:
                 filename = os.path.join(self.dir, 'isoluminance.exp')
-                self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
+                col = [round(i, 2) for i in self.isolum.output_col]
+                self.isolum.export_results(filename, ['Mean colour:', col])
 
                 self.colours['bg_col'] = self.isolum.output_col
                 self.save_colours(self.colours)

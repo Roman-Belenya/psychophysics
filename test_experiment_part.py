@@ -15,7 +15,7 @@ class TestExperimentPart(unittest.TestCase):
         os.makedirs('./__test__/stimuli')
         self.win = visual.Window(
             size = [1920, 1080],
-            monitor = 'Dell',
+            monitor = 'labBENQ',
             fullscr = True,
             colorSpace = 'rgb255',
             color = 128,
@@ -35,7 +35,7 @@ class TestExperimentPart(unittest.TestCase):
         self.assertTrue(os.path.isdir('./images/line_drawings'))
         
         imgs = glob.glob('./images/line_drawings/*.png')
-        n_contrast = self.params['ContrastDetection']['n_trials'] + self.params['ContrastDetection']['n_catch_trials']
+        n_contrast = self.params['ContrastDetection']['n_trials']
         n_isolum = self.params['IsoluminanceDetection']['n_trials'] * (len(self.params['IsoluminanceDetection']['blocks_seq']) / 2)
         
         self.assertGreater(len(imgs), n_contrast, 'Not enough images')
@@ -49,7 +49,7 @@ class TestExperimentPart(unittest.TestCase):
             nMaxFrames = 200,
             nWarmUpFrames = 100,
             threshold = 1)
-        self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate: {}'.format(framerate))
+        self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate: {}, actual is {}'.format(mon_fs, framerate))
 
 
     def test_iso_colours(self):
