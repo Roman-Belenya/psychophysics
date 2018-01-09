@@ -49,7 +49,7 @@ class TestExperimentPart(unittest.TestCase):
             nMaxFrames = 200,
             nWarmUpFrames = 100,
             threshold = 1)
-        self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate')
+        self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate: {}'.format(framerate))
 
 
     def test_iso_colours(self):
@@ -65,7 +65,7 @@ class TestExperimentPart(unittest.TestCase):
         t1 = fints.mean() - fints.std()
         t2 = fints.mean() + fints.std()
         self.assertTrue(t1 < msperframe < t2, 'Strange refresh period ({}, should be {})'.format(fints.mean(), msperframe))
-        self.assertLess(self.win.nDroppedFrames, 5, msg = 'Too many dropped frames')
+        self.assertLess(self.win.nDroppedFrames, 5, msg = 'Too many dropped frames ({})'.format(self.win.nDroppedFrames))
 
     def test_image_creation(self):
         out_dir = './__test__/stimuli'

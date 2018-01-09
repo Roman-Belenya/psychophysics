@@ -278,7 +278,7 @@ class Application(object):
 
     def save_colours(self, col_dict):
         for name, value in col_dict.items():
-            if type(value) is not list:
+            if type(value) is np.ndarray:
                 col_dict[name] = list(value)
         path = os.path.join(self.dir, 'colours.json')
         with open(path, 'wb') as f:

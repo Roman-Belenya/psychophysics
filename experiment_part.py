@@ -60,7 +60,7 @@ class ExperimentPart(object):
             size = 1,
             units = 'deg',
             colorSpace = 'rgb255',
-            color = 0)
+            color = 135)
 
     def __str__(self):
         return self.__class__.__name__

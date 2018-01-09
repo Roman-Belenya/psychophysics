@@ -4,8 +4,8 @@
 
 	"ContrastDetection":{
 		"images_path": "./images/line_drawings",
-		"n_trials":	 3,
-		"n_catch_trials": 0,
+		"n_trials":	 15,
+		"n_catch_trials": 5,
 		"fg_grey": [128, 128, 128],
         "bg_grey": [128, 128, 128],
 		"colour_delta": [1, 1, 1],
@@ -20,10 +20,10 @@
 	"IsoluminanceDetection":{
 		"images_path": "./images/line_drawings",
 		"instructions_text": "Isoluminance detection part",
-		"instructions_text_up": "Preess up key until the image stops flickering",
-		"instructions_text_down": "Preess down key until the image stops flickering",
+		"instructions_text_up": "Press up key until the image stops flickering",
+		"instructions_text_down": "Press down key until the image stops flickering",
 		"blocks_seq": ["up", "down", "up", "down"],
-		"n_trials": 2,
+		"n_trials": 10,
 		"fix_col": [225, 0, 0],
 		"var_col_lo": [0, 30, 0],
 		"var_col_hi": [0, 200, 0],
@@ -35,7 +35,7 @@
 	},
 
 	"FreeChoiceExperiment":{
-        "seq_file": "./imgs_seq.csv",
+        "seq_file": "./imgs_seq_magno_test.csv",
 		"instructions_text": "Free choice experiment",
 		"question_text": "What letter did you see?",
 		"conditions": ["unbiased", "parvo", "magno"],
