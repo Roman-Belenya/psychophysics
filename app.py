@@ -14,6 +14,8 @@ class PopupEntries(object):
 
         self.master = master
         self.top = tk.Toplevel(master.root, padx = 20, pady = 20)
+        self.top.focus_set()
+        self.top.grab_set()
         self.top.title('Define colours')
         self.def_grey = def_grey
         self.def_col = def_col
@@ -72,6 +74,7 @@ class PopupEntries(object):
             self.master.colours['bg_col'] = col
 
         self.finished = True
+        self.top.grab_release()
         self.top.destroy()
         
     def load_colours(self):
@@ -197,7 +200,7 @@ class Application(object):
 
         if free and not (contrast and isolum):
             popup = PopupEntries(self, not contrast, not isolum)
-            self.root.wait_window(popup.top)
+            # self.root.wait_window(popup.top)
             if not popup.finished:
                 return
             self.save_colours(self.colours)

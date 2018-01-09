@@ -30,7 +30,7 @@
 		"col_delta": [0, 2, 0],
 		"up_key": "up",
 		"down_key": "down",
-		"monitor_fs": 120,
+		"monitor_fs": 60,
 		"flicker_fs": 30
 	},
 

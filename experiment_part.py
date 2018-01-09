@@ -104,11 +104,6 @@ class ContrastDetection(ExperimentPart):
         super(ContrastDetection, self).__init__(win, id, params)
 
         self.stim.color = self.bg_grey
-
-        seq = [1]*(self.n_trials - 3) + [0]*self.n_catch_trials # 1=trial, 0=catch trial
-        np.random.shuffle(seq) # randomise the seq array
-        self.trial_seq = [1, 1, 1] + seq
-
         self.keys = [self.pos_key, self.neg_key, 'escape']
         self.colheaders = ['#', 'Kind', 'Grey_value', 'Response']
 
@@ -192,11 +187,15 @@ class ContrastDetection(ExperimentPart):
 
         clock = core.Clock()
         core.wait(1)
+        
+        seq = [1]*(self.n_trials - 3) + [0]*self.n_catch_trials # 1=trial, 0=catch trial
+        np.random.shuffle(seq) # randomise the seq array
+        trial_seq = [1, 1, 1] + seq
 
         image_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
         img_n = 0
 
-        for i, kind in enumerate(self.trial_seq):
+        for i, kind in enumerate(trial_seq):
 
             # Process the image
             if kind:

@@ -15,7 +15,7 @@ class TestExperimentPart(unittest.TestCase):
         os.makedirs('./__test__/stimuli')
         self.win = visual.Window(
             size = [1920, 1080],
-            monitor = 'labBENQ',
+            monitor = 'Dell',
             fullscr = True,
             colorSpace = 'rgb255',
             color = 128,
