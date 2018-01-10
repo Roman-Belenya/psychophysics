@@ -200,7 +200,7 @@ class Application(object):
 
         if free and not (contrast and isolum):
             popup = PopupEntries(self, not contrast, not isolum)
-            # self.root.wait_window(popup.top)
+            self.root.wait_window(popup.top)
             if not popup.finished:
                 return
             self.save_colours(self.colours)
@@ -225,8 +225,7 @@ class Application(object):
                 showwarning('Experiment error', str(e))
             finally:
                 filename = os.path.join(self.dir, 'contrast.exp')
-                col = [round(i, 2) for i in self.contrast.output_col]
-                self.contrast.export_results(filename, ['Mean colour:', col])
+                self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
 
                 self.colours['fg_grey'] = self.contrast.output_col
                 self.save_colours(self.colours)
@@ -242,8 +241,7 @@ class Application(object):
                 showwarning('Experiment error', str(e))
             finally:
                 filename = os.path.join(self.dir, 'isoluminance.exp')
-                col = [round(i, 2) for i in self.isolum.output_col]
-                self.isolum.export_results(filename, ['Mean colour:', col])
+                self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
 
                 self.colours['bg_col'] = self.isolum.output_col
                 self.save_colours(self.colours)
@@ -272,6 +270,8 @@ class Application(object):
 
         self.win.close()
         showinfo('Experiment', 'Finished!')
+        self.root.quit()
+        self.root.destroy()
 
 
     def load_params(self, file):

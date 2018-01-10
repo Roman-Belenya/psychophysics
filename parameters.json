@@ -10,9 +10,9 @@
         "bg_grey": [128, 128, 128],
 		"colour_delta": [1, 1, 1],
 		"instructions_text": "Contrast detection part",
-		"stim_latency": 1.5,
-		"stim_pre_delay": 1,
-		"stim_post_delay": 0.5,
+		"t_stim": 1.5,
+		"t_prestim": 0.5,
+		"t_poststim": 0.5,
 		"pos_key": "f",
 		"neg_key": "j"
 	},
@@ -31,7 +31,9 @@
 		"up_key": "up",
 		"down_key": "down",
 		"monitor_fs": 60,
-		"flicker_fs": 30
+		"flicker_fs": 30,
+        "t_prestim": 0,
+        "t_poststim": 0.5
 	},
 
 	"FreeChoiceExperiment":{
@@ -45,7 +47,9 @@
 		"t_stim": 0.25,
         "t_prestim": 0.5,
         "t_poststim": 1,
-		"stim_size": [7.84, 9.26]
+		"stim_size": [7.84, 9.26],
+        "left_key": "num_1",
+        "right_key": "num_2"
 	}
 
 }

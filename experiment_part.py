@@ -129,7 +129,7 @@ class ContrastDetection(ExperimentPart):
     @property
     def output_col(self):
         if not self.responses:
-            return None
+            return [999]*3
         # take average of positive responses to exprimental trials (exclude catch)
         values = [i[2] for i in self.responses if i[1] and i[3]]
         if not values:
@@ -144,7 +144,7 @@ class ContrastDetection(ExperimentPart):
             self.stim.draw()
         self.win.flip()
         clock.reset()
-        while clock.getTime() <= self.stim_latency:
+        while clock.getTime() <= self.t_stim:
             pass
         self.win.flip()
 
@@ -187,18 +187,10 @@ class ContrastDetection(ExperimentPart):
 
         clock = core.Clock()
         core.wait(1)
-        
-        # seq = [1]*(self.n_trials - 3) + [0]*self.n_catch_trials # 1=trial, 0=catch trial
-        # np.random.shuffle(seq) # randomise the seq array
-        # trial_seq = [1, 1, 1] + seq
-
-        # image_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
-        # img_n = 0
-
-        # for i, kind in enumerate(trial_seq):
-        
+                
         i = 0
         detects = 0 # number of times they detected the image when kind == 1
+        
         while detects < self.n_trials:
             
             if i < 5:
@@ -214,9 +206,9 @@ class ContrastDetection(ExperimentPart):
                 self.stim.color = self.fg_grey
 
             #Run the trial
-            core.wait(self.stim_pre_delay)
+            core.wait(self.t_prestim)
             self.run_trial(clock, kind)
-            core.wait(self.stim_post_delay)
+            core.wait(self.t_poststim)
 
             # Get the response
             response, increment = self.get_response()
@@ -262,7 +254,7 @@ class IsoluminanceDetection(ExperimentPart):
     @property
     def output_col(self):
         if not self.responses:
-            return [None]*3
+            return [999]*3
         values = [i[2] for i in self.responses]
         return np.mean(values, axis = 0).tolist()
 
@@ -312,6 +304,7 @@ class IsoluminanceDetection(ExperimentPart):
             fg = get_fg_mask(img)
             self.stim.mask = fg
 
+            core.wait(self.t_prestim)
             iso_col = self.run_trial(colour)
             if np.any(iso_col == 'stop'):
                 return
@@ -319,7 +312,7 @@ class IsoluminanceDetection(ExperimentPart):
             print self.responses[-1]
 
             self.win.flip()
-            core.wait(0.5)
+            core.wait(self.t_poststim)
 
 
     def main_sequence(self):
@@ -349,27 +342,28 @@ class FreeChoiceExperiment(ExperimentPart):
 
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours with rgb255
         self.stim.size = self.stim_size
+        self.keylist = [self.left_key, self.right_key, 'escape']
 
         self.colheaders = ['#', 'Condition', 'Stimulus', 'Responce', 'Latency']
 
-        self.global_resp = visual.TextStim(
+        self.left_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            pos = [-3, -7])
+            pos = [-3, -8])
 
-        self.local_resp = visual.TextStim(
+        self.right_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            pos = [3, -7])
+            pos = [3, -8])
 
         self.question = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
             text = self.question_text,
-            pos = (0, -4))
+            pos = (0, -5))
 
 
     def define_colours(self, col_dict):
@@ -427,16 +421,19 @@ class FreeChoiceExperiment(ExperimentPart):
         elif kind == 'unbiased':
             self.stim.setImage(image.unbiased_path)
 
+        # Randomly associate global and local letters with left/right response
+        left_letter, right_letter = np.random.choice([image.global_letter, image.local_letter], size = 2, replace = False)
+        
+        self.left_resp.color = 255
+        self.right_resp.color = 255
+        
+        # Get rid of "num_" if needed
+        lk = self.left_key.split('_')[-1]
+        rk = self.right_key.split('_')[-1]
+        
+        self.left_resp.text = '{} = {}'.format(lk, left_letter.upper())
+        self.right_resp.text = '{} = {}'.format(rk, right_letter.upper())
 
-        self.global_resp.text = image.global_letter.upper()
-        self.global_resp.color = 255
-        x = np.random.choice([-1, 1])
-        self.global_resp.pos[0] *= x
-        self.local_resp.text = image.local_letter.upper()
-        self.local_resp.color = 255
-        self.local_resp.pos[0] *= x
-
-        keylist = [image.global_letter, image.local_letter, 'escape']
         event.clearEvents()
         key = None
 
@@ -446,38 +443,35 @@ class FreeChoiceExperiment(ExperimentPart):
         while clock.getTime() < self.t_fix:
             pass
 
-        core.wait(self.t_prestim)
         self.stim.draw()
         self.win.flip()
         clock.reset() # starts counting time from here
 
         while clock.getTime() < self.t_stim:
             if not key:
-        		key = event.getKeys(keyList = keylist, timeStamped = clock)
+        		key = event.getKeys(keyList = self.keylist, timeStamped = clock)
 
         if not key:
             self.question.draw()
-            self.global_resp.draw()
-            self.local_resp.draw()
+            self.left_resp.draw()
+            self.right_resp.draw()
             self.win.flip()
-            key = event.waitKeys(keyList = keylist, timeStamped = clock)
-
-        # key = event.waitKeys(keyList = keylist, timeStamped = clock)
+            key = event.waitKeys(keyList = self.keylist, timeStamped = clock)
 
         key, = key
         latency = key[1]
-        if key[0] == image.global_letter:
-            response = 'global'
-            self.global_resp.color = 150
-        elif key[0] == image.local_letter:
-            response = 'local'
-            self.local_resp.color = 150
+        if key[0] == self.left_key:
+            response = image.get_response_type(left_letter)
+            self.left_resp.color = 150
+        elif key[0] == self.right_key:
+            response = image.get_response_type(right_letter)
+            self.right_resp.color = 150
         elif key[0] == 'escape':
-            response, latency = ('stop', 0)
+            response = 'stop'
 
         self.question.draw()
-        self.global_resp.draw()
-        self.local_resp.draw()
+        self.left_resp.draw()
+        self.right_resp.draw()
         self.win.flip()
 
         return response, latency
@@ -499,10 +493,11 @@ class FreeChoiceExperiment(ExperimentPart):
         for cond, img in images_seq:
 
             # Run trial
+            core.wait(self.t_prestim)
             resp, lat = self.run_trial(cond, clock, img)
             if resp == 'stop':
                 break
-            core.wait(1)
+            core.wait(self.t_poststim)
             self.responses.append( (n, cond, img.name, resp, lat) )
             print self.responses[-1]
             n += 1
