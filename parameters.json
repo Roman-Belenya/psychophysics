@@ -1,9 +1,10 @@
 {
-	"images_path": "./images",
+	"images_dir": "./images",
 	"viewing_distane": 40,
 
 	"ContrastDetection":{
-		"images_path": "./images/line_drawings",
+		"images_dir": "./images/line_drawings",
+        "stim_size": [9.26, 9.26],
 		"n_trials":	 15,
 		"p_catch": 0.15,
 		"fg_grey": [128, 128, 128],
@@ -18,7 +19,8 @@
 	},
 
 	"IsoluminanceDetection":{
-		"images_path": "./images/line_drawings",
+		"images_dir": "./images/line_drawings",
+        "stim_size": [9.26, 9.26],
 		"instructions_text": "Isoluminance detection part",
 		"instructions_text_up": "Press up key until the image stops flickering",
 		"instructions_text_down": "Press down key until the image stops flickering",
@@ -37,11 +39,11 @@
 	},
 
 	"FreeChoiceExperiment":{
+		"images_dir": "./images/letters_free_choice",
         "seq_file": "./imgs_seq_magno_test.csv",
 		"instructions_text": "Free choice experiment",
 		"question_text": "What letter did you see?",
 		"conditions": ["unbiased", "parvo", "magno"],
-		"images_path": "./images/letters",
 		"n_trials": 5,
 		"t_fix": 1,
 		"t_stim": 0.25,

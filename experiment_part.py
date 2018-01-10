@@ -26,7 +26,7 @@ class ExperimentPart(object):
 
         self.win = win
         self.id = id
-        self.images = [os.path.abspath(img) for img in glob.glob(os.path.join(self.images_path, '*.png'))]
+        self.images = [os.path.abspath(img) for img in glob.glob(os.path.join(self.images_dir, '*.png'))]
         self.responses = []
         self.colheaders = []
         self.finished = False
@@ -50,7 +50,7 @@ class ExperimentPart(object):
             image = None,
             mask = None,
             units = 'deg',
-            size = 9.26,
+            size = self.stim_size,
             colorSpace = 'rgb255')
 
         self.fixation_cross = visual.GratingStim(
@@ -341,7 +341,6 @@ class FreeChoiceExperiment(ExperimentPart):
         super(FreeChoiceExperiment, self).__init__(win, id, params)
 
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours with rgb255
-        self.stim.size = self.stim_size
         self.keylist = [self.left_key, self.right_key, 'escape']
 
         self.colheaders = ['#', 'Condition', 'Stimulus', 'Responce', 'Latency']
@@ -405,7 +404,7 @@ class FreeChoiceExperiment(ExperimentPart):
         with open(file, 'rb') as f:
             reader = csv.reader(f)
             for cond, stim in reader:
-                path = os.path.join(self.images_path, stim + '.png')
+                path = os.path.join(self.images_dir, stim + '.png')
                 img = MyImage(path, out_dir)
                 seq.append((cond, img))
 

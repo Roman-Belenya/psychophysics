@@ -1,0 +1,35 @@
+Image dims:
+w = 5.48 cm
+h = 6.48 cm
+
+Local letters:
+w = 0.5 cm
+h = 0.7 cm
+
+Global letters:
+w = 3.483 cm
+h = 4.479 cm
+
+font: Arial
+
+To find out line length:
+	- select the line
+	- view -> dociment info -> objects
+
+To find line inclination:
+	- draw new line
+	- delete
+	- double-click line tool
+
+To replace objects:
+	- JET_replaceWithSymbol.jsx script
+	- window -> symbols
+	- drag symbol to the symbold window
+	- select -> file -> scripts -> jet_replace
+
+
+Letter outline:
+	- type letter
+	- type -> make outline
+
+Export as png, no interlacing, no anti-aliasing, high resolution (300ppi), white background colour

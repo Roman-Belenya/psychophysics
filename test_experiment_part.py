@@ -22,7 +22,7 @@ class TestExperimentPart(unittest.TestCase):
             units = 'deg')
         cls.contrast = ContrastDetection(cls.win, id, cls.params['ContrastDetection'])
         cls.isolum = IsoluminanceDetection(cls.win, id, cls.params['IsoluminanceDetection'])
-        cls.free = FreeChoiceExperiment(cls.win, id, cls.params['FreeChoiceExperiment'])
+        cls.choice = FreeChoiceExperiment(cls.win, id, cls.params['FreeChoiceExperiment'])
 
     @classmethod
     def tearDownClass(cls):
@@ -31,20 +31,25 @@ class TestExperimentPart(unittest.TestCase):
 
     def test_files(self):
         self.assertTrue(os.path.isfile('./parameters.json'))
-        self.assertTrue(os.path.isdir('./images/letters'))
-        self.assertTrue(os.path.isdir('./images/line_drawings'))
+        self.assertTrue(os.path.isdir(self.params['images_dir']))
+        self.assertTrue(os.path.isdir(self.contrast.images_dir))
+        self.assertTrue(os.path.isdir(self.isolum.images_dir))
+        self.assertTrue(os.path.isdir(self.choice.images_dir))
         
-        imgs = glob.glob('./images/line_drawings/*.png')
-        n_contrast = self.params['ContrastDetection']['n_trials']
-        n_isolum = self.params['IsoluminanceDetection']['n_trials'] * (len(self.params['IsoluminanceDetection']['blocks_seq']) / 2)
+        imgs = glob.glob(self.contrast.images_dir + '/*.png')
+        self.assertGreater(len(imgs), self.contrast.n_trials, 'Not enough images: {}'.format(len(imgs)))
         
-        self.assertGreater(len(imgs), n_contrast, 'Not enough images')
-        self.assertGreater(len(imgs), n_isolum, 'Not enough images')
+        imgs = glob.glob(self.isolum.images_dir + '/*.png')
+        n_isolum = self.isolum.n_trials * (len(self.isolum.blocks_seq) / 2.0)
+        self.assertGreater(len(imgs), n_isolum, 'Not enough images :{}'.format(len(imgs)))
+        
+        imgs = glob.glob(self.choice.images_dir + '/*.png')
+        self.assertEqual(len(imgs), 6)
         
     def test_seq_file(self):
-        file = self.params['FreeChoiceExperiment']['seq_file']
+        file = self.choice.seq_file
         self.assertTrue(os.path.isfile(file))
-        stims = [os.path.split(i)[1] for i in self.free.images]
+        stims = [os.path.split(i)[1] for i in self.choice.images]
         stims = [i.split('.png')[0] for i in stims]
         
         with open(file, 'rb') as f:
@@ -55,7 +60,7 @@ class TestExperimentPart(unittest.TestCase):
 
 
     def test_frame_rate(self):
-        mon_fs = self.params['IsoluminanceDetection']['monitor_fs']
+        mon_fs = self.isolum.monitor_fs
         self.win.refreshThreshold = 1./mon_fs + 0.004
         framerate = self.win.getActualFrameRate(nIdentical = 20,
             nMaxFrames = 200,
@@ -64,9 +69,8 @@ class TestExperimentPart(unittest.TestCase):
         self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate: {}, actual is {}'.format(mon_fs, framerate))
 
     def test_flicker_fs(self):
-        mfs = self.params['IsoluminanceDetection']['monitor_fs']
-        ffs = self.params['IsoluminanceDetection']['flicker_fs']
-        half_cycle = mfs / (2.0 * ffs) # how much frames each image lasts for during flickering
+        mfs = self.isolum.monitor_fs
+        ffs = self.isolum.flicker_fs
         self.assertLessEqual(2 * ffs, mfs, 'Flicker rate should be at least twice as little as monitor fs')
 
     def test_iso_colours(self):
@@ -77,7 +81,7 @@ class TestExperimentPart(unittest.TestCase):
         self.isolum.col_delta = np.array([0, 1, 0])
         col = self.isolum.run_trial([0, 120, 0])
 
-        msperframe = 1000. / self.params['IsoluminanceDetection']['monitor_fs']
+        msperframe = 1000. / self.isolum.monitor_fs
         fints = np.array(self.win.frameIntervals) * 1000
         t1 = fints.mean() - fints.std()
         t2 = fints.mean() + fints.std()
@@ -86,7 +90,7 @@ class TestExperimentPart(unittest.TestCase):
 
     def test_image_creation(self):
         out_dir = './__test__/stimuli'
-        for img in self.free.images:
+        for img in self.choice.images:
             image = MyImage(img, out_dir)
             image.apply_colours(fg_col = np.array([255, 255, 0]),
                                 bg_col = np.array([0, 0, 255]), 
