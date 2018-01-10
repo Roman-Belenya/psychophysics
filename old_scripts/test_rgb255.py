@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 
 
-pics = glob.glob('./images/line_drawings/*.png')
+pics = glob.glob('./line_drawings/*.png')
 
 def get_fg_mask(img_path):
 		# returns psyhopy mask of black pixel locations

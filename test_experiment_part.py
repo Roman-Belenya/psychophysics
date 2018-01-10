@@ -57,7 +57,11 @@ class TestExperimentPart(unittest.TestCase):
             for cond, stim in reader:
                 self.assertIn(cond, ['magno', 'parvo', 'unbiased'], 'Incorrect condition name in seq_file: {}'.format(cond))
                 self.assertIn(stim, stims, 'Incorrect stim name in seq_file: {}'.format(stim))
-
+                
+    def test_viewing_distance(self):
+        mon = monitors.Monitor(self.params['monitor_name'])
+        self.assertEqual(self.params['viewing_distance'], mon.getDistance(), 'Need to update viewing distance')
+        
 
     def test_frame_rate(self):
         mon_fs = self.isolum.monitor_fs

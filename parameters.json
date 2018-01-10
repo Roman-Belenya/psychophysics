@@ -1,6 +1,7 @@
 {
 	"images_dir": "./images",
-	"viewing_distane": 40,
+	"viewing_distance": 40,
+    "monitor_name": "labBENQ",
 
 	"ContrastDetection":{
 		"images_dir": "./images/line_drawings",

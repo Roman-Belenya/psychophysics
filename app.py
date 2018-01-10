@@ -1,6 +1,8 @@
+import psychopy
+from psychopy import logging
+logging.console.setLevel(logging.CRITICAL)
 from experiment_part import *
 import json
-from psychopy import visual, core
 from tools import *
 import Tkinter as tk
 import tkFileDialog
@@ -203,6 +205,7 @@ class Application(object):
             else:
                 shutil.rmtree(self.dir)
         os.makedirs(os.path.join(self.dir, 'stimuli'))
+        self.log = logging.LogFile(os.path.join(self.dir, 'logfile.log'), filemode = 'a', level = logging.WARNING)
 
         free = self.free_var.get()
         contrast = self.contrast_var.get()
