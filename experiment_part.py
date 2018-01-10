@@ -263,7 +263,7 @@ class IsoluminanceDetection(ExperimentPart):
         '''colour is the colour to be changed in the trial'''
 
         frame = 0
-        half_cycle = self.monitor_fs / (2.0 * self.flicker_fs)
+        half_cycle = self.monitor_fs / (2.0 * self.flicker_fs) # how much frames each image lasts for during flickering
 
         while True:
             if frame % half_cycle == 0:

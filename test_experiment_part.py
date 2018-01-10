@@ -7,26 +7,26 @@ import json
 class TestExperimentPart(unittest.TestCase):
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
 
         with open('./parameters.json', 'rb') as f:
-            self.params = json.load(f)
+            cls.params = json.load(f)
         id = '__test__'
         os.makedirs('./__test__/stimuli')
-        self.win = visual.Window(
+        cls.win = visual.Window(
             size = [1920, 1080],
             monitor = 'labBENQ',
             fullscr = True,
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
-        self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
-        self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
-        self.free = FreeChoiceExperiment(self.win, id, self.params['FreeChoiceExperiment'])
+        cls.contrast = ContrastDetection(cls.win, id, cls.params['ContrastDetection'])
+        cls.isolum = IsoluminanceDetection(cls.win, id, cls.params['IsoluminanceDetection'])
+        cls.free = FreeChoiceExperiment(cls.win, id, cls.params['FreeChoiceExperiment'])
 
     @classmethod
-    def tearDownClass(self):
-        self.win.close()
+    def tearDownClass(cls):
+        cls.win.close()
         shutil.rmtree('./__test__/')
 
     def test_files(self):
@@ -40,6 +40,18 @@ class TestExperimentPart(unittest.TestCase):
         
         self.assertGreater(len(imgs), n_contrast, 'Not enough images')
         self.assertGreater(len(imgs), n_isolum, 'Not enough images')
+        
+    def test_seq_file(self):
+        file = self.params['FreeChoiceExperiment']['seq_file']
+        self.assertTrue(os.path.isfile(file))
+        stims = [os.path.split(i)[1] for i in self.free.images]
+        stims = [i.split('.png')[0] for i in stims]
+        
+        with open(file, 'rb') as f:
+            reader = csv.reader(f)
+            for cond, stim in reader:
+                self.assertIn(cond, ['magno', 'parvo', 'unbiased'], 'Incorrect condition name in seq_file: {}'.format(cond))
+                self.assertIn(stim, stims, 'Incorrect stim name in seq_file: {}'.format(stim))
 
 
     def test_frame_rate(self):
@@ -51,6 +63,11 @@ class TestExperimentPart(unittest.TestCase):
             threshold = 1)
         self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate: {}, actual is {}'.format(mon_fs, framerate))
 
+    def test_flicker_fs(self):
+        mfs = self.params['IsoluminanceDetection']['monitor_fs']
+        ffs = self.params['IsoluminanceDetection']['flicker_fs']
+        half_cycle = mfs / (2.0 * ffs) # how much frames each image lasts for during flickering
+        self.assertLessEqual(2 * ffs, mfs, 'Flicker rate should be at least twice as little as monitor fs')
 
     def test_iso_colours(self):
         self.win.recordFrameIntervals = True
@@ -71,7 +88,15 @@ class TestExperimentPart(unittest.TestCase):
         out_dir = './__test__/stimuli'
         for img in self.free.images:
             image = MyImage(img, out_dir)
-            image.apply_colours(100, 200, np.array([255, 255, 0]), np.array([0, 0, 255]))
+            image.apply_colours(fg_col = np.array([255, 255, 0]),
+                                bg_col = np.array([0, 0, 255]), 
+                                fg_grey = 128,
+                                bg_grey = 131)
+            self.assertTrue(os.path.isfile(image.parvo_path))
+            self.assertTrue(os.path.isfile(image.magno_path))
+            self.assertTrue(os.path.isfile(image.unbiased_path))
+            
+            
 
 
 if __name__ == '__main__':
