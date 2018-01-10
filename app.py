@@ -80,9 +80,7 @@ class PopupEntries(object):
         if self.def_col:
             self.master.colours['bg_col'] = col
         
-        print 'grey:', grey
-        print 'col:', col
-        self.finished = False
+        self.finished = True
         self.top.grab_release()
         self.top.destroy()
         
@@ -95,8 +93,11 @@ class PopupEntries(object):
             d = json.load(f)
             
         try:    
-            self.grey_var.set(str(d['fg_grey']))
-            self.col_var.set(str(d['bg_col']))
+            for name, value in zip(['r', 'g', 'b'], d['bg_col']):
+                self.col_vars[name].set(value)
+            for name, value in zip(['r', 'g', 'b'], d['fg_grey']):
+                self.grey_vars[name].set(value)
+                
         except:
             showwarning('File error', 'Bad colours file')
             return
