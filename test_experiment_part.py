@@ -4,6 +4,7 @@ from my_image import *
 from tools import *
 import json
 
+
 class TestExperimentPart(unittest.TestCase):
 
     @classmethod
@@ -35,33 +36,33 @@ class TestExperimentPart(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.contrast.images_dir))
         self.assertTrue(os.path.isdir(self.isolum.images_dir))
         self.assertTrue(os.path.isdir(self.choice.images_dir))
-        
+
         imgs = glob.glob(self.contrast.images_dir + '/*.png')
         self.assertGreater(len(imgs), self.contrast.n_trials, 'Not enough images: {}'.format(len(imgs)))
-        
+
         imgs = glob.glob(self.isolum.images_dir + '/*.png')
         n_isolum = self.isolum.n_trials * (len(self.isolum.blocks_seq) / 2.0)
         self.assertGreater(len(imgs), n_isolum, 'Not enough images :{}'.format(len(imgs)))
-        
+
         imgs = glob.glob(self.choice.images_dir + '/*.png')
         self.assertEqual(len(imgs), 6)
-        
+
     def test_seq_file(self):
         file = self.choice.seq_file
         self.assertTrue(os.path.isfile(file))
         stims = [os.path.split(i)[1] for i in self.choice.images]
         stims = [i.split('.png')[0] for i in stims]
-        
+
         with open(file, 'rb') as f:
             reader = csv.reader(f)
             for cond, stim in reader:
                 self.assertIn(cond, ['magno', 'parvo', 'unbiased'], 'Incorrect condition name in seq_file: {}'.format(cond))
                 self.assertIn(stim, stims, 'Incorrect stim name in seq_file: {}'.format(stim))
-                
+
     def test_viewing_distance(self):
         mon = monitors.Monitor(self.params['monitor_name'])
         self.assertEqual(self.params['viewing_distance'], mon.getDistance(), 'Need to update viewing distance')
-        
+
 
     def test_frame_rate(self):
         mon_fs = self.isolum.monitor_fs
@@ -97,14 +98,14 @@ class TestExperimentPart(unittest.TestCase):
         for img in self.choice.images:
             image = MyImage(img, out_dir)
             image.apply_colours(fg_col = np.array([255, 255, 0]),
-                                bg_col = np.array([0, 0, 255]), 
+                                bg_col = np.array([0, 0, 255]),
                                 fg_grey = 128,
                                 bg_grey = 131)
             self.assertTrue(os.path.isfile(image.parvo_path))
             self.assertTrue(os.path.isfile(image.magno_path))
             self.assertTrue(os.path.isfile(image.unbiased_path))
-            
-            
+
+
 
 
 if __name__ == '__main__':

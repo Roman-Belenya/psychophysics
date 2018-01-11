@@ -10,6 +10,9 @@ from itertools import product
 import csv
 import shutil
 import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 np.random.seed(1)
 
@@ -134,7 +137,7 @@ class ContrastDetection(ExperimentPart):
         values = [i[2] for i in self.responses if i[1] and i[3]]
         if not values:
             return [None, None, None]
-  
+
         return np.mean(values, axis = 0).tolist()
 
 
@@ -183,21 +186,22 @@ class ContrastDetection(ExperimentPart):
 
         start = self.show_instructions(self.instructions_text)
         if not start:
+            logger.info('escaped')
             return
 
         clock = core.Clock()
         core.wait(1)
-                
+
         i = 0
         detects = 0 # number of times they detected the image when kind == 1
-        
+
         while detects < self.n_trials:
-            
+
             if i < 5:
                 kind = 1
             else:
                 kind = np.random.choice([0, 1], p = [self.p_catch, 1 - self.p_catch])
-                
+
             # Process the image
             if kind:
                 img = np.random.choice(self.images)
@@ -213,10 +217,11 @@ class ContrastDetection(ExperimentPart):
             # Get the response
             response, increment = self.get_response()
             if response == 'stop':
+                logger.info('stopped')
                 break
 
             self.responses.append( (i, kind, list(self.fg_grey), response) )
-            print self.responses[-1]
+            logger.info('ran trial: {}'.format(self.responses[-1]))
 
             # Adjust grey if experimental trial
             if kind:
@@ -224,7 +229,7 @@ class ContrastDetection(ExperimentPart):
                 if response:
                     detects += 1
             i += 1
-            
+
 
         core.wait(2)
         self.finished = True
@@ -309,7 +314,7 @@ class IsoluminanceDetection(ExperimentPart):
             if np.any(iso_col == 'stop'):
                 return
             self.responses.append( (i, kind, list(iso_col)) )
-            print self.responses[-1]
+            logger.info('ran trial: {}'.format(self.responses[-1]))
 
             self.win.flip()
             core.wait(self.t_poststim)
@@ -319,6 +324,7 @@ class IsoluminanceDetection(ExperimentPart):
 
         start = self.show_instructions(self.instructions_text)
         if not start:
+            logger.info('escaped')
             return
 
         for i, kind in enumerate(self.blocks_seq):
@@ -368,6 +374,7 @@ class FreeChoiceExperiment(ExperimentPart):
     def define_colours(self, col_dict):
 
         for name, value in col_dict.items():
+            logger.info('define {}: {}'.format(name, value))
             setattr(self, name, value)
 
 
@@ -376,7 +383,9 @@ class FreeChoiceExperiment(ExperimentPart):
         out_dir = os.path.join('.', self.id, 'stimuli')
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir)
+            logger.info('makeing {}'.format(out_dir))
 
+        logger.info('creating images')
         for img_path in self.images:
             img = MyImage(img_path, out_dir)
             img.apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
@@ -422,14 +431,14 @@ class FreeChoiceExperiment(ExperimentPart):
 
         # Randomly associate global and local letters with left/right response
         left_letter, right_letter = np.random.choice([image.global_letter, image.local_letter], size = 2, replace = False)
-        
+
         self.left_resp.color = 255
         self.right_resp.color = 255
-        
+
         # Get rid of "num_" if needed
         lk = self.left_key.split('_')[-1]
         rk = self.right_key.split('_')[-1]
-        
+
         self.left_resp.text = '{} = {}'.format(lk, left_letter.upper())
         self.right_resp.text = '{} = {}'.format(rk, right_letter.upper())
 
@@ -480,6 +489,7 @@ class FreeChoiceExperiment(ExperimentPart):
 
         start = self.show_instructions(self.instructions_text)
         if not start:
+            logger.info('escaped')
             return
 
         clock = core.Clock()
@@ -495,10 +505,11 @@ class FreeChoiceExperiment(ExperimentPart):
             core.wait(self.t_prestim)
             resp, lat = self.run_trial(cond, clock, img)
             if resp == 'stop':
+                logger.info('stopped experiment')
                 break
             core.wait(self.t_poststim)
             self.responses.append( (n, cond, img.name, resp, lat) )
-            print self.responses[-1]
+            logger.info('ran trial {}'.format(self.responses[-1]))
             n += 1
 
 

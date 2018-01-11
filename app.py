@@ -1,6 +1,7 @@
 import psychopy
-from psychopy import logging
-logging.console.setLevel(logging.CRITICAL)
+# from psychopy import logging
+# logging.console.setLevel(logging.CRITICAL)
+import logging
 from experiment_part import *
 import json
 from tools import *
@@ -9,6 +10,26 @@ import tkFileDialog
 import ast
 from tkMessageBox import showwarning, showinfo, askyesno
 import subprocess
+
+logdir = './logs'
+if not os.path.isdir(logdir):
+    os.mkdir(logdir)
+time = datetime.datetime.strftime(datetime.datetime.now(), '%d-%b-%Y %H-%M-%S,%f')
+logging.basicConfig(filename = os.path.join(logdir, time + '.log'),
+    level = logging.INFO,
+    format = '%(asctime)s - %(levelname)s - %(message)s',
+    filemode = 'a')
+logger = logging.getLogger(__name__)
+# logger.setLevel(logging.INFO)
+# formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# file_handler = logging.FileHandler(os.path.join(logdir, time + '.log'))
+# file_handler.setFormatter(formatter)
+# logger.addHandler(file_handler)
+
+# stream_handler = logging.StreamHandler(sys.stdout)
+# stream_handler.setFormatter(formatter)
+# logger.addHandler(stream_handler)
 
 class PopupEntries(object):
 
@@ -24,32 +45,32 @@ class PopupEntries(object):
         self.finished = False
 
 
-        self.grey_vars = {'r': tk.IntVar(), 
+        self.grey_vars = {'r': tk.IntVar(),
                           'g': tk.IntVar(),
                           'b': tk.IntVar()}
-                          
-        self.col_vars = {'r': tk.IntVar(), 
+
+        self.col_vars = {'r': tk.IntVar(),
                   'g': tk.IntVar(),
                   'b': tk.IntVar()}
-                  
+
         entry_params = {'width': 3, 'relief': tk.FLAT, 'justify': tk.CENTER}
         grid_params = {'padx': 5, 'pady': 5}
-        
+
         for i, n in enumerate(['R', 'G', 'B']):
             tk.Label(self.top, text = n).grid(row = 0, column = i+1, sticky = 'WE', pady = 5)
 
         if def_grey:
             tk.Label(self.top, text = 'Contrast (FG grey):').grid(row = 1, column = 0, sticky = 'E', pady = 5)
             for i, col in enumerate(['r', 'g', 'b']):
-                tk.Entry(self.top, 
-                    textvariable = self.grey_vars[col], 
+                tk.Entry(self.top,
+                    textvariable = self.grey_vars[col],
                     **entry_params).grid(row = 1, column = i+1, **grid_params)
 
         if def_col:
             tk.Label(self.top, text = 'Isoluminance (BG col):').grid(row = 2, column = 0, sticky = 'E', pady = 5)
             for i, col in enumerate(['r', 'g', 'b']):
-                tk.Entry(self.top, 
-                    textvariable = self.col_vars[col], 
+                tk.Entry(self.top,
+                    textvariable = self.col_vars[col],
                     **entry_params).grid(row = 2, column = i+1, **grid_params)
 
         tk.Button(self.top,
@@ -57,7 +78,7 @@ class PopupEntries(object):
             command = self.ok,
             width = 5,
             relief = tk.GROOVE).grid(row = 3, column = 1, columnspan = 3, pady = (15, 0))
-            
+
         tk.Button(self.top,
             text = 'Load colours',
             command = self.load_colours,
@@ -78,30 +99,34 @@ class PopupEntries(object):
 
         if self.def_grey:
             self.master.colours['fg_grey'] = grey
+            logger.info('defining fg_grey by hand: {}'.format(grey))
 
         if self.def_col:
             self.master.colours['bg_col'] = col
-        
+            logger.info('defining bg_col by hand: {}'.format(col))
+
+
         self.finished = True
         self.top.grab_release()
         self.top.destroy()
-        
+
     def load_colours(self):
-        
+
         file = tkFileDialog.askopenfilename(filetypes = [('json files', '.json')])
         if not file:
             return
         with open(file, 'rb') as f:
             d = json.load(f)
-            
-        try:    
+
+        try:
             for name, value in zip(['r', 'g', 'b'], d['bg_col']):
                 self.col_vars[name].set(value)
             for name, value in zip(['r', 'g', 'b'], d['fg_grey']):
                 self.grey_vars[name].set(value)
-                
-        except:
+
+        except Exception:
             showwarning('File error', 'Bad colours file')
+            logger.exception('bad colours.json file: {}'.format(file))
             return
 
 
@@ -118,9 +143,10 @@ class Application(object):
 
         if not os.path.isfile('./parameters.json'):
             showwarning('Parameters', 'Missing parameters file')
+            logger.warning('missing parameters file')
             return
         self.params = self.load_params('./parameters.json')
-        
+
         self.colours = {
             'bg_grey': self.params['ContrastDetection']['bg_grey'],
             'fg_grey': None,
@@ -186,6 +212,8 @@ class Application(object):
             relief = tk.GROOVE)
         self.start_button.grid(row = 7, column = 0, columnspan = 2, sticky = 'EW', pady = (10, 0))
 
+        logger.info('started app')
+
 
 
 
@@ -196,6 +224,7 @@ class Application(object):
         if id == "Participant's id":
             showwarning('Missing id', "Enter participant's id")
             return
+        logger.info('creating new participant {}'.format(id))
 
         self.dir = os.path.join('.', id)
         if os.path.isdir(self.dir):
@@ -204,12 +233,13 @@ class Application(object):
                 return
             else:
                 shutil.rmtree(self.dir)
+                logger.info('overwriting {}'.format(self.dir))
         os.makedirs(os.path.join(self.dir, 'stimuli'))
-        self.log = logging.LogFile(os.path.join(self.dir, 'logfile.log'), filemode = 'a', level = logging.WARNING)
 
         free = self.free_var.get()
         contrast = self.contrast_var.get()
         isolum = self.isolum_var.get()
+        logger.info('selected contrast: {}, isolum: {}, choice: {}'.format(contrast, isolum, free))
 
         if free and not (contrast and isolum):
             popup = PopupEntries(self, not contrast, not isolum)
@@ -231,58 +261,68 @@ class Application(object):
         # Contrast detection
         if contrast:
             self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
+            logger.info('creating contrast detection exp')
             try:
                 self.contrast.main_sequence()
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
+                logging.exception('error in contrast main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'contrast.exp')
                 self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
 
                 self.colours['fg_grey'] = self.contrast.output_col
                 self.save_colours(self.colours)
-
+                logger.info('exported file: {}'.format(filename))
 
         # Isoluminance detection
         if isolum:
             self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
+            logger.info('creating isolum detection exp')
             try:
                 self.isolum.main_sequence()
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
+                logging.exception('error in contrast main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'isoluminance.exp')
                 self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
 
                 self.colours['bg_col'] = self.isolum.output_col
                 self.save_colours(self.colours)
-         
+                logger.info('exported file: {}'.format(filename))
+
 
         # Free choice experiment
         if free:
+            self.free_choice = FreeChoiceExperiment(self.win, id, self.params['FreeChoiceExperiment'])
+            logger.info('creating free choice exp')
 
             correct = self.check_colours_dict(self.colours)
             if not correct:
                 self.win.close()
                 showwarning('Colours', 'Error with colours')
+                logger.warning('bad colours dict: {}'.format(self.colours))
                 return
 
-            self.free_choice = FreeChoiceExperiment(self.win, id, self.params['FreeChoiceExperiment'])
             try:
                 self.free_choice.define_colours(self.colours)
                 self.free_choice.main_sequence()
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
+                logging.exception('error in contrast main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'free_choice.exp')
                 self.free_choice.export_results(filename)
+                logger.info('exported file: {}'.format(filename))
 
 
         self.win.close()
         showinfo('Experiment', 'Finished!')
+        logging.info('finished experiment')
         self.root.quit()
         self.root.destroy()
 
@@ -309,7 +349,8 @@ class Application(object):
                 assert type(value) is list
                 for v in value:
                     assert 0 <= v <= 255
-        except:
+        except Exception:
+            logger.exception('bad colours dict')
             return False
 
         return True

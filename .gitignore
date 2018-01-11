@@ -3,3 +3,4 @@ images/letters/stimuli/*
 images/line_drawings_old
 *.exp
 *.pkl
+logs

@@ -1,6 +1,9 @@
 from PIL import Image
 import numpy as np
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MyImage(object):
 
@@ -21,7 +24,7 @@ class MyImage(object):
 
         self.global_letter = self.name[0].lower()
         self.local_letter = self.name[1].lower()
-        
+
     def get_response_type(self, letter):
         letter = letter.lower()
         if letter == self.global_letter:
@@ -39,13 +42,16 @@ class MyImage(object):
         img[~fg] = bg_col
         image = Image.fromarray(img)
         image.save(self.parvo_path)
+        logger.info('created {}'.format(self.parvo_path))
 
         img[fg] = fg_grey
         img[~fg] = bg_grey
         image = Image.fromarray(img)
         image.save(self.magno_path)
+        logger.info('created {}'.format(self.magno_path))
 
         img[fg] = [0]*3
         # img[~fg] = bg_grey
         image = Image.fromarray(img)
         image.save(self.unbiased_path)
+        logger.info('created {}'.format(self.unbiased_path))
