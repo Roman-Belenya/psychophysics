@@ -10,6 +10,7 @@ import tkFileDialog
 import ast
 from tkMessageBox import showwarning, showinfo, askyesno
 import subprocess
+import unittest
 
 logdir = './logs'
 if not os.path.isdir(logdir):
@@ -17,19 +18,10 @@ if not os.path.isdir(logdir):
 time = datetime.datetime.strftime(datetime.datetime.now(), '%d-%b-%Y %H-%M-%S,%f')
 logging.basicConfig(filename = os.path.join(logdir, time + '.log'),
     level = logging.INFO,
-    format = '%(asctime)s - %(levelname)s - %(message)s',
+    format = '%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s: %(message)s',
     filemode = 'a')
 logger = logging.getLogger(__name__)
-# logger.setLevel(logging.INFO)
-# formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-# file_handler = logging.FileHandler(os.path.join(logdir, time + '.log'))
-# file_handler.setFormatter(formatter)
-# logger.addHandler(file_handler)
-
-# stream_handler = logging.StreamHandler(sys.stdout)
-# stream_handler.setFormatter(formatter)
-# logger.addHandler(stream_handler)
 
 class PopupEntries(object):
 
@@ -357,8 +349,23 @@ class Application(object):
 
 
     def run_tests(self):
-        subprocess.call(['python', 'test_tools.py'])
-        subprocess.call(['python', 'test_experiment_part.py'])
+
+        logger.info('running tests')
+        from test_experiment_part import TestExperimentPart
+        from test_tools import TestTools
+
+        to_run = [TestTools, TestExperimentPart]
+        loader= unittest.TestLoader()
+        suites = [loader.loadTestsFromTestCase(test) for test in to_run]
+
+        suite = unittest.TestSuite(suites)
+        runner = unittest.TextTestRunner()
+        result = runner.run(suite)
+
+        if not result.wasSuccessful():
+            showwarning('Test results', 'Some tests were not successful')
+            for i in result.failures:
+                logging.error('test error:\n'.format(i[1]))
 
 
 

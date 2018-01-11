@@ -3,7 +3,9 @@ from experiment_part import *
 from my_image import *
 from tools import *
 import json
+import logging
 
+logger = logging.getLogger(__name__)
 
 class TestExperimentPart(unittest.TestCase):
 
@@ -24,11 +26,14 @@ class TestExperimentPart(unittest.TestCase):
         cls.contrast = ContrastDetection(cls.win, id, cls.params['ContrastDetection'])
         cls.isolum = IsoluminanceDetection(cls.win, id, cls.params['IsoluminanceDetection'])
         cls.choice = FreeChoiceExperiment(cls.win, id, cls.params['FreeChoiceExperiment'])
+        cls.stream_handler = logging.StreamHandler()
+        logger.addHandler(cls.stream_handler)
 
     @classmethod
     def tearDownClass(cls):
         cls.win.close()
         shutil.rmtree('./__test__/')
+        logger.removeHandler(cls.stream_handler)
 
     def test_files(self):
         self.assertTrue(os.path.isfile('./parameters.json'))
@@ -72,6 +77,7 @@ class TestExperimentPart(unittest.TestCase):
             nWarmUpFrames = 100,
             threshold = 1)
         self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate: {}, actual is {}'.format(mon_fs, framerate))
+        logger.info('actual framerate is {}'.format(framerate))
 
     def test_flicker_fs(self):
         mfs = self.isolum.monitor_fs
@@ -92,6 +98,8 @@ class TestExperimentPart(unittest.TestCase):
         t2 = fints.mean() + fints.std()
         self.assertTrue(t1 < msperframe < t2, 'Strange refresh period ({}, should be {})'.format(fints.mean(), msperframe))
         self.assertLess(self.win.nDroppedFrames, 5, msg = 'Too many dropped frames ({})'.format(self.win.nDroppedFrames))
+        logger.info('it takes {} ms to refresh each frame'.format(msperframe))
+        logger.info('dropped {} frames'.format(self.win.nDroppedFrames))
 
     def test_image_creation(self):
         out_dir = './__test__/stimuli'
