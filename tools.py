@@ -7,7 +7,7 @@ import time
 
 
 def create_monitor(name, distance, width_cm, dim_pix):
-    '''create_monitor(distance = 40 cm, width_cm = 53.13, dim_pix = [1920, 1080])'''
+    '''create_monitor(name = 'labBENQ', distance = 40, width_cm = 53.13, dim_pix = [1920, 1080])'''
 
     mon = monitors.Monitor(name = name)
     mon.setWidth(width_cm)

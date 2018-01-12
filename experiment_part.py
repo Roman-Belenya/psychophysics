@@ -65,6 +65,8 @@ class ExperimentPart(object):
             colorSpace = 'rgb255',
             color = 135)
 
+        logging.info('creating {}'.format(str(self)))
+
     def __str__(self):
         return self.__class__.__name__
 
@@ -98,6 +100,8 @@ class ExperimentPart(object):
             for line in self.responses:
                 writer.writerow(line)
 
+        logger.info('exported file {}'.format(filename))
+
 
 
 class ContrastDetection(ExperimentPart):
@@ -108,7 +112,7 @@ class ContrastDetection(ExperimentPart):
 
         self.stim.color = self.bg_grey
         self.keys = [self.pos_key, self.neg_key, 'escape']
-        self.colheaders = ['#', 'Kind', 'Grey_value', 'Response']
+        self.colheaders = ['#', 'Condition', 'Stimulus', 'Grey_value', 'Response']
 
         self.positive = visual.TextStim(
             win = self.win,
@@ -134,7 +138,7 @@ class ContrastDetection(ExperimentPart):
         if not self.responses:
             return [999]*3
         # take average of positive responses to exprimental trials (exclude catch)
-        values = [i[2] for i in self.responses if i[1] and i[3]]
+        values = [i[3] for i in self.responses if i[1] and i[4]]
         if not values:
             return [None, None, None]
 
@@ -186,9 +190,10 @@ class ContrastDetection(ExperimentPart):
 
         start = self.show_instructions(self.instructions_text)
         if not start:
-            logger.info('escaped')
+            logger.info('did not start experiment')
             return
 
+        logger.info('started experiment')
         clock = core.Clock()
         core.wait(1)
 
@@ -217,10 +222,10 @@ class ContrastDetection(ExperimentPart):
             # Get the response
             response, increment = self.get_response()
             if response == 'stop':
-                logger.info('stopped')
+                logger.info('broke from the experiment')
                 break
 
-            self.responses.append( (i, kind, list(self.fg_grey), response) )
+            self.responses.append( (i, kind, os.path.split(img)[1], list(self.fg_grey), response) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
 
             # Adjust grey if experimental trial
@@ -245,8 +250,9 @@ class IsoluminanceDetection(ExperimentPart):
         super(IsoluminanceDetection, self).__init__(win, id, params)
 
         self.keys = [self.up_key, self.down_key, 'escape', 'return']
-        self.colheaders = ['#', 'Kind', 'Colour']
+        self.colheaders = ['#', 'Condition', 'Stimulus', 'IsoColour']
 
+        self.half_cycle = self.monitor_fs / (2.0 * self.flicker_fs) # how much frames each image lasts for during flickering
         self.done = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
@@ -260,7 +266,7 @@ class IsoluminanceDetection(ExperimentPart):
     def output_col(self):
         if not self.responses:
             return [999]*3
-        values = [i[2] for i in self.responses]
+        values = [i[3] for i in self.responses]
         return np.mean(values, axis = 0).tolist()
 
 
@@ -268,10 +274,8 @@ class IsoluminanceDetection(ExperimentPart):
         '''colour is the colour to be changed in the trial'''
 
         frame = 0
-        half_cycle = self.monitor_fs / (2.0 * self.flicker_fs) # how much frames each image lasts for during flickering
-
         while True:
-            if frame % half_cycle == 0:
+            if frame % self.half_cycle == 0:
                 if np.all(self.stim.color == self.fix_col):
                     self.stim.color = colour
                 else:
@@ -313,7 +317,7 @@ class IsoluminanceDetection(ExperimentPart):
             iso_col = self.run_trial(colour)
             if np.any(iso_col == 'stop'):
                 return
-            self.responses.append( (i, kind, list(iso_col)) )
+            self.responses.append( (i, kind, os.path.split(img)[1], list(iso_col)) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
 
             self.win.flip()
@@ -324,11 +328,11 @@ class IsoluminanceDetection(ExperimentPart):
 
         start = self.show_instructions(self.instructions_text)
         if not start:
-            logger.info('escaped')
+            logger.info('did not start the experiment')
             return
+        logger.info('start the experiment')
 
         for i, kind in enumerate(self.blocks_seq):
-
             # get new images on block 0, 2, 4 ...
             if i % 2 == 0:
                 images_seq = np.random.choice(self.images, size = self.n_trials, replace = False)
@@ -374,16 +378,15 @@ class FreeChoiceExperiment(ExperimentPart):
     def define_colours(self, col_dict):
 
         for name, value in col_dict.items():
-            logger.info('define {}: {}'.format(name, value))
             setattr(self, name, value)
-
+        logging.info('define colours: {}'.format(*col_dict.items()))
 
     def make_images(self):
 
         out_dir = os.path.join('.', self.id, 'stimuli')
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir)
-            logger.info('makeing {}'.format(out_dir))
+            logger.info('making {}'.format(out_dir))
 
         logger.info('creating images')
         for img_path in self.images:
@@ -407,6 +410,7 @@ class FreeChoiceExperiment(ExperimentPart):
 
     def read_images_sequence(self, file):
 
+        logger.info('loaded trial sequence from {}'.format(file))
         seq = []
         out_dir = os.path.join('.', self.id, 'stimuli')
 
@@ -489,8 +493,9 @@ class FreeChoiceExperiment(ExperimentPart):
 
         start = self.show_instructions(self.instructions_text)
         if not start:
-            logger.info('escaped')
+            logger.info('did not start the experiment')
             return
+        logger.info('started the experiment')
 
         clock = core.Clock()
         core.wait(1)
@@ -500,8 +505,6 @@ class FreeChoiceExperiment(ExperimentPart):
         n = 0
 
         for cond, img in images_seq:
-
-            # Run trial
             core.wait(self.t_prestim)
             resp, lat = self.run_trial(cond, clock, img)
             if resp == 'stop':
@@ -511,7 +514,6 @@ class FreeChoiceExperiment(ExperimentPart):
             self.responses.append( (n, cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
             n += 1
-
 
         core.wait(2)
         self.finished = True

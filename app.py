@@ -1,6 +1,5 @@
 import psychopy
-# from psychopy import logging
-# logging.console.setLevel(logging.CRITICAL)
+from psychopy import monitors
 import logging
 from experiment_part import *
 import json
@@ -129,15 +128,22 @@ class Application(object):
         self.root = root
         self.root.resizable(width = False, height = False)
         self.root.title('Psychophysics')
-        self.program_path = os.getcwd()
         self.frame = tk.Frame(root)
         self.frame.grid(row = 0, column = 0, sticky = 'wns', padx=  30, pady = 30)
 
+        # Check parameters file
         if not os.path.isfile('./parameters.json'):
             showwarning('Parameters', 'Missing parameters file')
             logger.warning('missing parameters file')
             return
         self.params = self.load_params('./parameters.json')
+
+        # Check monitor viewing distane
+        mon = monitors.Monitor(self.params['monitor_name'])
+        if mon.getDistance() != self.params['viewing_distance']:
+            mon.setDistance(self.params['viewing_distance'])
+            mon.saveMon()
+            logger.info('updated monitor viewing distance: {} cm'.format(mon.getDistance))
 
         self.colours = {
             'bg_grey': self.params['ContrastDetection']['bg_grey'],
@@ -146,6 +152,7 @@ class Application(object):
             'fg_col': self.params['IsoluminanceDetection']['fix_col']
             }
 
+        # Participant's id entry
         self.id = tk.StringVar()
         self.id.set("Participant's id")
         self.id_entry = tk.Entry(self.frame,
@@ -212,6 +219,8 @@ class Application(object):
     def start_experiment(self):
 
         np.random.seed(1)
+
+        # Get participant's id and make directories
         id = self.id.get()
         if id == "Participant's id":
             showwarning('Missing id', "Enter participant's id")
@@ -228,13 +237,18 @@ class Application(object):
                 logger.info('overwriting {}'.format(self.dir))
         os.makedirs(os.path.join(self.dir, 'stimuli'))
 
-        free = self.free_var.get()
-        contrast = self.contrast_var.get()
-        isolum = self.isolum_var.get()
-        logger.info('selected contrast: {}, isolum: {}, choice: {}'.format(contrast, isolum, free))
+        # Get experiment selections
+        selections = {
+            'free': self.free_var.get(),
+            'contrast': self.contrast_var.get(),
+            'isolum': self.isolum_var.get(),
+            }
+        logger.info('selected experiments: {}, {}, {}'.format(*selections.items()))
 
-        if free and not (contrast and isolum):
-            popup = PopupEntries(self, not contrast, not isolum)
+        # Need to define colours if free choice is selected, but one of isolum or contrast is not
+        need_def = selections['free'] and not (selections['contrast'] and selections['isolum'])
+        if need_def:
+            popup = PopupEntries(self, not selections['contrast'], not selections['isolum'])
             self.root.wait_window(popup.top)
             if not popup.finished:
                 return
@@ -242,18 +256,17 @@ class Application(object):
 
         self.win = visual.Window(
             size = [1920, 1080],
-            monitor = 'labBENQ',
+            monitor = self.params['monitor_name'],
             fullscr = True,
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
-        self.win.mouseVisible = False
+        self.win.mouseVisible = True
 
 
         # Contrast detection
-        if contrast:
+        if selections['contrast']:
             self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
-            logger.info('creating contrast detection exp')
             try:
                 self.contrast.main_sequence()
             except Exception as e:
@@ -266,12 +279,10 @@ class Application(object):
 
                 self.colours['fg_grey'] = self.contrast.output_col
                 self.save_colours(self.colours)
-                logger.info('exported file: {}'.format(filename))
 
         # Isoluminance detection
-        if isolum:
+        if selections['isolum']:
             self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
-            logger.info('creating isolum detection exp')
             try:
                 self.isolum.main_sequence()
             except Exception as e:
@@ -284,19 +295,17 @@ class Application(object):
 
                 self.colours['bg_col'] = self.isolum.output_col
                 self.save_colours(self.colours)
-                logger.info('exported file: {}'.format(filename))
 
 
         # Free choice experiment
-        if free:
+        if selections['free']:
             self.free_choice = FreeChoiceExperiment(self.win, id, self.params['FreeChoiceExperiment'])
-            logger.info('creating free choice exp')
 
             correct = self.check_colours_dict(self.colours)
             if not correct:
                 self.win.close()
                 showwarning('Colours', 'Error with colours')
-                logger.warning('bad colours dict: {}'.format(self.colours))
+                logger.warning('bad colours dict: {}. terminating experiment'.format(self.colours))
                 return
 
             try:
@@ -309,7 +318,6 @@ class Application(object):
             finally:
                 filename = os.path.join(self.dir, 'free_choice.exp')
                 self.free_choice.export_results(filename)
-                logger.info('exported file: {}'.format(filename))
 
 
         self.win.close()

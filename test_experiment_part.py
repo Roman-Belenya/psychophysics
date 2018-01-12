@@ -37,7 +37,6 @@ class TestExperimentPart(unittest.TestCase):
 
     def test_files(self):
         self.assertTrue(os.path.isfile('./parameters.json'))
-        self.assertTrue(os.path.isdir(self.params['images_dir']))
         self.assertTrue(os.path.isdir(self.contrast.images_dir))
         self.assertTrue(os.path.isdir(self.isolum.images_dir))
         self.assertTrue(os.path.isdir(self.choice.images_dir))
