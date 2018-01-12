@@ -25,12 +25,30 @@ class MyImage(object):
         self.global_letter = self.name[0].lower()
         self.local_letter = self.name[1].lower()
 
+
     def get_response_type(self, letter):
+
         letter = letter.lower()
         if letter == self.global_letter:
             return 'global'
         elif letter == self.local_letter:
             return 'local'
+
+
+    def has_letter(self, letter):
+
+        if letter.lower() in [self.global_letter, self.local_letter]:
+            return True
+        else:
+            return False
+
+
+    def is_congruent(self):
+
+        if self.global_letter == self.local_letter:
+            return True
+        else:
+            return False
 
 
     def apply_colours(self, fg_col, bg_col, fg_grey, bg_grey):

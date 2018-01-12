@@ -257,6 +257,7 @@ class Application(object):
         self.win = visual.Window(
             size = [1920, 1080],
             monitor = self.params['monitor_name'],
+            screen = 0,
             fullscr = True,
             colorSpace = 'rgb255',
             color = 128,

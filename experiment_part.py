@@ -381,6 +381,7 @@ class FreeChoiceExperiment(ExperimentPart):
             setattr(self, name, value)
         logging.info('define colours: {}'.format(*col_dict.items()))
 
+
     def make_images(self):
 
         out_dir = os.path.join('.', self.id, 'stimuli')
@@ -392,7 +393,6 @@ class FreeChoiceExperiment(ExperimentPart):
         for img_path in self.images:
             img = MyImage(img_path, out_dir)
             img.apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
-
 
 
     def make_images_sequence(self):
@@ -519,4 +519,10 @@ class FreeChoiceExperiment(ExperimentPart):
         self.finished = True
 
 
+
+class DividedAttentionExperiment(ExperimentPart):
+
+    def __init__(self, win, id, params):
+
+        super(DividedAttentionExperiment, self).__init__(win, id, params)
 

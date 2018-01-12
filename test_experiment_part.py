@@ -19,6 +19,7 @@ class TestExperimentPart(unittest.TestCase):
         cls.win = visual.Window(
             size = [1920, 1080],
             monitor = 'labBENQ',
+            screen = 0,
             fullscr = True,
             colorSpace = 'rgb255',
             color = 128,
