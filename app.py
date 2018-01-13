@@ -1,12 +1,11 @@
 import psychopy
 from psychopy import monitors
+import Tkinter as tk
 import logging
 from experiment_part import *
 import json
 from tools import *
-import Tkinter as tk
 import tkFileDialog
-import ast
 from tkMessageBox import showwarning, showinfo, askyesno
 import subprocess
 import unittest
@@ -225,34 +224,43 @@ class Application(object):
         if id == "Participant's id":
             showwarning('Missing id', "Enter participant's id")
             return
-        logger.info('creating new participant {}'.format(id))
 
         self.dir = os.path.join('.', id)
         if os.path.isdir(self.dir):
-            ans = askyesno('Participant id', 'This participant exists. Overwrite?')
-            if ans == 0:
-                return
-            else:
-                shutil.rmtree(self.dir)
-                logger.info('overwriting {}'.format(self.dir))
-        os.makedirs(os.path.join(self.dir, 'stimuli'))
+            showwarning('Participant id', '{} already exists. Delete/rename the directory, then retry'.format(id))
+            return
+            # ans = askyesno('Participant id', 'This participant exists. Overwrite?')
+            # if ans == 0:
+            #     return
+            # else:
+            #     shutil.rmtree(self.dir)
+            #     logger.info('overwriting {}'.format(self.dir))
+        os.makedirs(os.path.join(self.dir, 'stimuli_free_choice'))
+        os.makedirs(os.path.join(self.dir, 'stimuli_div_attention'))
+        logger.info('created new participant {}'.format(id))
 
         # Get experiment selections
-        selections = {
-            'free': self.free_var.get(),
+        sel = {
             'contrast': self.contrast_var.get(),
             'isolum': self.isolum_var.get(),
+            'free': self.free_var.get(),
+            'divided': self.divided_var.get(),
+            'selective': self.selective_var.get()
             }
-        logger.info('selected experiments: {}, {}, {}'.format(*selections.items()))
+        logger.info('selected experiments: {}'.format(sel))
 
         # Need to define colours if free choice is selected, but one of isolum or contrast is not
-        need_def = selections['free'] and not (selections['contrast'] and selections['isolum'])
+        need_def = (sel['free'] or sel['divided'] or sel['selective']) and not (sel['contrast'] and sel['isolum'])
         if need_def:
-            popup = PopupEntries(self, not selections['contrast'], not selections['isolum'])
+            popup = PopupEntries(self, not sel['contrast'], not sel['isolum'])
             self.root.wait_window(popup.top)
             if not popup.finished:
                 return
             self.save_colours(self.colours)
+
+        # The app is no longer needed. Also, crashes sometimes when using PIL with tkinter
+        self.root.quit()
+        self.root.destroy()
 
         self.win = visual.Window(
             size = [1920, 1080],
@@ -262,13 +270,13 @@ class Application(object):
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
-        self.win.mouseVisible = True
+        self.win.mouseVisible = False
 
 
         # Contrast detection
-        if selections['contrast']:
-            self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
+        if sel['contrast']:
             try:
+                self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
                 self.contrast.main_sequence()
             except Exception as e:
                 self.win.close()
@@ -282,14 +290,14 @@ class Application(object):
                 self.save_colours(self.colours)
 
         # Isoluminance detection
-        if selections['isolum']:
-            self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
+        if sel['isolum']:
             try:
+                self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
                 self.isolum.main_sequence()
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
-                logging.exception('error in contrast main sequence:')
+                logging.exception('error in isolum main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'isoluminance.exp')
                 self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
@@ -297,10 +305,9 @@ class Application(object):
                 self.colours['bg_col'] = self.isolum.output_col
                 self.save_colours(self.colours)
 
-
         # Free choice experiment
-        if selections['free']:
-            self.free_choice = FreeChoiceExperiment(self.win, id, self.params['FreeChoiceExperiment'])
+        if sel['free']:
+
 
             correct = self.check_colours_dict(self.colours)
             if not correct:
@@ -310,22 +317,41 @@ class Application(object):
                 return
 
             try:
-                self.free_choice.define_colours(self.colours)
+                self.free_choice = FreeChoiceExperiment(self.win, id, self.colours, self.params['FreeChoiceExperiment'])
                 self.free_choice.main_sequence()
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
-                logging.exception('error in contrast main sequence:')
+                logging.exception('error in free choice main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'free_choice.exp')
                 self.free_choice.export_results(filename)
+
+        # Divided attention experiment
+        if sel['divided']:
+
+            correct = self.check_colours_dict(self.colours)
+            if not correct:
+                self.win.close()
+                showwarning('Colours', 'Error with colours')
+                logger.warning('bad colours dict: {}. terminating experiment'.format(self.colours))
+                return
+
+            try:
+                self.divided = DividedAttentionExperiment(self.win, id, self.colours, self.params['DividedAttentionExperiment'])
+                self.divided.main_sequence()
+            except Exception as e:
+                self.win.close()
+                showwarning('Experiment error', str(e))
+                logging.exception('error in divided main sequence:')
+            finally:
+                filename = os.path.join(self.dir, 'divided.exp')
+                self.divided.export_results(filename)
 
 
         self.win.close()
         showinfo('Experiment', 'Finished!')
         logging.info('finished experiment')
-        self.root.quit()
-        self.root.destroy()
 
 
     def load_params(self, file):

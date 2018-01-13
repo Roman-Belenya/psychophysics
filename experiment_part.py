@@ -145,7 +145,7 @@ class ContrastDetection(ExperimentPart):
         return np.mean(values, axis = 0).tolist()
 
 
-    def run_trial(self, clock, kind):
+    def run_trial(self, clock):
 
         if kind == 1: # if is experimental trial
             self.stim.draw()
@@ -238,8 +238,6 @@ class ContrastDetection(ExperimentPart):
 
         core.wait(2)
         self.finished = True
-
-
 
 
 
@@ -346,14 +344,13 @@ class IsoluminanceDetection(ExperimentPart):
 
 class FreeChoiceExperiment(ExperimentPart):
 
-    def __init__(self, win, id, params):
+    def __init__(self, win, id, colours_dict, params):
 
         super(FreeChoiceExperiment, self).__init__(win, id, params)
 
+        self.colours_dict = colours_dict
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours with rgb255
-        self.keylist = [self.left_key, self.right_key, 'escape']
-
-        self.colheaders = ['#', 'Condition', 'Stimulus', 'Responce', 'Latency']
+        self.colheaders = ['#', 'Condition', 'Stimulus', 'Response', 'Latency']
 
         self.left_resp = visual.TextStim(
             win = self.win,
@@ -375,30 +372,11 @@ class FreeChoiceExperiment(ExperimentPart):
             pos = (0, -5))
 
 
-    def define_colours(self, col_dict):
-
-        for name, value in col_dict.items():
-            setattr(self, name, value)
-        logging.info('define colours: {}'.format(*col_dict.items()))
-
-
-    def make_images(self):
-
-        out_dir = os.path.join('.', self.id, 'stimuli')
-        if not os.path.isdir(out_dir):
-            os.makedirs(out_dir)
-            logger.info('making {}'.format(out_dir))
-
-        logger.info('creating images')
-        for img_path in self.images:
-            img = MyImage(img_path, out_dir)
-            img.apply_colours(self.fg_col, self.bg_col, self.fg_grey, self.bg_grey)
-
-
     def make_images_sequence(self):
 
+        conditions = ['magno', 'parvo', 'unbiased']
         names = [os.path.split(os.path.splitext(i)[0])[1] for i in self.images]
-        perm = list(product(self.conditions, names))
+        perm = list(product(conditions, names))
         perm = perm * self.n_trials
         np.random.shuffle(perm)
 
@@ -408,36 +386,30 @@ class FreeChoiceExperiment(ExperimentPart):
                 writer.writerow(line)
 
 
-    def read_images_sequence(self, file):
+    def read_images_sequence(self, out_dir):
+        '''returns a sequence with MyImage objects. images are created here when encounered for the first time'''
 
-        logger.info('loaded trial sequence from {}'.format(file))
+        logger.info('loading trial sequence from {}'.format(self.seq_file))
         seq = []
-        out_dir = os.path.join('.', self.id, 'stimuli')
 
-        with open(file, 'rb') as f:
+        with open(self.seq_file, 'rb') as f:
             reader = csv.reader(f)
-            for cond, stim in reader:
-                path = os.path.join(self.images_dir, stim + '.png')
-                img = MyImage(path, out_dir)
-                seq.append((cond, img))
 
+            for cond, stim in reader: # cond = 'magno', stim = 'Hs'
+                path = os.path.join(self.images_dir, stim + '.png')
+                img = MyImage(path, out_dir, cond, self.colours_dict)
+                seq.append(img)
         return seq
 
 
-    def run_trial(self, kind, clock, image):
+    def run_trial(self, clock, image):
 
-        if kind == 'parvo':
-            self.stim.setImage(image.parvo_path)
-        elif kind == 'magno':
-            self.stim.setImage(image.magno_path)
-        elif kind == 'unbiased':
-            self.stim.setImage(image.unbiased_path)
+        self.stim.setImage(image.stim_path)
+        self.left_resp.color = 255
+        self.right_resp.color = 255
 
         # Randomly associate global and local letters with left/right response
         left_letter, right_letter = np.random.choice([image.global_letter, image.local_letter], size = 2, replace = False)
-
-        self.left_resp.color = 255
-        self.right_resp.color = 255
 
         # Get rid of "num_" if needed
         lk = self.left_key.split('_')[-1]
@@ -461,7 +433,7 @@ class FreeChoiceExperiment(ExperimentPart):
 
         while clock.getTime() < self.t_stim:
             if not key:
-        		key = event.getKeys(keyList = self.keylist, timeStamped = clock)
+                key = event.getKeys(keyList = self.keylist, timeStamped = clock)
 
         if not key:
             self.question.draw()
@@ -491,38 +463,91 @@ class FreeChoiceExperiment(ExperimentPart):
 
     def main_sequence(self):
 
+        self.keylist = [self.left_key, self.right_key, 'escape']
+
         start = self.show_instructions(self.instructions_text)
         if not start:
             logger.info('did not start the experiment')
             return
         logger.info('started the experiment')
 
+        out_dir = os.path.join('.', self.id, 'stimuli_free_choice')
+        images_seq = self.read_images_sequence(out_dir)
+
         clock = core.Clock()
         core.wait(1)
 
-        self.make_images()
-        images_seq = self.read_images_sequence(self.seq_file)
-        n = 0
-
-        for cond, img in images_seq:
+        for n, img in enumerate(images_seq):
             core.wait(self.t_prestim)
-            resp, lat = self.run_trial(cond, clock, img)
+            resp, lat = self.run_trial(clock, img)
             if resp == 'stop':
                 logger.info('stopped experiment')
                 break
             core.wait(self.t_poststim)
-            self.responses.append( (n, cond, img.name, resp, lat) )
+            self.responses.append( (n, img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
-            n += 1
 
         core.wait(2)
         self.finished = True
 
 
 
-class DividedAttentionExperiment(ExperimentPart):
+class DividedAttentionExperiment(FreeChoiceExperiment):
 
-    def __init__(self, win, id, params):
+    def run_trial(self, clock, image):
 
-        super(DividedAttentionExperiment, self).__init__(win, id, params)
+        self.stim.setImage(image.stim_path)
+
+        self.fixation_cross.draw()
+        self.win.flip()
+        clock.reset()
+        while clock.getTime() < self.t_fix:
+            pass
+
+        self.stim.draw()
+        self.win.flip()
+        clock.reset()
+        key = event.waitKeys(keyList = self.keylist, timeStamped = clock)
+
+        key, = key
+        latency = key[1]
+        if key[0] == self.pos_key:
+            response = 1
+        elif key[0] == self.neg_key:
+            response = 0
+        elif key[0] == 'escape':
+            response = 'stop'
+
+        self.win.flip()
+
+        return response, latency
+
+    def main_sequence(self):
+
+        self.keylist = [self.pos_key, self.neg_key, 'escape']
+
+        start = self.show_instructions(self.instructions_text)
+        if not start:
+            logger.info('did not start the experiment')
+            return
+        logger.info('started the experiment')
+
+        out_dir = os.path.join('.', self.id, 'stimuli_div_attention')
+        images_seq = self.read_images_sequence(out_dir)
+
+        clock = core.Clock()
+        core.wait(1)
+
+        for n, img in enumerate(images_seq):
+            core.wait(self.t_prestim)
+            resp, lat = self.run_trial(clock, img)
+            if resp == 'stop':
+                logger.info('stopped experiment')
+                break
+            core.wait(self.t_poststim)
+            self.responses.append( (n, img.cond, img.name, resp, lat) )
+            logger.info('ran trial {}'.format(self.responses[-1]))
+
+        core.wait(2)
+        self.finished = True
 

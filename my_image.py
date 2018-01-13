@@ -7,20 +7,32 @@ logger = logging.getLogger(__name__)
 
 class MyImage(object):
 
-    def __init__(self, template_path, out_dir):
+    def __init__(self, template_path, out_dir, cond, colours_dict, make_img = True):
         '''template_path is binary template, out_dir is subject dir'''
 
         self.template_path = os.path.abspath(template_path)
         out_dir = os.path.abspath(out_dir)
+        self.cond = cond
 
         _, name = os.path.split(self.template_path)
         self.name, ext = os.path.splitext(name)
 
-        self.parvo_path = os.path.join(out_dir, self.name + '_parvo' + ext)
-        self.magno_path = os.path.join(out_dir, self.name + '_magno' + ext)
-        self.unbiased_path = os.path.join(out_dir, self.name + '_unbiased' + ext)
+        self.stim_path = os.path.join(out_dir, self.name + '_' + cond + ext)
+        # e.g. './P01/stimuli_free_choice/Hs_parvo.png'
 
-        assert len(self.name) == 2, 'Image name should be 2 characters'
+        if make_img and not os.path.isfile(self.stim_path):
+
+            if cond == 'magno':
+                fg = colours_dict['fg_grey']
+                bg = colours_dict['bg_grey']
+            elif cond == 'parvo':
+                fg = colours_dict['fg_col']
+                bg = colours_dict['bg_col']
+            elif cond == 'unbiased':
+                fg = [0,0,0]
+                bg = colours_dict['bg_grey']
+
+            self.make_image(self.stim_path, fg = fg, bg = bg)
 
         self.global_letter = self.name[0].lower()
         self.local_letter = self.name[1].lower()
@@ -51,25 +63,15 @@ class MyImage(object):
             return False
 
 
-    def apply_colours(self, fg_col, bg_col, fg_grey, bg_grey):
+    def make_image(self, path, fg, bg):
 
+        # img = np.array(Image.open(self.template_path))
         img = np.array(Image.open(self.template_path))
-        fg = img[:, :, 0] == 0
+        fg_mask = img[:, :, 0] == 0
 
-        img[fg] = fg_col
-        img[~fg] = bg_col
-        image = Image.fromarray(img)
-        image.save(self.parvo_path)
-        logger.info('created {}'.format(self.parvo_path))
+        img[fg_mask] = fg
+        img[~fg_mask] = bg
 
-        img[fg] = fg_grey
-        img[~fg] = bg_grey
-        image = Image.fromarray(img)
-        image.save(self.magno_path)
-        logger.info('created {}'.format(self.magno_path))
+        Image.fromarray(img).save(path)
+        logger.info('---> created image: {}'.format(path))
 
-        img[fg] = [0]*3
-        # img[~fg] = bg_grey
-        image = Image.fromarray(img)
-        image.save(self.unbiased_path)
-        logger.info('created {}'.format(self.unbiased_path))

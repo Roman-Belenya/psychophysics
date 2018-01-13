@@ -40,10 +40,9 @@
 
 	"FreeChoiceExperiment":{
 		"images_dir": "./images/letters_free_choice",
-        "seq_file": "./imgs_seq_magno_test.csv",
+        "seq_file": "./imgs_seq_free_choice_short.csv",
 		"instructions_text": "Free choice experiment",
 		"question_text": "What letter did you see?",
-		"conditions": ["unbiased", "parvo", "magno"],
 		"n_trials": 5,
 		"t_fix": 1,
 		"t_stim": 0.25,
@@ -52,6 +51,21 @@
 		"stim_size": [7.84, 9.26],
         "left_key": "num_1",
         "right_key": "num_2"
-	}
+	},
+
+    "DividedAttentionExperiment":{
+        "images_dir": "./images/letters_div_attention",
+        "seq_file": "./imgs_seq_div_attention_short.csv",
+        "instructions_text": "Divided attention experiment",
+        "target_letter": "H",
+        "question_text": "Did you see H?",
+        "n_trials": 5,
+        "t_fix": 1,
+        "t_prestim": 0.5,
+        "t_poststim": 1,
+        "stim_size": [7.84, 9.26],
+        "pos_key": "f",
+        "neg_key": "j"
+    }
 
 }

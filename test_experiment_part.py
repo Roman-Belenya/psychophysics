@@ -4,6 +4,7 @@ from my_image import *
 from tools import *
 import json
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,16 @@ class TestExperimentPart(unittest.TestCase):
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
+
+        cls.colours = {
+            'fg_col' : [255, 255, 0],
+            'bg_col' : [0, 0, 255],
+            'fg_grey': [128, 128, 128],
+            'bg_grey': [150, 150, 150]}
         cls.contrast = ContrastDetection(cls.win, id, cls.params['ContrastDetection'])
         cls.isolum = IsoluminanceDetection(cls.win, id, cls.params['IsoluminanceDetection'])
-        cls.choice = FreeChoiceExperiment(cls.win, id, cls.params['FreeChoiceExperiment'])
+        cls.choice = FreeChoiceExperiment(cls.win, id, cls.colours, cls.params['FreeChoiceExperiment'])
+        cls.divided = DividedAttentionExperiment(cls.win, id, cls.colours, cls.params['DividedAttentionExperiment'])
         cls.stream_handler = logging.StreamHandler()
         logger.addHandler(cls.stream_handler)
 
@@ -52,17 +60,18 @@ class TestExperimentPart(unittest.TestCase):
         imgs = glob.glob(self.choice.images_dir + '/*.png')
         self.assertEqual(len(imgs), 6)
 
-    def test_seq_file(self):
-        file = self.choice.seq_file
-        self.assertTrue(os.path.isfile(file))
-        stims = [os.path.split(i)[1] for i in self.choice.images]
-        stims = [i.split('.png')[0] for i in stims]
+    def test_seq_files(self):
+        for exp in [self.choice, self.divided]:
+            file = exp.seq_file
+            self.assertTrue(os.path.isfile(file))
+            stims = [os.path.split(i)[1] for i in exp.images]
+            stims = [i.split('.png')[0] for i in stims]
 
-        with open(file, 'rb') as f:
-            reader = csv.reader(f)
-            for cond, stim in reader:
-                self.assertIn(cond, ['magno', 'parvo', 'unbiased'], 'Incorrect condition name in seq_file: {}'.format(cond))
-                self.assertIn(stim, stims, 'Incorrect stim name in seq_file: {}'.format(stim))
+            with open(file, 'rb') as f:
+                reader = csv.reader(f)
+                for cond, stim in reader:
+                    self.assertIn(cond, ['magno', 'parvo', 'unbiased'], 'Incorrect condition name in seq_file: {}'.format(cond))
+                    self.assertIn(stim, stims, 'Incorrect stim name in seq_file: {}'.format(stim))
 
     def test_viewing_distance(self):
         mon = monitors.Monitor(self.params['monitor_name'])
@@ -84,7 +93,22 @@ class TestExperimentPart(unittest.TestCase):
         ffs = self.isolum.flicker_fs
         self.assertLessEqual(2 * ffs, mfs, 'Flicker rate should be at least twice as little as monitor fs')
 
-    def test_iso_colours(self):
+    def test_timing(self):
+        frame = 0
+        t = 10
+        t0 = time.time()
+        stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
+        self.isolum.monitor_fs = float(self.isolum.monitor_fs)
+
+        while frame < self.isolum.monitor_fs * t:
+            stim.text = '{:.2f}'.format(frame / self.isolum.monitor_fs)
+            stim.draw()
+            self.win.flip()
+            frame += 1
+        dt = time.time() - t0
+        self.assertAlmostEqual(dt, t, delta = 0.03, msg = 'Wrong timing {}, should be {} sec'.format(dt, t))
+
+    def test_flicker(self):
         self.win.recordFrameIntervals = True
         img = os.path.join('.', 'images', 'circle.png')
         fg = get_fg_mask(img)
@@ -103,15 +127,10 @@ class TestExperimentPart(unittest.TestCase):
 
     def test_image_creation(self):
         out_dir = './__test__/stimuli'
-        for img in self.choice.images:
-            image = MyImage(img, out_dir)
-            image.apply_colours(fg_col = np.array([255, 255, 0]),
-                                bg_col = np.array([0, 0, 255]),
-                                fg_grey = 128,
-                                bg_grey = 131)
-            self.assertTrue(os.path.isfile(image.parvo_path))
-            self.assertTrue(os.path.isfile(image.magno_path))
-            self.assertTrue(os.path.isfile(image.unbiased_path))
+        for img in self.choice.images + self.divided.images:
+            for cond in ['magno', 'parvo', 'unbiased']:
+                image = MyImage(img, out_dir, cond, self.colours)
+                self.assertTrue(os.path.isfile(image.stim_path))
 
 
 

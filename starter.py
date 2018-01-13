@@ -9,9 +9,9 @@ params = json.load(open('./parameters.json'))
 
 if os.path.isdir('./test/'):
     raise Exception('delete test folder')
-    
+
 os.makedirs('./test/stimuli')
-    
+
 
 colours = {"fg_col": [225, 0, 0],
            "bg_grey": 128,
@@ -25,14 +25,15 @@ win = visual.Window(
     colorSpace = 'rgb255',
     color = 128,
     units = 'deg')
-    
-    
-con = ContrastDetection(win, id, params['ContrastDetection'])    
-    
+
+
+con = ContrastDetection(win, id, params['ContrastDetection'])
+
 iso = IsoluminanceDetection(win, id, params['IsoluminanceDetection'])
-    
-choice = FreeChoiceExperiment(win, id, params['FreeChoiceExperiment'])
-choice.define_colours(colours)
+
+choice = FreeChoiceExperiment(win, id, colours, params['FreeChoiceExperiment'])
+
+divided = DividedAttentionExperiment(win, id, colours, params['DividedAttentionExperiment'])
 
 
 if __name__ == '__main__':
@@ -43,9 +44,10 @@ if __name__ == '__main__':
         iso.main_sequence()
     if 'f' in arg:
         choice.main_sequence()
-        
+    if 'd' in arg:
+        divided.main_sequence()
+
     if 'u' in arg:
-        print type(con.fg_grey)
-        print type(iso.fix_col)
-        
-    
+        divided.make_images_sequence()
+
+
