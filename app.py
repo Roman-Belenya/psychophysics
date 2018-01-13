@@ -16,7 +16,7 @@ if not os.path.isdir(logdir):
 time = datetime.datetime.strftime(datetime.datetime.now(), '%d-%b-%Y %H-%M-%S,%f')
 logging.basicConfig(filename = os.path.join(logdir, time + '.log'),
     level = logging.INFO,
-    format = '%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s: %(message)s',
+    format = '%(asctime)s - %(levelname)s - %(funcName)s: %(message)s',
     filemode = 'a')
 logger = logging.getLogger(__name__)
 
@@ -281,7 +281,7 @@ class Application(object):
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
-                logging.exception('error in contrast main sequence:')
+                logger.exception('error in contrast main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'contrast.exp')
                 self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
@@ -297,7 +297,7 @@ class Application(object):
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
-                logging.exception('error in isolum main sequence:')
+                logger.exception('error in isolum main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'isoluminance.exp')
                 self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
@@ -322,7 +322,7 @@ class Application(object):
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
-                logging.exception('error in free choice main sequence:')
+                logger.exception('error in free choice main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'free_choice.exp')
                 self.free_choice.export_results(filename)
@@ -343,7 +343,7 @@ class Application(object):
             except Exception as e:
                 self.win.close()
                 showwarning('Experiment error', str(e))
-                logging.exception('error in divided main sequence:')
+                logger.exception('error in divided main sequence:')
             finally:
                 filename = os.path.join(self.dir, 'divided.exp')
                 self.divided.export_results(filename)
@@ -351,7 +351,7 @@ class Application(object):
 
         self.win.close()
         showinfo('Experiment', 'Finished!')
-        logging.info('finished experiment')
+        logger.info('finished experiment')
 
 
     def load_params(self, file):
@@ -397,10 +397,12 @@ class Application(object):
         runner = unittest.TextTestRunner()
         result = runner.run(suite)
 
+        showinfo('Test results', '{} error(s) detected'.format(len(result.failures)))
         if not result.wasSuccessful():
-            showwarning('Test results', 'Some tests were not successful')
             for i in result.failures:
-                logging.error('test error:\n'.format(i[1]))
+                logger.error('test error:\n'.format(i[1]))
+        else:
+            logger.info('all tests are successful')
 
 
 

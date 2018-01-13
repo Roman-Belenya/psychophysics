@@ -33,6 +33,7 @@ class ExperimentPart(object):
         self.responses = []
         self.colheaders = []
         self.finished = False
+        self.clock = core.Clock()
 
         self.instructions = visual.TextStim(
             win = self.win,
@@ -65,7 +66,7 @@ class ExperimentPart(object):
             colorSpace = 'rgb255',
             color = 135)
 
-        logging.info('creating {}'.format(str(self)))
+        logger.info('creating {}'.format(str(self)))
 
     def __str__(self):
         return self.__class__.__name__
@@ -74,7 +75,6 @@ class ExperimentPart(object):
     def show_instructions(self, text):
 
         self.instructions.text = text
-        # self.instructions.setText('these are my instructions')
         self.instructions.draw()
         self.press_any.draw()
         self.win.flip()
@@ -112,25 +112,21 @@ class ContrastDetection(ExperimentPart):
 
         self.stim.color = self.bg_grey
         self.keys = [self.pos_key, self.neg_key, 'escape']
-        self.colheaders = ['#', 'Condition', 'Stimulus', 'Grey_value', 'Response']
+        self.colheaders = ['#', 'Condition', 'Stimulus', 'GreyValue', 'Response']
 
         self.positive = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
             text = '{} = detected'.format(self.pos_key.upper()),
-            pos = (-7, 0),
-            alignHoriz = 'center',
-            alignVert = 'center')
+            pos = (-7, 0))
 
         self.negative = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
             text = '{} = not detected'.format(self.neg_key.upper()),
-            pos = (7, 0),
-            alignHoriz = 'center',
-            alignVert = 'center')
+            pos = (7, 0))
 
 
     @property
@@ -145,13 +141,13 @@ class ContrastDetection(ExperimentPart):
         return np.mean(values, axis = 0).tolist()
 
 
-    def run_trial(self, clock):
+    def run_trial(self, kind):
 
         if kind == 1: # if is experimental trial
             self.stim.draw()
         self.win.flip()
-        clock.reset()
-        while clock.getTime() <= self.t_stim:
+        self.clock.reset()
+        while self.clock.getTime() <= self.t_stim:
             pass
         self.win.flip()
 
@@ -194,7 +190,6 @@ class ContrastDetection(ExperimentPart):
             return
 
         logger.info('started experiment')
-        clock = core.Clock()
         core.wait(1)
 
         i = 0
@@ -216,7 +211,7 @@ class ContrastDetection(ExperimentPart):
 
             #Run the trial
             core.wait(self.t_prestim)
-            self.run_trial(clock, kind)
+            self.run_trial(kind)
             core.wait(self.t_poststim)
 
             # Get the response
@@ -250,15 +245,8 @@ class IsoluminanceDetection(ExperimentPart):
         self.keys = [self.up_key, self.down_key, 'escape', 'return']
         self.colheaders = ['#', 'Condition', 'Stimulus', 'IsoColour']
 
-        self.half_cycle = self.monitor_fs / (2.0 * self.flicker_fs) # how much frames each image lasts for during flickering
-        self.done = visual.TextStim(
-            win = self.win,
-            colorSpace = 'rgb255',
-            color = 255,
-            text = 'Done!',
-            pos = (0, 0),
-            alignHoriz = 'center',
-            alignVert = 'center')
+        self.half_cycle = self.monitor_fs / (2.0 * self.flicker_fs) # how many frames each image lasts during flickering (e.g. green 2 frames -> red 2 frames)
+
 
     @property
     def output_col(self):
@@ -269,7 +257,7 @@ class IsoluminanceDetection(ExperimentPart):
 
 
     def run_trial(self, colour):
-        '''colour is the colour to be changed in the trial'''
+        '''colour is the colour to be changed in the trial (var_col_lo or var_col_hi)'''
 
         frame = 0
         while True:
@@ -294,7 +282,6 @@ class IsoluminanceDetection(ExperimentPart):
                     return 'stop'
 
 
-
     def run_block(self, kind, images_seq):
 
         if kind == 'up':
@@ -303,23 +290,27 @@ class IsoluminanceDetection(ExperimentPart):
         elif kind == 'down':
             text = self.instructions_text_down
             colour = self.var_col_hi
-        self.show_instructions(text)
 
-        for i in range(self.n_trials):
+        start = self.show_instructions(text)
+        if not start:
+            logger.info('did not start the block {}'.format(kind))
+            return
+        logger.info('started block {}'.format(kind))
 
-            img = images_seq[i]
-            fg = get_fg_mask(img)
-            self.stim.mask = fg
+        for i, img in enumerate(images_seq):
+
+            self.stim.mask = get_fg_mask(img)
 
             core.wait(self.t_prestim)
             iso_col = self.run_trial(colour)
+            self.win.flip()
+            core.wait(self.t_poststim)
+
             if np.any(iso_col == 'stop'):
                 return
             self.responses.append( (i, kind, os.path.split(img)[1], list(iso_col)) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
 
-            self.win.flip()
-            core.wait(self.t_poststim)
 
 
     def main_sequence(self):
@@ -328,7 +319,7 @@ class IsoluminanceDetection(ExperimentPart):
         if not start:
             logger.info('did not start the experiment')
             return
-        logger.info('start the experiment')
+        logger.info('started the experiment')
 
         for i, kind in enumerate(self.blocks_seq):
             # get new images on block 0, 2, 4 ...
@@ -372,12 +363,11 @@ class FreeChoiceExperiment(ExperimentPart):
             pos = (0, -5))
 
 
-    def make_images_sequence(self):
+    def make_images_seq_file(self):
 
         conditions = ['magno', 'parvo', 'unbiased']
         names = [os.path.split(os.path.splitext(i)[0])[1] for i in self.images]
-        perm = list(product(conditions, names))
-        perm = perm * self.n_trials
+        perm = list(product(conditions, names)) * self.n_trials
         np.random.shuffle(perm)
 
         with open(self.seq_file, 'wb') as f:
@@ -386,7 +376,7 @@ class FreeChoiceExperiment(ExperimentPart):
                 writer.writerow(line)
 
 
-    def read_images_sequence(self, out_dir):
+    def load_images_sequence(self, out_dir):
         '''returns a sequence with MyImage objects. images are created here when encounered for the first time'''
 
         logger.info('loading trial sequence from {}'.format(self.seq_file))
@@ -402,16 +392,17 @@ class FreeChoiceExperiment(ExperimentPart):
         return seq
 
 
-    def run_trial(self, clock, image):
+    def run_trial(self, image):
 
         self.stim.setImage(image.stim_path)
         self.left_resp.color = 255
         self.right_resp.color = 255
 
-        # Randomly associate global and local letters with left/right response
+        # Randomly associate global and local letters with left/right response. Local/global letters can randomly appear on the left/right (4 possible combinations)
+        # left = local, left = global, right = local, right = global
         left_letter, right_letter = np.random.choice([image.global_letter, image.local_letter], size = 2, replace = False)
 
-        # Get rid of "num_" if needed
+        # Get rid of "num_" if needed (to display on screen)
         lk = self.left_key.split('_')[-1]
         rk = self.right_key.split('_')[-1]
 
@@ -423,24 +414,24 @@ class FreeChoiceExperiment(ExperimentPart):
 
         self.fixation_cross.draw()
         self.win.flip()
-        clock.reset()
-        while clock.getTime() < self.t_fix:
+        self.clock.reset()
+        while self.clock.getTime() < self.t_fix:
             pass
 
         self.stim.draw()
         self.win.flip()
-        clock.reset() # starts counting time from here
+        self.clock.reset() # starts counting time from here
 
-        while clock.getTime() < self.t_stim:
+        while self.clock.getTime() < self.t_stim:
             if not key:
-                key = event.getKeys(keyList = self.keylist, timeStamped = clock)
+                key = event.getKeys(keyList = self.keylist, timeStamped = self.clock)
 
         if not key:
             self.question.draw()
             self.left_resp.draw()
             self.right_resp.draw()
             self.win.flip()
-            key = event.waitKeys(keyList = self.keylist, timeStamped = clock)
+            key = event.waitKeys(keyList = self.keylist, timeStamped = self.clock)
 
         key, = key
         latency = key[1]
@@ -472,18 +463,16 @@ class FreeChoiceExperiment(ExperimentPart):
         logger.info('started the experiment')
 
         out_dir = os.path.join('.', self.id, 'stimuli_free_choice')
-        images_seq = self.read_images_sequence(out_dir)
-
-        clock = core.Clock()
+        images_seq = self.load_images_sequence(out_dir)
         core.wait(1)
 
         for n, img in enumerate(images_seq):
             core.wait(self.t_prestim)
-            resp, lat = self.run_trial(clock, img)
+            resp, lat = self.run_trial(img)
+            core.wait(self.t_poststim)
             if resp == 'stop':
                 logger.info('stopped experiment')
                 break
-            core.wait(self.t_poststim)
             self.responses.append( (n, img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
@@ -494,20 +483,20 @@ class FreeChoiceExperiment(ExperimentPart):
 
 class DividedAttentionExperiment(FreeChoiceExperiment):
 
-    def run_trial(self, clock, image):
+    def run_trial(self, img):
 
         self.stim.setImage(image.stim_path)
 
         self.fixation_cross.draw()
         self.win.flip()
-        clock.reset()
-        while clock.getTime() < self.t_fix:
+        self.clock.reset()
+        while self.clock.getTime() < self.t_fix:
             pass
 
         self.stim.draw()
         self.win.flip()
-        clock.reset()
-        key = event.waitKeys(keyList = self.keylist, timeStamped = clock)
+        self.clock.reset()
+        key = event.waitKeys(keyList = self.keylist, timeStamped = self.clock)
 
         key, = key
         latency = key[1]
@@ -522,6 +511,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
         return response, latency
 
+
     def main_sequence(self):
 
         self.keylist = [self.pos_key, self.neg_key, 'escape']
@@ -533,19 +523,17 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         logger.info('started the experiment')
 
         out_dir = os.path.join('.', self.id, 'stimuli_div_attention')
-        images_seq = self.read_images_sequence(out_dir)
-
-        clock = core.Clock()
+        images_seq = self.load_images_sequence(out_dir)
         core.wait(1)
 
-        for n, img in enumerate(images_seq):
+        for i, img in enumerate(images_seq):
             core.wait(self.t_prestim)
-            resp, lat = self.run_trial(clock, img)
+            resp, lat = self.run_trial(img)
+            core.wait(self.t_poststim)
             if resp == 'stop':
                 logger.info('stopped experiment')
                 break
-            core.wait(self.t_poststim)
-            self.responses.append( (n, img.cond, img.name, resp, lat) )
+            self.responses.append( (i, img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
         core.wait(2)

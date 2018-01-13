@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 class MyImage(object):
 
     def __init__(self, template_path, out_dir, cond, colours_dict, make_img = True):
-        '''template_path is binary template, out_dir is subject dir'''
+        '''template_path is b&w template, out_dir is subject dir'''
 
         self.template_path = os.path.abspath(template_path)
         out_dir = os.path.abspath(out_dir)
@@ -73,5 +73,5 @@ class MyImage(object):
         img[~fg_mask] = bg
 
         Image.fromarray(img).save(path)
-        logger.info('---> created image: {}'.format(path))
+        logger.info('created image: {}'.format(path))
 

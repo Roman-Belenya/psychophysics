@@ -60,6 +60,9 @@ class TestExperimentPart(unittest.TestCase):
         imgs = glob.glob(self.choice.images_dir + '/*.png')
         self.assertEqual(len(imgs), 6)
 
+        imgs = glob.glob(self.divided.images_dir + '/*.png')
+        self.assertEqual(len(imgs), 6)
+
     def test_seq_files(self):
         for exp in [self.choice, self.divided]:
             file = exp.seq_file
@@ -106,7 +109,7 @@ class TestExperimentPart(unittest.TestCase):
             frame += 1
         dt = time.time() - t0
         self.assertAlmostEqual(dt, t, delta = 0.03, msg = 'Large timing error: {}, should be {} sec'.format(dt, t))
-        logging.info('timing error is {}'.format(dt - t))
+        logger.info('timing error is {}'.format(dt - t))
 
     def test_flicker(self):
         self.win.recordFrameIntervals = True
@@ -122,7 +125,7 @@ class TestExperimentPart(unittest.TestCase):
         t2 = fints.mean() + fints.std()
         self.assertTrue(t1 < msperframe < t2, 'Strange refresh period ({}, should be {})'.format(fints.mean(), msperframe))
         self.assertLess(self.win.nDroppedFrames, 5, msg = 'Too many dropped frames ({})'.format(self.win.nDroppedFrames))
-        logger.info('takes {} ms to refresh each frame'.format(msperframe))
+        logger.info('{} +- {} ms to refresh each frame, should be {}'.format(fints.mean(), fints.std(), msperframe))
         logger.info('dropped {} frames'.format(self.win.nDroppedFrames))
 
     def test_image_creation(self):
