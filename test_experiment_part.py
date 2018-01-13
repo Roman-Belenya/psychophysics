@@ -96,17 +96,17 @@ class TestExperimentPart(unittest.TestCase):
     def test_timing(self):
         frame = 0
         t = 10
-        t0 = time.time()
         stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
         self.isolum.monitor_fs = float(self.isolum.monitor_fs)
-
+        t0 = time.time()
         while frame < self.isolum.monitor_fs * t:
-            stim.text = '{:.2f}'.format(frame / self.isolum.monitor_fs)
+            stim.text = '{:.2f}'.format(t - frame / self.isolum.monitor_fs)
             stim.draw()
             self.win.flip()
             frame += 1
         dt = time.time() - t0
-        self.assertAlmostEqual(dt, t, delta = 0.03, msg = 'Wrong timing {}, should be {} sec'.format(dt, t))
+        self.assertAlmostEqual(dt, t, delta = 0.03, msg = 'Large timing error: {}, should be {} sec'.format(dt, t))
+        logging.info('timing error is {}'.format(dt - t))
 
     def test_flicker(self):
         self.win.recordFrameIntervals = True
@@ -122,7 +122,7 @@ class TestExperimentPart(unittest.TestCase):
         t2 = fints.mean() + fints.std()
         self.assertTrue(t1 < msperframe < t2, 'Strange refresh period ({}, should be {})'.format(fints.mean(), msperframe))
         self.assertLess(self.win.nDroppedFrames, 5, msg = 'Too many dropped frames ({})'.format(self.win.nDroppedFrames))
-        logger.info('it takes {} ms to refresh each frame'.format(msperframe))
+        logger.info('takes {} ms to refresh each frame'.format(msperframe))
         logger.info('dropped {} frames'.format(self.win.nDroppedFrames))
 
     def test_image_creation(self):
