@@ -80,6 +80,18 @@ class TestExperimentPart(unittest.TestCase):
         mon = monitors.Monitor(self.params['monitor_name'])
         self.assertEqual(self.params['viewing_distance'], mon.getDistance(), 'Need to update viewing distance')
 
+    def test_check_colours_dict(self):
+        del self.choice.colours_dict['fg_grey']
+        with self.assertRaises(AssertionError):
+            self.choice.check_colours_dict()
+
+        self.choice.colours_dict['bg_col'] = [256, 0, 0]
+        with self.assertRaises(AssertionError):
+            self.choice.check_colours_dict()
+
+        self.choice.colours_dict['fg_grey'] = [128, 128, 128]
+        self.choice.colours_dict['bg_col'] = [0, 0, 255]
+
 
     def test_frame_rate(self):
         mon_fs = self.isolum.monitor_fs

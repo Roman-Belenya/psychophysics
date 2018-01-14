@@ -86,12 +86,23 @@ class ExperimentPart(object):
 
     def export_results(self, filename, *extralines):
 
+        if os.path.isfile(filename):
+            name, ext = os.path.splitext(filename)
+            filename = name + '_new' + ext
+
         with open(filename, 'wb') as f:
-            writer = csv.writer(f, delimiter = '\t')
+            if '.csv' in filename:
+                delimiter = ','
+            else:
+                delimiter = '\t'
+
+            writer = csv.writer(f, delimiter = delimiter)
 
             writer.writerow( ['Experiment:', str(self)] )
+            writer.writerow( ['Participant:', self.id] )
             writer.writerow( ['Date:', self.datetime.strftime('%d %B %Y')] )
             writer.writerow( ['Time:', self.datetime.strftime('%H:%M:%S')] )
+
             for line in extralines:
                 writer.writerow(line)
             writer.writerow('')
@@ -340,6 +351,8 @@ class FreeChoiceExperiment(ExperimentPart):
         super(FreeChoiceExperiment, self).__init__(win, id, params)
 
         self.colours_dict = colours_dict
+        self.check_colours_dict()
+
         self.stim.colorSpace = 'rgb' # back to default, would show inverted colours with rgb255
         self.colheaders = ['#', 'Condition', 'Stimulus', 'Response', 'Latency']
 
@@ -361,6 +374,17 @@ class FreeChoiceExperiment(ExperimentPart):
             color = 255,
             text = self.question_text,
             pos = (0, -5))
+
+
+    def check_colours_dict(self):
+        try:
+            assert set(self.colours_dict.keys()) == set(['bg_grey', 'fg_grey', 'bg_col', 'fg_col'])
+            for value in self.colours_dict.values():
+                for v in value:
+                    assert 0 <= v <= 255
+        except Exception as e:
+            logger.exception('bad colours dict: {}'.format(str(e)))
+            raise
 
 
     def make_images_seq_file(self):
@@ -485,7 +509,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
     def run_trial(self, img):
 
-        self.stim.setImage(image.stim_path)
+        self.stim.setImage(img.stim_path)
 
         self.fixation_cross.draw()
         self.win.flip()

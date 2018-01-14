@@ -227,17 +227,21 @@ class Application(object):
 
         self.dir = os.path.join('.', id)
         if os.path.isdir(self.dir):
-            showwarning('Participant id', '{} already exists. Delete/rename the directory, then retry'.format(id))
-            return
-            # ans = askyesno('Participant id', 'This participant exists. Overwrite?')
-            # if ans == 0:
-            #     return
-            # else:
-            #     shutil.rmtree(self.dir)
-            #     logger.info('overwriting {}'.format(self.dir))
-        os.makedirs(os.path.join(self.dir, 'stimuli_free_choice'))
-        os.makedirs(os.path.join(self.dir, 'stimuli_div_attention'))
-        logger.info('created new participant {}'.format(id))
+            ans = askyesno("Participant's id", '{} already exists. Continue experiment with this participant?')
+            if ans:
+                logger.info('continue with participant {}'.format(id))
+                try:
+                    col_file = os.path.join(self.dir, 'colours.json')
+                    self.colours = json.load(open(col_file, 'rb'))
+                except IOError:
+                    logger.info('could not load colours from colours.json: no such file')
+            else:
+                logger.info('do not continue with participant {}. returning'.format(id))
+                return
+        else:
+            os.makedirs(os.path.join(self.dir, 'stimuli_free_choice'))
+            os.makedirs(os.path.join(self.dir, 'stimuli_div_attention'))
+            logger.info('created new participant {}'.format(id))
 
         # Get experiment selections
         sel = {
@@ -258,9 +262,6 @@ class Application(object):
                 return
             self.save_colours(self.colours)
 
-        # The app is no longer needed. Also, crashes sometimes when using PIL with tkinter
-        self.root.quit()
-        self.root.destroy()
 
         self.win = visual.Window(
             size = [1920, 1080],
@@ -273,85 +274,49 @@ class Application(object):
         self.win.mouseVisible = False
 
 
-        # Contrast detection
-        if sel['contrast']:
-            try:
-                self.contrast = ContrastDetection(self.win, id, self.params['ContrastDetection'])
-                self.contrast.main_sequence()
-            except Exception as e:
-                self.win.close()
-                showwarning('Experiment error', str(e))
-                logger.exception('error in contrast main sequence:')
-            finally:
-                filename = os.path.join(self.dir, 'contrast.exp')
-                self.contrast.export_results(filename, ['Mean colour:', self.contrast.output_col])
+        ###
+        exps = [ ('contrast', 'ContrastDetection', ContrastDetection),
+                ('isolum', 'IsoluminanceDetection', IsoluminanceDetection),
+                ('free', 'FreeChoiceExperiment', FreeChoiceExperiment),
+                ('divided', 'DividedAttentionExperiment', DividedAttentionExperiment) ]
 
-                self.colours['fg_grey'] = self.contrast.output_col
-                self.save_colours(self.colours)
+        for name, fullname, exp in exps:
 
-        # Isoluminance detection
-        if sel['isolum']:
-            try:
-                self.isolum = IsoluminanceDetection(self.win, id, self.params['IsoluminanceDetection'])
-                self.isolum.main_sequence()
-            except Exception as e:
-                self.win.close()
-                showwarning('Experiment error', str(e))
-                logger.exception('error in isolum main sequence:')
-            finally:
-                filename = os.path.join(self.dir, 'isoluminance.exp')
-                self.isolum.export_results(filename, ['Mean colour:', self.isolum.output_col])
+            if name in ['contrast', 'isolum']:
+                if sel[name]: # if this experiment is selected
+                    try:
+                        experiment = exp(self.win, id, self.params[fullname])
+                        experiment.main_sequence()
+                    except Exception as e:
+                        self.win.close()
+                        showwarning('Experiment error', str(e))
+                        logger.exception('error in experiment:')
+                        return # this will return from start_expeiment without closing the app
+                    finally:
+                        filename = os.path.join(self.dir, experiment.export_filename)
+                        experiment.export_results(filename, ['Mean colour:', experiment.output_col])
+                        self.add_colour(name, experiment.output_col)
 
-                self.colours['bg_col'] = self.isolum.output_col
-                self.save_colours(self.colours)
-
-        # Free choice experiment
-        if sel['free']:
-
-
-            correct = self.check_colours_dict(self.colours)
-            if not correct:
-                self.win.close()
-                showwarning('Colours', 'Error with colours')
-                logger.warning('bad colours dict: {}. terminating experiment'.format(self.colours))
-                return
-
-            try:
-                self.free_choice = FreeChoiceExperiment(self.win, id, self.colours, self.params['FreeChoiceExperiment'])
-                self.free_choice.main_sequence()
-            except Exception as e:
-                self.win.close()
-                showwarning('Experiment error', str(e))
-                logger.exception('error in free choice main sequence:')
-            finally:
-                filename = os.path.join(self.dir, 'free_choice.exp')
-                self.free_choice.export_results(filename)
-
-        # Divided attention experiment
-        if sel['divided']:
-
-            correct = self.check_colours_dict(self.colours)
-            if not correct:
-                self.win.close()
-                showwarning('Colours', 'Error with colours')
-                logger.warning('bad colours dict: {}. terminating experiment'.format(self.colours))
-                return
-
-            try:
-                self.divided = DividedAttentionExperiment(self.win, id, self.colours, self.params['DividedAttentionExperiment'])
-                self.divided.main_sequence()
-            except Exception as e:
-                self.win.close()
-                showwarning('Experiment error', str(e))
-                logger.exception('error in divided main sequence:')
-            finally:
-                filename = os.path.join(self.dir, 'divided.exp')
-                self.divided.export_results(filename)
+            elif name in ['free', 'divided', 'selective']:
+                if sel[name]:
+                    try:
+                        experiment = exp(self.win, id, self.colours, self.params[fullname])
+                        experiment.main_sequence()
+                    except Exception as e:
+                        self.win.close()
+                        showwarning('Experiment error', str(e))
+                        logger.exception('error in experiment:')
+                        return
+                    finally:
+                        filename = os.path.join(self.dir, experiment.export_filename)
+                        experiment.export_results(filename)
 
 
         self.win.close()
         showinfo('Experiment', 'Finished!')
         logger.info('finished experiment')
+        self.root.quit()
+        self.root.destroy()
 
 
     def load_params(self, file):
@@ -361,6 +326,15 @@ class Application(object):
         return params
 
 
+    def add_colour(self, exp_name, value):
+
+        if exp_name in ['contrast', 'ContrastDetection']:
+            self.colours['fg_grey'] = value
+        elif exp_name in ['isolum', 'IsoluminanceDetection']:
+            self.colours['bg_col'] = value
+        self.save_colours(self.colours)
+
+
     def save_colours(self, col_dict):
         for name, value in col_dict.items():
             if type(value) is np.ndarray:
@@ -368,19 +342,6 @@ class Application(object):
         path = os.path.join(self.dir, 'colours.json')
         with open(path, 'wb') as f:
             json.dump(col_dict, f)
-
-    def check_colours_dict(self, col_dict):
-        try:
-            for name, value in col_dict.items():
-                assert name in ['bg_grey', 'fg_grey', 'bg_col', 'fg_col']
-                assert type(value) is list
-                for v in value:
-                    assert 0 <= v <= 255
-        except Exception:
-            logger.exception('bad colours dict')
-            return False
-
-        return True
 
 
     def run_tests(self):
