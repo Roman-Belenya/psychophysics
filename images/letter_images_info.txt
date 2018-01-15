@@ -1,15 +1,16 @@
 Image dims:
-w = 5.48 cm
-h = 6.48 cm
+w = 5.48 cm		7.837°
+h = 6.48 cm		9.262°
 
 Local letters:
-w = 0.5 cm
-h = 0.7 cm
+w = 0.5 cm		0.716°
+h = 0.7 cm		1.002°
 
 Global letters:
-w = 3.483 cm
-h = 4.479 cm
+w = 3.483 cm	4.986°
+h = 4.479 cm	6.409°
 
+degrees calculated with 40 cm viewing distance
 font: Arial
 
 To find out line length:
