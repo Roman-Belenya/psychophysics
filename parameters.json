@@ -61,15 +61,35 @@
         "export_filename": "divided_attention.exp",
         "seq_file": "./imgs_seq_div_attention_short.csv",
         "instructions_text": "Divided attention experiment",
-        "target_letter": "H",
-        "question_text": "Did you see H?",
+        "instructions_text_practice": "some practice trials...",
+        "instructions_text_experiment": "experimental trials...",
+        "blocks_seq": ["practice", "experiment", "experiment"],
         "n_trials": 5,
+        "n_practice_trials": 2,
         "t_fix": 1,
         "t_prestim": 0.5,
         "t_poststim": 1,
         "stim_size": [7.84, 9.26],
         "pos_key": "f",
         "neg_key": "j"
+    },
+
+    "SelectiveAttentionExperiment":{
+        "images_dir": "./images/letters_free_choice",
+        "export_filename": "selective_attention.exp",
+        "seq_file": "./imgs_seq_sel_attention_short.csv",
+        "instructions_text": "Selective attention experiment",
+        "instructions_text_practice_local": "Practise local",
+        "instructions_text_practice_global": "Practise global",
+        "instructions_text_local": "In the next set of trials, attend to local stimuli only",
+        "instructions_text_global": "In the next set of trials, attend to global stimuli only",
+        "blocks_seq": ["practice_local", "practice_global", "local", "global"],
+        "n_trials": 5,
+        "n_practice_trials": 2,
+        "t_fix": 1,
+        "t_prestim": 0.5,
+        "t_poststim": 1,
+        "stim_size": [7.84, 9.26],
     }
 
 }

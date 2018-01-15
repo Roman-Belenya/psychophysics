@@ -229,10 +229,11 @@ class Application(object):
         if os.path.isdir(self.dir):
             ans = askyesno("Participant's id", '{} already exists. Continue experiment with this participant?')
             if ans:
-                logger.info('continue with participant {}'.format(id))
+                logger.info('continuing with participant {}'.format(id))
                 try:
                     col_file = os.path.join(self.dir, 'colours.json')
                     self.colours = json.load(open(col_file, 'rb'))
+                    logger.info('loading previously saved colours from {}'.format(col_file))
                 except IOError:
                     logger.info('could not load colours from colours.json: no such file')
             else:

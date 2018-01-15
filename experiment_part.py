@@ -536,18 +536,30 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         return response, latency
 
 
-    def main_sequence(self):
+    def make_practice_images_sequence(self, out_dir):
 
-        self.keylist = [self.pos_key, self.neg_key, 'escape']
+        seq = []
+        for image in self.images: # only include unbiased images in practice trials
+            img = MyImage(image, out_dir, 'unbiased', colours_dict)
+            seq.append(img)
+        seq *= self.n_practice_trials # how many times each image should be repeated
+        return np.random.shuffle(seq)
 
-        start = self.show_instructions(self.instructions_text)
+
+    def run_block(self, kind):
+
+        if kind == 'practice':
+            txt = self.instructions_text_practice
+            images_seq = self.make_practice_images_sequence(self.out_dir)
+        elif kind == 'experiment':
+            txt = self.instructions_text_experiment
+            images_seq = self.load_images_sequence(self.out_dir)
+
+        start = self.show_instructions(txt)
         if not start:
-            logger.info('did not start the experiment')
+            logger.info('did not start block {}'.format(kind))
             return
-        logger.info('started the experiment')
-
-        out_dir = os.path.join('.', self.id, 'stimuli_div_attention')
-        images_seq = self.load_images_sequence(out_dir)
+        logger.info('started block {}'.format(kind))
         core.wait(1)
 
         for i, img in enumerate(images_seq):
@@ -555,11 +567,125 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
             resp, lat = self.run_trial(img)
             core.wait(self.t_poststim)
             if resp == 'stop':
-                logger.info('stopped experiment')
-                break
-            self.responses.append( (i, img.cond, img.name, resp, lat) )
+                logger.info('stopped block {}'.format(kind))
+                return
+            self.responses.append( (i, kind, img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
+
+        logger.info('finished block {}'.format(kind))
+
+
+    def main_sequence(self):
+
+        self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
+        self.keylist = [self.pos_key, self.neg_key, 'escape']
+        self.out_dir = os.path.join('.', self.id, 'stimuli_div_attention')
+
+        start = self.show_instructions(self.instructions_text)
+        if not start:
+            logger.info('did not start the experiment')
+            return
+        logger.info('started the experiment')
+
+        for i, block in enumerate(self.blocks_seq):
+            self.run_block(block)
 
         core.wait(2)
         self.finished = True
+
+
+class SelectiveAttentionExperiment(DividedAttentionExperiment):
+
+    def run_trial(self, img):
+
+        self.stim.setImage(img.stim_path)
+        keylist = [img.global_letter, img.local_letter]
+
+        self.fixation_cross.draw()
+        self.win.flip()
+        self.clock.reset()
+        while self.clock.getTime() < self.t_fix:
+            pass
+
+        self.stim.draw()
+        self.win.flip()
+        self.clock.reset()
+        key = event.waitKeys(keyList = keylist, timeStamped = self.clock)
+
+        key, = key
+        latency = key[1]
+        if key[0] == img.global_letter:
+            response = 'global'
+        elif key[0] == img.local_letter:
+            response = 'local'
+        elif key[0] == 'escape':
+            response = 'stop'
+
+        self.win.flip()
+
+        return response, latency
+
+
+    def run_block(self, kind):
+
+        if kind == 'practice_local':
+            txt = self.instructions_text_practice_local
+            images_seq = self.make_practice_images_sequence(self.out_dir)
+        elif kind == 'practice_global':
+            txt = self.instructions_text_practice_local
+            images_seq = self.make_practice_images_sequence(self.out_dir)
+        elif kind == 'local':
+            txt = self.instructions_text_local
+            images_seq = self.load_images_sequence(self.out_dir)
+        elif kind = 'global':
+            txt = self.instructions_text_global
+            images_seq = self.load_images_sequence(self.out_dir)
+
+        start = self.show_instructions(txt)
+        if not start:
+            logger.info('did not start block {}'.format(kind))
+            return
+        logger.info('started block {}'.format(kind))
+        core.wait(1)
+
+        for i, img in enumerate(images_seq):
+            core.wait(self.t_prestim)
+            resp, lat = self.run_trial(img)
+            core.wait(self.t_poststim)
+            if resp == 'stop':
+                logger.info('stopped block {}'.format(kind))
+                return
+            self.responses.append( (i, kind, img.cond, img.name, resp, lat) )
+            logger.info('ran trial {}'.format(self.responses[-1]))
+
+        logger.info('finished block {}'.format(kind))
+
+
+    def main_sequence(self):
+
+        self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
+        self.out_dir = os.path.join('.', self.id, 'stimuli_free_choice')
+
+        start = self.show_instructions(self.instructions_text)
+        if not start:
+            logger.info('did not start the experiment')
+            return
+        logger.info('started the experiment')
+
+        for i, block in enumerate(self.blocks_seq):
+            self.run_block(block)
+
+        core.wait(2)
+        self.finished = True
+
+
+
+#                           ExperimentPart
+#                _______________|________________________
+#               |               |                       |
+#   ContrastDetection   IsoluminanceDetection   FreeChoiceExperiment
+#                                                       |
+#                                               DividedAttentionExperiment
+#                                                       |
+#                                               SelectiveAttentionExperiment
 
