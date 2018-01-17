@@ -10,11 +10,13 @@ from tkMessageBox import showwarning, showinfo, askyesno
 import subprocess
 import unittest
 
-logdir = './logs'
-if not os.path.isdir(logdir):
-    os.mkdir(logdir)
+DIRS = ['./data', './logs']
+for DIR in DIRS:
+    if not os.path.isdir(DIR):
+        os.mkdir(DIR)
+
 time = datetime.datetime.strftime(datetime.datetime.now(), '%d-%b-%Y %H-%M-%S,%f')
-logging.basicConfig(filename = os.path.join(logdir, time + '.log'),
+logging.basicConfig(filename = os.path.join('./logs', time + '.log'),
     level = logging.INFO,
     format = '%(asctime)s - %(levelname)s - %(funcName)s: %(message)s',
     filemode = 'a')
@@ -225,17 +227,11 @@ class Application(object):
             showwarning('Missing id', "Enter participant's id")
             return
 
-        self.dir = os.path.join('.', id)
+        self.dir = os.path.join('.', 'data', id)
         if os.path.isdir(self.dir):
-            ans = askyesno("Participant's id", '{} already exists. Continue experiment with this participant?')
+            ans = askyesno("Participant's id", '{} already exists. Continue experiment with this participant?'.format(id))
             if ans:
                 logger.info('continuing with participant {}'.format(id))
-                try:
-                    col_file = os.path.join(self.dir, 'colours.json')
-                    self.colours = json.load(open(col_file, 'rb'))
-                    logger.info('loading previously saved colours from {}'.format(col_file))
-                except IOError:
-                    logger.info('could not load colours from colours.json: no such file')
             else:
                 logger.info('do not continue with participant {}. returning'.format(id))
                 return
@@ -279,7 +275,8 @@ class Application(object):
         exps = [ ('contrast', 'ContrastDetection', ContrastDetection),
                 ('isolum', 'IsoluminanceDetection', IsoluminanceDetection),
                 ('free', 'FreeChoiceExperiment', FreeChoiceExperiment),
-                ('divided', 'DividedAttentionExperiment', DividedAttentionExperiment) ]
+                ('divided', 'DividedAttentionExperiment', DividedAttentionExperiment) ,
+                ('selective', 'SelectiveAttentionExperiment', SelectiveAttentionExperiment) ]
 
         for name, fullname, exp in exps:
 

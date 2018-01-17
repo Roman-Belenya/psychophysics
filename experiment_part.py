@@ -383,7 +383,7 @@ class FreeChoiceExperiment(ExperimentPart):
                 for v in value:
                     assert 0 <= v <= 255
         except Exception as e:
-            logger.exception('bad colours dict: {}'.format(str(e)))
+            logger.exception('bad colours dict: {}'.format(self.colours_dict))
             raise
 
 
@@ -486,7 +486,7 @@ class FreeChoiceExperiment(ExperimentPart):
             return
         logger.info('started the experiment')
 
-        out_dir = os.path.join('.', self.id, 'stimuli_free_choice')
+        out_dir = os.path.join('.', 'data', self.id, 'stimuli_free_choice')
         images_seq = self.load_images_sequence(out_dir)
         core.wait(1)
 
@@ -540,10 +540,11 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
         seq = []
         for image in self.images: # only include unbiased images in practice trials
-            img = MyImage(image, out_dir, 'unbiased', colours_dict)
+            img = MyImage(image, out_dir, 'unbiased', self.colours_dict)
             seq.append(img)
         seq *= self.n_practice_trials # how many times each image should be repeated
-        return np.random.shuffle(seq)
+        np.random.shuffle(seq)
+        return seq
 
 
     def run_block(self, kind):
@@ -579,7 +580,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
         self.keylist = [self.pos_key, self.neg_key, 'escape']
-        self.out_dir = os.path.join('.', self.id, 'stimuli_div_attention')
+        self.out_dir = os.path.join('.', 'data', self.id, 'stimuli_div_attention')
 
         start = self.show_instructions(self.instructions_text)
         if not start:
@@ -626,20 +627,12 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         return response, latency
 
 
-    def run_block(self, kind):
+    def run_block(self, kind, imgs_seq):
 
-        if kind == 'practice_local':
-            txt = self.instructions_text_practice_local
-            images_seq = self.make_practice_images_sequence(self.out_dir)
-        elif kind == 'practice_global':
-            txt = self.instructions_text_practice_local
-            images_seq = self.make_practice_images_sequence(self.out_dir)
-        elif kind == 'local':
+        if kind[1] == 'local':
             txt = self.instructions_text_local
-            images_seq = self.load_images_sequence(self.out_dir)
-        elif kind = 'global':
+        elif kind[1] == 'global':
             txt = self.instructions_text_global
-            images_seq = self.load_images_sequence(self.out_dir)
 
         start = self.show_instructions(txt)
         if not start:
@@ -648,14 +641,14 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         logger.info('started block {}'.format(kind))
         core.wait(1)
 
-        for i, img in enumerate(images_seq):
+        for i, img in enumerate(imgs_seq):
             core.wait(self.t_prestim)
             resp, lat = self.run_trial(img)
             core.wait(self.t_poststim)
             if resp == 'stop':
                 logger.info('stopped block {}'.format(kind))
                 return
-            self.responses.append( (i, kind, img.cond, img.name, resp, lat) )
+            self.responses.append( (i, '-'.join(kind), img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
         logger.info('finished block {}'.format(kind))
@@ -664,7 +657,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
     def main_sequence(self):
 
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
-        self.out_dir = os.path.join('.', self.id, 'stimuli_free_choice')
+        self.out_dir = os.path.join('.', 'data', self.id, 'stimuli_free_choice')
 
         start = self.show_instructions(self.instructions_text)
         if not start:
@@ -672,8 +665,23 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
             return
         logger.info('started the experiment')
 
-        for i, block in enumerate(self.blocks_seq):
-            self.run_block(block)
+        total_blocks = self.n_practice_blocks + self.n_blocks
+        if self.local_first:
+            cond_seq = ['local' if i%2==0 else 'global' for i in range(total_blocks)]
+        else:
+            cond_seq = ['global' if i%2==0 else 'local' for i in range(total_blocks)]
+        type_seq = ['practice'] * self.n_practice_blocks + ['experimental'] * self.n_blocks
+        blocks_seq = zip(type_seq, cond_seq)
+        logger.info('made blocks sequence: {}'.format(blocks_seq))
+
+        practice_imgs_seq = self.make_practice_images_sequence(self.out_dir)
+        imgs_seq = self.load_images_sequence(self.out_dir)
+
+        for i, block in enumerate(blocks_seq):
+            if block[0] == 'practice':
+                self.run_block(block, practice_imgs_seq)
+            elif block[0] == 'experimental':
+                self.run_block(block, imgs_seq)
 
         core.wait(2)
         self.finished = True

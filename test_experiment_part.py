@@ -35,6 +35,7 @@ class TestExperimentPart(unittest.TestCase):
         cls.isolum = IsoluminanceDetection(cls.win, id, cls.params['IsoluminanceDetection'])
         cls.choice = FreeChoiceExperiment(cls.win, id, cls.colours, cls.params['FreeChoiceExperiment'])
         cls.divided = DividedAttentionExperiment(cls.win, id, cls.colours, cls.params['DividedAttentionExperiment'])
+        cls.selective = SelectiveAttentionExperiment(cls.win, id, cls.colours, cls.params['SelectiveAttentionExperiment'])
         cls.stream_handler = logging.StreamHandler()
         logger.addHandler(cls.stream_handler)
 
@@ -84,12 +85,12 @@ class TestExperimentPart(unittest.TestCase):
         del self.choice.colours_dict['fg_grey']
         with self.assertRaises(AssertionError):
             self.choice.check_colours_dict()
+        self.choice.colours_dict['fg_grey'] = [128, 128, 128]
 
         self.choice.colours_dict['bg_col'] = [256, 0, 0]
         with self.assertRaises(AssertionError):
             self.choice.check_colours_dict()
 
-        self.choice.colours_dict['fg_grey'] = [128, 128, 128]
         self.choice.colours_dict['bg_col'] = [0, 0, 255]
 
 

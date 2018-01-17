@@ -2,3 +2,4 @@
 *.exp
 *.pkl
 logs
+data
