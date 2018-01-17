@@ -547,23 +547,16 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         return seq
 
 
-    def run_block(self, kind):
+    def run_block(self, kind, imgs_seq):
 
-        if kind == 'practice':
-            txt = self.instructions_text_practice
-            images_seq = self.make_practice_images_sequence(self.out_dir)
-        elif kind == 'experiment':
-            txt = self.instructions_text_experiment
-            images_seq = self.load_images_sequence(self.out_dir)
-
-        start = self.show_instructions(txt)
+        start = self.show_instructions(self.instructions_text_block)
         if not start:
             logger.info('did not start block {}'.format(kind))
             return
         logger.info('started block {}'.format(kind))
         core.wait(1)
 
-        for i, img in enumerate(images_seq):
+        for i, img in enumerate(imgs_seq):
             core.wait(self.t_prestim)
             resp, lat = self.run_trial(img)
             core.wait(self.t_poststim)
@@ -580,7 +573,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
         self.keylist = [self.pos_key, self.neg_key, 'escape']
-        self.out_dir = os.path.join('.', 'data', self.id, 'stimuli_div_attention')
+        out_dir = os.path.join('.', 'data', self.id, 'stimuli_div_attention')
 
         start = self.show_instructions(self.instructions_text)
         if not start:
@@ -588,8 +581,15 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
             return
         logger.info('started the experiment')
 
-        for i, block in enumerate(self.blocks_seq):
-            self.run_block(block)
+        blocks_seq = ['practice'] * self.n_practice_blocks + ['experimental'] * self.n_blocks
+        practice_imgs_seq = self.make_practice_images_sequence(out_dir)
+        imgs_seq = self.load_images_sequence(out_dir)
+
+        for i, block in enumerate(blocks_seq):
+            if block == 'practice':
+                self.run_block(block, practice_imgs_seq)
+            elif block == 'experimental':
+                self.run_block(block, imgs_seq)
 
         core.wait(2)
         self.finished = True
@@ -657,7 +657,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
     def main_sequence(self):
 
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
-        self.out_dir = os.path.join('.', 'data', self.id, 'stimuli_free_choice')
+        out_dir = os.path.join('.', 'data', self.id, 'stimuli_free_choice')
 
         start = self.show_instructions(self.instructions_text)
         if not start:
@@ -674,8 +674,8 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         blocks_seq = zip(type_seq, cond_seq)
         logger.info('made blocks sequence: {}'.format(blocks_seq))
 
-        practice_imgs_seq = self.make_practice_images_sequence(self.out_dir)
-        imgs_seq = self.load_images_sequence(self.out_dir)
+        practice_imgs_seq = self.make_practice_images_sequence(out_dir)
+        imgs_seq = self.load_images_sequence(out_dir)
 
         for i, block in enumerate(blocks_seq):
             if block[0] == 'practice':
