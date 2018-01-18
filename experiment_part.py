@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import psychopy
 from psychopy import visual, core, event
 import numpy as np
@@ -11,6 +13,7 @@ import csv
 import shutil
 import datetime
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -129,15 +132,15 @@ class ContrastDetection(ExperimentPart):
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            text = '{} = detected'.format(self.pos_key.upper()),
-            pos = (-7, 0))
+            text = '→  detected'.decode('UTF-8'),
+            pos = (7, 0))
 
         self.negative = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            text = '{} = not detected'.format(self.neg_key.upper()),
-            pos = (7, 0))
+            text = 'not detected  ←'.decode('UTF-8'),
+            pos = (-7, 0))
 
 
     @property
@@ -427,11 +430,11 @@ class FreeChoiceExperiment(ExperimentPart):
         left_letter, right_letter = np.random.choice([image.global_letter, image.local_letter], size = 2, replace = False)
 
         # Get rid of "num_" if needed (to display on screen)
-        lk = self.left_key.split('_')[-1]
-        rk = self.right_key.split('_')[-1]
+        # lk = self.left_key.split('_')[-1]
+        # rk = self.right_key.split('_')[-1]
 
-        self.left_resp.text = '{} = {}'.format(lk, left_letter.upper())
-        self.right_resp.text = '{} = {}'.format(rk, right_letter.upper())
+        self.left_resp.text = '{}  ←'.format(left_letter.upper()).decode('UTF-8')
+        self.right_resp.text = '→  {}'.format(right_letter.upper()).decode('UTF-8')
 
         event.clearEvents()
         key = None
@@ -451,7 +454,7 @@ class FreeChoiceExperiment(ExperimentPart):
                 key = event.getKeys(keyList = self.keylist, timeStamped = self.clock)
 
         if not key:
-            self.question.draw()
+            # self.question.draw()
             self.left_resp.draw()
             self.right_resp.draw()
             self.win.flip()
@@ -468,7 +471,7 @@ class FreeChoiceExperiment(ExperimentPart):
         elif key[0] == 'escape':
             response = 'stop'
 
-        self.question.draw()
+        # self.question.draw()
         self.left_resp.draw()
         self.right_resp.draw()
         self.win.flip()
@@ -600,7 +603,12 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
     def run_trial(self, img):
 
         self.stim.setImage(img.stim_path)
-        keylist = [img.global_letter, img.local_letter]
+        self.left_resp.color = 255
+        self.right_resp.color = 255
+
+        left_letter, right_letter = np.random.choice([img.global_letter, img.local_letter], size = 2, replace = False)
+        self.left_resp.text = '{}  ←'.format(left_letter.upper()).decode('UTF-8')
+        self.right_resp.text = '→  {}'.format(right_letter.upper()).decode('UTF-8')
 
         self.fixation_cross.draw()
         self.win.flip()
@@ -609,19 +617,26 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
             pass
 
         self.stim.draw()
+        self.left_resp.draw()
+        self.right_resp.draw()
         self.win.flip()
         self.clock.reset()
-        key = event.waitKeys(keyList = keylist, timeStamped = self.clock)
+        key = event.waitKeys(keyList = self.keylist, timeStamped = self.clock)
 
         key, = key
         latency = key[1]
-        if key[0] == img.global_letter:
-            response = 'global'
-        elif key[0] == img.local_letter:
-            response = 'local'
+        if key[0] == self.left_key:
+            response = img.get_response_type(left_letter)
+            self.left_resp.color = 150
+        elif key[0] == self.right_key:
+            response = img.get_response_type(right_letter)
+            self.right_resp.color = 150
         elif key[0] == 'escape':
             response = 'stop'
 
+        self.stim.draw()
+        self.left_resp.draw()
+        self.right_resp.draw()
         self.win.flip()
 
         return response, latency
@@ -658,6 +673,9 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
 
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
         out_dir = os.path.join('.', 'data', self.id, 'stimuli_free_choice')
+        self.keylist = [self.left_key, self.right_key, 'escape']
+        # self.left_resp.pos = [-5, -10]
+        # self.right_resp.pos = [5, -10]
 
         start = self.show_instructions(self.instructions_text)
         if not start:

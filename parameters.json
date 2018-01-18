@@ -1,6 +1,7 @@
 {
 	"viewing_distance": 40,
     "monitor_name": "labBENQ",
+    "thank_you_text": "Thank you for participating!",
 
 	"ContrastDetection":{
 		"images_dir": "./images/line_drawings",
@@ -15,8 +16,8 @@
 		"t_stim": 0.25,
 		"t_prestim": 0.5,
 		"t_poststim": 0.5,
-		"pos_key": "f",
-		"neg_key": "j"
+		"pos_key": "right",
+		"neg_key": "left"
 	},
 
 	"IsoluminanceDetection":{
@@ -52,8 +53,8 @@
         "t_prestim": 0.5,
         "t_poststim": 1,
 		"stim_size": [7.84, 9.26],
-        "left_key": "num_1",
-        "right_key": "num_2"
+        "left_key": "left",
+        "right_key": "right"
 	},
 
     "DividedAttentionExperiment":{
@@ -71,8 +72,8 @@
         "t_prestim": 0.5,
         "t_poststim": 1,
         "stim_size": [7.84, 9.26],
-        "pos_key": "f",
-        "neg_key": "j"
+        "pos_key": "right",
+        "neg_key": "left"
     },
 
     "SelectiveAttentionExperiment":{
@@ -91,7 +92,9 @@
         "t_fix": 1,
         "t_prestim": 0.5,
         "t_poststim": 1,
-        "stim_size": [7.84, 9.26]
+        "stim_size": [7.84, 9.26],
+        "left_key": "left",
+        "right_key": "right"
     }
 
 }

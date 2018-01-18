@@ -259,7 +259,6 @@ class Application(object):
                 return
             self.save_colours(self.colours)
 
-
         self.win = visual.Window(
             size = [1920, 1080],
             monitor = self.params['monitor_name'],
@@ -270,6 +269,16 @@ class Application(object):
             units = 'deg')
         self.win.mouseVisible = False
 
+        self.thank_you = visual.TextStim(
+            win = self.win,
+            colorSpace = 'rgb255',
+            color = 255,
+            text = '',
+            pos = (0, 0))
+
+        # The app is no longer needed
+        self.root.quit()
+        self.root.destroy()
 
         ###
         exps = [ ('contrast', 'ContrastDetection', ContrastDetection),
@@ -309,12 +318,14 @@ class Application(object):
                         filename = os.path.join(self.dir, experiment.export_filename)
                         experiment.export_results(filename)
 
-
+        self.win.flip()
+        self.thank_you.text = self.params['thank_you_text']
+        self.thank_you.draw()
+        self.win.flip()
+        event.waitKeys()
         self.win.close()
-        showinfo('Experiment', 'Finished!')
+
         logger.info('finished experiment')
-        self.root.quit()
-        self.root.destroy()
 
 
     def load_params(self, file):
