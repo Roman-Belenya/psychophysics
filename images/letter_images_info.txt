@@ -9,7 +9,7 @@ w = 204 px      5.48 cm		7.84°
 h = 241 px      6.48 cm		9.26°
 
 Global letters:
-w = 130 px      3.49 cm 	5.00°
+w = 122 px      3.28 cm 	4.70°
 h = 167 px      4.49 cm	    6.42°
 
 Local letters:
