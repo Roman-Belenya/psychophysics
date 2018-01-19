@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageFilter
 import numpy as np
 import os
 import logging
@@ -63,7 +63,7 @@ class MyImage(object):
             return False
 
 
-    def make_image(self, path, fg, bg):
+    def make_image(self, path, fg, bg, blur = 0.5):
 
         # img = np.array(Image.open(self.template_path))
         img = np.array(Image.open(self.template_path))
@@ -72,6 +72,9 @@ class MyImage(object):
         img[fg_mask] = fg
         img[~fg_mask] = bg
 
-        Image.fromarray(img).save(path)
+        img = Image.fromarray(img)
+        if blur:
+            img = img.filter(ImageFilter.GaussianBlur(radius = blur))
+        img.save(path)
         logger.info('created image: {}'.format(path))
 
