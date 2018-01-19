@@ -244,7 +244,7 @@ class ContrastDetection(ExperimentPart):
                     detects += 1
             i += 1
 
-
+        self.win.flip()
         core.wait(2)
         self.finished = True
 
@@ -342,6 +342,7 @@ class IsoluminanceDetection(ExperimentPart):
             np.random.shuffle(images_seq)
             self.run_block(kind, images_seq)
 
+        self.win.flip()
         core.wait(2)
         self.finished = True
 
@@ -503,6 +504,7 @@ class FreeChoiceExperiment(ExperimentPart):
             self.responses.append( (n, img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
+        self.win.flip()
         core.wait(2)
         self.finished = True
 
@@ -594,6 +596,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
             elif block == 'experimental':
                 self.run_block(block, imgs_seq)
 
+        self.win.flip()
         core.wait(2)
         self.finished = True
 
@@ -701,6 +704,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
             elif block[0] == 'experimental':
                 self.run_block(block, imgs_seq)
 
+        self.win.flip()
         core.wait(2)
         self.finished = True
 
