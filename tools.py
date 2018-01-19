@@ -62,10 +62,10 @@ def invert(colour):
 
 
 def deg_to_cm(degs, d):
-    return 2 * d * np.tan(degs/2.0)
+    return 2 * d * np.tan(np.degrees(degs)/2.0)
 
 def cm_to_deg(cms, d):
-    return 2 * np.arctan(cms/(2.0*d))
+    return np.degrees(2 * np.arctan(cms/(2.0*d)))
 
 def find_ppi(pix_h, pix_v, diagonal):
     return np.sqrt(pix_h**2 + pix_v**2) / diagonal
@@ -76,6 +76,12 @@ def find_flicker_fs(frames, monitor_fs):
 
 def find_frames_in_cycle(flicker_fs, monitor_fs):
     return monitor_fs / float(flicker_fs)
+    
+def pix_to_cm(pix, ppi):
+    return pix * 2.54 / ppi
+    
+def cm_to_pix(cm, ppi):
+    return (cm / 2.54) * ppi
 
 
 
