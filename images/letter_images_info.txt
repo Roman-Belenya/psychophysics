@@ -1,6 +1,6 @@
-Monitor:
-h = 1080 px     29.88 cm    40.96°
-w = 1920 px     51.13 cm    65.17°
+﻿Monitor:
+h = 1080 px     29.88 cm    	40.96°
+w = 1920 px     51.13 cm    	65.17°
 ppi = 94.48
 
 
@@ -10,7 +10,7 @@ h = 241 px      6.48 cm		9.26°
 
 Global letters:
 w = 122 px      3.28 cm 	4.70°
-h = 167 px      4.49 cm	    6.42°
+h = 167 px      4.49 cm	    	6.42°
 
 Local letters:
 w = 19 px       0.51 cm		0.73°

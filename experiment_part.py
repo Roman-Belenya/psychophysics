@@ -60,14 +60,22 @@ class ExperimentPart(object):
             size = self.stim_size,
             colorSpace = 'rgb255')
 
-        self.fixation_cross = visual.GratingStim(
+        # self.fixation_cross = visual.GratingStim(
+        #     win = self.win,
+        #     tex = None,
+        #     mask = 'cross',
+        #     size = 1,
+        #     units = 'deg',
+        #     colorSpace = 'rgb255',
+        #     color = 135)
+
+        fix_img = './images/fixation_cross.png'
+        self.fixation_cross = visual.ImageStim(
             win = self.win,
-            tex = None,
-            mask = 'cross',
-            size = 1,
-            units = 'deg',
+            size = 3.42,
             colorSpace = 'rgb255',
             color = 135)
+        self.fixation_cross.mask = get_fg_mask(fix_img)
 
         logger.info('creating {}'.format(str(self)))
 
