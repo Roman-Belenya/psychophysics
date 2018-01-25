@@ -15,7 +15,7 @@
 		"instructions_text": "Contrast detection part",
 		"t_stim": 0.25,
 		"t_prestim": 0.5,
-		"t_poststim": 0.5,
+		"t_poststim": 1,
 		"pos_key": "right",
 		"neg_key": "left"
 	},

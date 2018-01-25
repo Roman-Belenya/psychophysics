@@ -32,7 +32,7 @@ class ExperimentPart(object):
 
         self.win = win
         self.id = id
-        self.images = [os.path.abspath(img) for img in glob.glob(os.path.join(self.images_dir, '*.png'))]
+        self.images = glob.glob(os.path.join(self.images_dir, '*.png'))
         self.responses = []
         self.colheaders = []
         self.finished = False
@@ -41,24 +41,23 @@ class ExperimentPart(object):
         self.instructions = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 255,
+            color = 200,
             text = '',
             pos = (0, 0))
 
         self.press_any = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 255,
+            color = 200,
             text = 'Press any button to continue',
             pos = (0, -10))
 
         self.stim = visual.ImageStim(
             win = self.win,
-            image = None,
-            mask = None,
             units = 'deg',
             size = self.stim_size,
-            colorSpace = 'rgb255')
+            colorSpace = 'rgb255',
+            interpolate = True)
 
         # self.fixation_cross = visual.GratingStim(
         #     win = self.win,
@@ -97,7 +96,7 @@ class ExperimentPart(object):
 
     def export_results(self, filename, *extralines):
 
-        if os.path.isfile(filename):
+        while os.path.isfile(filename):
             name, ext = os.path.splitext(filename)
             filename = name + '_new' + ext
 
@@ -139,14 +138,14 @@ class ContrastDetection(ExperimentPart):
         self.positive = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 255,
+            color = 200,
             text = '→  detected'.decode('UTF-8'),
             pos = (7, 0))
 
         self.negative = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 255,
+            color = 200,
             text = 'not detected  ←'.decode('UTF-8'),
             pos = (-7, 0))
 
@@ -165,6 +164,9 @@ class ContrastDetection(ExperimentPart):
 
     def run_trial(self, kind):
 
+        self.win.flip()
+        core.wait(self.t_prestim)
+
         if kind == 1: # if is experimental trial
             self.stim.draw()
         self.win.flip()
@@ -172,12 +174,7 @@ class ContrastDetection(ExperimentPart):
         while self.clock.getTime() <= self.t_stim:
             pass
         self.win.flip()
-
-
-    def get_response(self):
-
-        self.positive.color = 255
-        self.negative.color = 255
+        core.wait(self.t_poststim)
 
         self.positive.draw()
         self.negative.draw()
@@ -200,6 +197,10 @@ class ContrastDetection(ExperimentPart):
         self.positive.draw()
         self.negative.draw()
         self.win.flip()
+
+        core.wait(1)
+        self.positive.color = 200
+        self.negative.color = 200
 
         return response, increment
 
@@ -232,12 +233,7 @@ class ContrastDetection(ExperimentPart):
                 self.stim.color = self.fg_grey
 
             #Run the trial
-            core.wait(self.t_prestim)
-            self.run_trial(kind)
-            core.wait(self.t_poststim)
-
-            # Get the response
-            response, increment = self.get_response()
+            response, increment = self.run_trial(kind)
             if response == 'stop':
                 logger.info('broke from the experiment')
                 break
@@ -371,19 +367,19 @@ class FreeChoiceExperiment(ExperimentPart):
         self.left_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 255,
+            color = 200,
             pos = [-3, -8])
 
         self.right_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 255,
+            color = 200,
             pos = [3, -8])
 
         self.question = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 255,
+            color = 200,
             text = self.question_text,
             pos = (0, -5))
 
@@ -431,8 +427,8 @@ class FreeChoiceExperiment(ExperimentPart):
     def run_trial(self, image):
 
         self.stim.setImage(image.stim_path)
-        self.left_resp.color = 255
-        self.right_resp.color = 255
+        event.clearEvents()
+        key = None
 
         # Randomly associate global and local letters with left/right response. Local/global letters can randomly appear on the left/right (4 possible combinations)
         # left = local, left = global, right = local, right = global
@@ -445,14 +441,14 @@ class FreeChoiceExperiment(ExperimentPart):
         self.left_resp.text = '{}  ←'.format(left_letter.upper()).decode('UTF-8')
         self.right_resp.text = '→  {}'.format(right_letter.upper()).decode('UTF-8')
 
-        event.clearEvents()
-        key = None
-
         self.fixation_cross.draw()
         self.win.flip()
         self.clock.reset()
         while self.clock.getTime() < self.t_fix:
             pass
+
+        self.win.flip()
+        core.wait(self.t_prestim)
 
         self.stim.draw()
         self.win.flip()
@@ -485,6 +481,12 @@ class FreeChoiceExperiment(ExperimentPart):
         self.right_resp.draw()
         self.win.flip()
 
+        core.wait(self.t_poststim)
+
+        # Reset the colours of the answer options
+        self.left_resp.color = 200
+        self.right_resp.color = 200
+
         return response, latency
 
 
@@ -503,9 +505,7 @@ class FreeChoiceExperiment(ExperimentPart):
         core.wait(1)
 
         for n, img in enumerate(images_seq):
-            core.wait(self.t_prestim)
             resp, lat = self.run_trial(img)
-            core.wait(self.t_poststim)
             if resp == 'stop':
                 logger.info('stopped experiment')
                 break
@@ -530,6 +530,9 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         while self.clock.getTime() < self.t_fix:
             pass
 
+        self.win.flip()
+        core.wait(self.t_prestim)
+
         self.stim.draw()
         self.win.flip()
         self.clock.reset()
@@ -545,6 +548,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
             response = 'stop'
 
         self.win.flip()
+        core.wait(self.t_poststim)
 
         return response, latency
 
@@ -570,9 +574,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         core.wait(1)
 
         for i, img in enumerate(imgs_seq):
-            core.wait(self.t_prestim)
             resp, lat = self.run_trial(img)
-            core.wait(self.t_poststim)
             if resp == 'stop':
                 logger.info('stopped block {}'.format(kind))
                 return
@@ -614,8 +616,6 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
     def run_trial(self, img):
 
         self.stim.setImage(img.stim_path)
-        self.left_resp.color = 255
-        self.right_resp.color = 255
 
         left_letter, right_letter = np.random.choice([img.global_letter, img.local_letter], size = 2, replace = False)
         self.left_resp.text = '{}  ←'.format(left_letter.upper()).decode('UTF-8')
@@ -626,6 +626,9 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         self.clock.reset()
         while self.clock.getTime() < self.t_fix:
             pass
+
+        self.win.flip()
+        core.wait(self.t_prestim)
 
         self.stim.draw()
         self.left_resp.draw()
@@ -650,6 +653,10 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         self.right_resp.draw()
         self.win.flip()
 
+        self.left_resp.color = 200
+        self.right_resp.color = 200
+        core.wait(self.t_poststim)
+
         return response, latency
 
 
@@ -668,9 +675,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         core.wait(1)
 
         for i, img in enumerate(imgs_seq):
-            core.wait(self.t_prestim)
             resp, lat = self.run_trial(img)
-            core.wait(self.t_poststim)
             if resp == 'stop':
                 logger.info('stopped block {}'.format(kind))
                 return
@@ -685,8 +690,6 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
         out_dir = os.path.join('.', 'data', self.id, 'stimuli_free_choice')
         self.keylist = [self.left_key, self.right_key, 'escape']
-        # self.left_resp.pos = [-5, -10]
-        # self.right_resp.pos = [5, -10]
 
         start = self.show_instructions(self.instructions_text)
         if not start:

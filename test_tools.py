@@ -40,9 +40,9 @@ class TestTools(unittest.TestCase):
 
     def test_deg_to_cm(self):
         self.assertEqual(deg_to_cm(np.radians(0), 40), 0)
-        s = np.radians(100)
+        s = 100
         d = 40
-        v = 2 * d * np.tan(s/2.0)
+        v = 2 * d * np.tan(np.radians(s)/2.0)
         self.assertEqual(deg_to_cm(s,d), v)
 
 

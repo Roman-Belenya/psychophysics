@@ -221,7 +221,7 @@ class Application(object):
 
         np.random.seed(1)
 
-        # Get participant's id and make directories
+        # Get participant's id
         id = self.id.get()
         if id == "Participant's id":
             showwarning('Missing id', "Enter participant's id")
@@ -232,6 +232,12 @@ class Application(object):
             ans = askyesno("Participant's id", '{} already exists. Continue experiment with this participant?'.format(id))
             if ans:
                 logger.info('continuing with participant {}'.format(id))
+                cols = os.path.join(self.dir, 'colours.json')
+                try:
+                    self.colours = json.load(open(cols, 'rb'))
+                    logger.info('loaded colours from {}'.format(cols))
+                except:
+                    logger.exception('failed to load colours from {}'.format(cols))
             else:
                 logger.info('do not continue with participant {}. returning'.format(id))
                 return
@@ -251,9 +257,11 @@ class Application(object):
         logger.info('selected experiments: {}'.format(sel))
 
         # Need to define colours if free choice is selected, but one of isolum or contrast is not
-        need_def = (sel['free'] or sel['divided'] or sel['selective']) and not (sel['contrast'] and sel['isolum'])
+        grey_is_defined = sel['contrast'] or self.colours['fg_grey']
+        col_is_defined = sel['isolum'] or self.colours['bg_col']
+        need_def = (sel['free'] or sel['divided'] or sel['selective']) and not (grey_is_defined and col_is_defined)
         if need_def:
-            popup = PopupEntries(self, not sel['contrast'], not sel['isolum'])
+            popup = PopupEntries(self, not grey_is_defined, not col_is_defined)
             self.root.wait_window(popup.top)
             if not popup.finished:
                 return
@@ -272,7 +280,7 @@ class Application(object):
         self.thank_you = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 255,
+            color = 200,
             text = '',
             pos = (0, 0))
 
@@ -280,7 +288,6 @@ class Application(object):
         self.root.quit()
         self.root.destroy()
 
-        ###
         exps = [ ('contrast', 'ContrastDetection', ContrastDetection),
                 ('isolum', 'IsoluminanceDetection', IsoluminanceDetection),
                 ('free', 'FreeChoiceExperiment', FreeChoiceExperiment),
@@ -298,7 +305,7 @@ class Application(object):
                         self.win.close()
                         showwarning('Experiment error', str(e))
                         logger.exception('error in experiment:')
-                        return # this will return from start_expeiment without closing the app
+                        return
                     finally:
                         filename = os.path.join(self.dir, experiment.export_filename)
                         experiment.export_results(filename, ['Mean colour:', experiment.output_col])
@@ -370,7 +377,7 @@ class Application(object):
         showinfo('Test results', '{} error(s) detected'.format(len(result.failures)))
         if not result.wasSuccessful():
             for i in result.failures:
-                logger.error('test error:\n'.format(i[1]))
+                logger.error('test error:\n{}'.format(i[1]))
         else:
             logger.info('all tests are successful')
 
