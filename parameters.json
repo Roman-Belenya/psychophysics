@@ -50,7 +50,7 @@
 		"n_trials": 5,
 		"t_fix": 1,
 		"t_stim": 0.25,
-        "t_prestim": 0.5,
+        "t_prestim": 1,
         "t_poststim": 1,
 		"stim_size": [7.84, 9.26],
         "left_key": "left",
@@ -73,7 +73,8 @@
         "t_poststim": 1,
         "stim_size": [7.84, 9.26],
         "pos_key": "right",
-        "neg_key": "left"
+        "neg_key": "left",
+        "target_letter": "h"
     },
 
     "SelectiveAttentionExperiment":{

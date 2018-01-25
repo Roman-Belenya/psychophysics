@@ -111,7 +111,8 @@ class ExperimentPart(object):
             writer.writerow( ['Experiment:', str(self)] )
             writer.writerow( ['Participant:', self.id] )
             writer.writerow( ['Date:', self.datetime.strftime('%d %B %Y')] )
-            writer.writerow( ['Time:', self.datetime.strftime('%H:%M:%S')] )
+            exp_time = datetime.datetime.now()
+            writer.writerow( ['Time:', self.datetime.strftime('%H:%M:%S'), exp_time.strftime('%H:%M:%S')] )
 
             for line in extralines:
                 writer.writerow(line)
@@ -578,7 +579,8 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
             if resp == 'stop':
                 logger.info('stopped block {}'.format(kind))
                 return
-            self.responses.append( (i, kind, img.cond, img.name, resp, lat) )
+            correct = img.has_letter(self.target_letter) == resp # this var tells whether the resp was correct or not
+            self.responses.append( (i, kind, img.cond, img.name, resp, correct, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
         logger.info('finished block {}'.format(kind))
@@ -586,7 +588,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
     def main_sequence(self):
 
-        self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
+        self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Correct', 'Latency']
         self.keylist = [self.pos_key, self.neg_key, 'escape']
         out_dir = os.path.join('.', 'data', self.id, 'stimuli_div_attention')
 
@@ -602,9 +604,14 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
         for i, block in enumerate(blocks_seq):
             if block == 'practice':
-                self.run_block(block, practice_imgs_seq)
+                seq = practice_imgs_seq
             elif block == 'experimental':
-                self.run_block(block, imgs_seq)
+                seq = imgs_seq
+
+            # reverse the order of trials (the same as seq[::-1])
+            if i > 0:
+                seq = reversed(seq)
+            self.run_block(block, seq)
 
         self.win.flip()
         core.wait(2)
@@ -703,7 +710,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         else:
             cond_seq = ['global' if i%2==0 else 'local' for i in range(total_blocks)]
         type_seq = ['practice'] * self.n_practice_blocks + ['experimental'] * self.n_blocks
-        blocks_seq = zip(type_seq, cond_seq)
+        blocks_seq = zip(type_seq, cond_seq) # (practice, global), (experimental, local) etc.
         logger.info('made blocks sequence: {}'.format(blocks_seq))
 
         practice_imgs_seq = self.make_practice_images_sequence(out_dir)
@@ -711,9 +718,13 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
 
         for i, block in enumerate(blocks_seq):
             if block[0] == 'practice':
-                self.run_block(block, practice_imgs_seq)
+                seq = practice_imgs_seq
             elif block[0] == 'experimental':
-                self.run_block(block, imgs_seq)
+                seq = imgs_seq
+
+            if i > 0:
+                seq = reversed(seq)
+            self.run_block(block, seq)
 
         self.win.flip()
         core.wait(2)
