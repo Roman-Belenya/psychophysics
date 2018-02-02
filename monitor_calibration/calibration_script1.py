@@ -58,7 +58,7 @@ mon.setNotes('psychopy')
 
 
 # Get the spectra data
-datafile = 'C:\Users\marotta_admin\Desktop\spectra.csv'
+datafile = './spectra_data/spectra.csv'
 
 wavelengths = []
 power = []

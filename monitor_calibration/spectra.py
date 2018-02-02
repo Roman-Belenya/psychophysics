@@ -2,7 +2,7 @@ import numpy as np
 import csv
 from psychopy import monitors
 
-datafile = 'C:\Users\marotta_admin\Desktop\spectra.csv'
+datafile = './spectra_data/spectra.csv'
 
 wavelengths = []
 power = []
