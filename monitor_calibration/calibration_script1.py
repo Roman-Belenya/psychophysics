@@ -1,5 +1,6 @@
 from psychopy import monitors
 import numpy as np
+import csv
 
 files = ['./spectra_data/luminance.dat',
          './spectra_data/red.dat',
@@ -53,6 +54,33 @@ mon.setLumsPre(lums)
 mon.setLineariseMethod(4)
 mon.setGammaGrid(gammaGrid)
 mon.setNotes('psychopy')
+
+
+
+# Get the spectra data
+datafile = 'C:\Users\marotta_admin\Desktop\spectra.csv'
+
+wavelengths = []
+power = []
+
+with open(datafile, 'rb') as f:
+    reader = csv.reader(f)
+    for i, line in enumerate(reader):
+        if i == 0:
+            print line
+            continue
+        line = map(float, line)
+        wavelengths.append(line[0])
+        power.append(line[1:])
+
+wavelengths = np.array(wavelengths) # 1xN
+power = np.transpose(power) # should be a 3xN matrix
+
+dkl2rgb = monitors.makeDKL2RGB(wavelengths, power)
+lms2rgb = monitors.makeLMS2RGB(wavelengths, power)
+
+mon.setDKL2RGB(dkl2rgb)
+mon.setLMS2RGB(lms2rgb)
 
 mon.saveMon()
 

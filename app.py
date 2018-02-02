@@ -269,7 +269,8 @@ class Application(object):
 
         self.win = visual.Window(
             size = [1920, 1080],
-            monitor = self.params['monitor_name'],
+            # monitor = 'self.params['monitor_name']',
+            monitor = 'labDell',
             screen = 0,
             fullscr = True,
             colorSpace = 'rgb255',

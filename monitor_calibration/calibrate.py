@@ -3,7 +3,7 @@ import numpy as np
 np.random.seed(1)
 
 mon = monitors.Monitor('labDell')
-mon.setCurrent('matlab')
+mon.setCurrent('psychopy')
 print mon.currentCalib['notes']
 
 win = visual.Window(
@@ -12,7 +12,7 @@ win = visual.Window(
     screen = 0,
     fullscr = True,
     colorSpace = 'rgb255',
-    color = 111,
+    color = 128,
     units = 'pix')
 
 noise_tex = np.random.rand(1920, 1200) * 2 - 1
@@ -97,9 +97,9 @@ def calibrate(chan, n = 32):
 if __name__ == '__main__':
 
     # Measure levels
-    # calibs = ['luminance', 'red', 'green', 'blue']
-    # for calib in calibs:
-    #     calibrate(calib, n = 32)
+    calibs = ['luminance', 'red', 'green', 'blue']
+    for calib in calibs:
+        calibrate(calib, n = 32)
 
     # Measure pure colours
     # cols = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
@@ -125,11 +125,11 @@ if __name__ == '__main__':
 
     # Test calibration
 
-    cols = [0, 128, 255]
-    for col in cols:
-        target.color = col
-        target.draw()
-        win.flip()
-        event.waitKeys()
+    # cols = [0, 128, 255]
+    # for col in cols:
+    #     target.color = col
+    #     target.draw()
+    #     win.flip()
+    #     event.waitKeys()
 
     win.close()
