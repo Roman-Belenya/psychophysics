@@ -7,32 +7,24 @@ logger = logging.getLogger(__name__)
 
 class MyImage(object):
 
-    def __init__(self, template_path, out_dir, cond, colours_dict, make_img = True):
-        '''template_path is b&w template, out_dir is subject dir'''
+    def __init__(self, template_path, cond, colours_dict):
+        '''template_path is b&w template'''
 
         self.template_path = os.path.abspath(template_path)
-        out_dir = os.path.abspath(out_dir)
         self.cond = cond
 
         _, name = os.path.split(self.template_path)
         self.name, ext = os.path.splitext(name)
 
-        self.stim_path = os.path.join(out_dir, self.name + '_' + cond + ext)
-        # e.g. './P01/stimuli_free_choice/Hs_parvo.png'
-
-        if make_img and not os.path.isfile(self.stim_path):
-
-            if cond == 'magno':
-                fg = colours_dict['fg_grey']
-                bg = colours_dict['bg_grey']
-            elif cond == 'parvo':
-                fg = colours_dict['fg_col']
-                bg = colours_dict['bg_col']
-            elif cond == 'unbiased':
-                fg = [0,0,0]
-                bg = colours_dict['bg_grey']
-
-            self.make_image(self.stim_path, fg = fg, bg = bg)
+        if cond == 'magno':
+            self.fg = colours_dict['fg_grey']
+            self.bg = colours_dict['bg_grey']
+        elif cond == 'parvo':
+            self.fg = colours_dict['fg_col']
+            self.bg = colours_dict['bg_col']
+        elif cond == 'unbiased':
+            self.fg = [0,0,0]
+            self.bg = colours_dict['bg_grey']
 
         self.global_letter = self.name[0].lower()
         self.local_letter = self.name[1].lower()
@@ -63,18 +55,17 @@ class MyImage(object):
             return False
 
 
-    def make_image(self, path, fg, bg, blur = 0.5):
+    def make_image(self, blur = 0.5):
 
-        # img = np.array(Image.open(self.template_path))
-        img = np.array(Image.open(self.template_path))
-        fg_mask = img[:, :, 0] == 0
+        arr = np.array(Image.open(self.template_path))
+        fg_mask = arr[:, :, 0] == 0
 
-        img[fg_mask] = fg
-        img[~fg_mask] = bg
+        arr[fg_mask] = self.fg
+        arr[~fg_mask] = self.bg
 
-        img = Image.fromarray(img)
+        img = Image.fromarray(arr)
         if blur:
             img = img.filter(ImageFilter.GaussianBlur(radius = blur))
-        img.save(path)
-        logger.info('created image: {}'.format(path))
 
+        logger.info('created {} {} image'.format(self.cond, self.name))
+        return img

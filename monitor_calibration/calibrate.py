@@ -94,9 +94,20 @@ def calibrate(chan, n = 32):
 if __name__ == '__main__':
 
     # Measure levels
-    calibs = ['l', 'r', 'g', 'b']
-    for calib in calibs:
-        calibrate(calib, n = 32)
+    # calibs = ['l', 'r', 'g', 'b']
+    # for calib in calibs:
+    #     calibrate(calib, n = 32)
+
+    from PIL import Image
+    img = Image.open(r"C:\Users\marotta_admin\Desktop\gamma_test.png")
+    target = visual.ImageStim(
+        win = win,
+        image = img,
+        size = 256)
+
+    target.draw()
+    win.flip()
+    event.waitKeys()
 
     # Measure pure colours
     # cols = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]

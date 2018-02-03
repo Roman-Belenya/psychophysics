@@ -409,7 +409,7 @@ class FreeChoiceExperiment(ExperimentPart):
                 writer.writerow(line)
 
 
-    def load_images_sequence(self, out_dir):
+    def load_images_sequence(self):
         '''returns a sequence with MyImage objects. images are created here when encounered for the first time'''
 
         logger.info('loading trial sequence from {}'.format(self.seq_file))
@@ -420,11 +420,11 @@ class FreeChoiceExperiment(ExperimentPart):
 
             for cond, stim in reader: # cond = 'magno', stim = 'Hs'
                 path = os.path.join(self.images_dir, stim + '.png')
-                img = MyImage(path, out_dir, cond, self.colours_dict)
+                img = MyImage(path, cond, self.colours_dict)
                 seq.append(img)
         return seq
 
-
+### finished here
     def run_trial(self, image):
 
         self.stim.setImage(image.stim_path)
