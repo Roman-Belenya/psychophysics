@@ -64,23 +64,20 @@ def calibrate(chan, n = 32):
 
         tc = int(steps[i])
 
-        if chan == 'red':
+        if chan == 'r':
             target_col = [tc, 0, 0]
-        elif chan == 'green':
+        elif chan == 'g':
             target_col = [0, tc, 0]
-        elif chan == 'blue':
+        elif chan == 'b':
             target_col = [0, 0, tc]
-        elif chan == 'luminance':
+        elif chan == 'l':
             target_col = [tc] * 3
         else:
             return
 
         target.color = target_col
-        # reference.color = [255 - k for k in target_col]
         curr_colour.text = '{}/{}: {}'.format(i+1, n, str(target_col))
 
-        # noise.draw()
-        # reference.draw()
         target.draw()
         curr_colour.draw()
         win.flip()
@@ -97,7 +94,7 @@ def calibrate(chan, n = 32):
 if __name__ == '__main__':
 
     # Measure levels
-    calibs = ['luminance', 'red', 'green', 'blue']
+    calibs = ['l', 'r', 'g', 'b']
     for calib in calibs:
         calibrate(calib, n = 32)
 
