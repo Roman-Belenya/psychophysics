@@ -141,12 +141,12 @@ class TestExperimentPart(unittest.TestCase):
         logger.info('{} +- {} ms to refresh each frame, should be {}'.format(fints.mean(), fints.std(), msperframe))
         logger.info('dropped {} frames'.format(self.win.nDroppedFrames))
 
-    def test_image_creation(self):
-        out_dir = './__test__/stimuli'
-        for img in self.choice.images + self.divided.images:
-            for cond in ['magno', 'parvo', 'unbiased']:
-                image = MyImage(img, out_dir, cond, self.colours)
-                self.assertTrue(os.path.isfile(image.stim_path))
+    # def test_image_creation(self):
+    #     out_dir = './__test__/stimuli'
+    #     for img in self.choice.images + self.divided.images:
+    #         for cond in ['magno', 'parvo', 'unbiased']:
+    #             image = MyImage(img, out_dir, cond, self.colours)
+    #             self.assertTrue(os.path.isfile(image.stim_path))
 
 
 

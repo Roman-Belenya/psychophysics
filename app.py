@@ -242,8 +242,7 @@ class Application(object):
                 logger.info('do not continue with participant {}. returning'.format(id))
                 return
         else:
-            os.makedirs(os.path.join(self.dir, 'stimuli_free_choice'))
-            os.makedirs(os.path.join(self.dir, 'stimuli_div_attention'))
+            os.makedir(self.dir)
             logger.info('created new participant {}'.format(id))
 
         # Get experiment selections
@@ -256,23 +255,31 @@ class Application(object):
             }
         logger.info('selected experiments: {}'.format(sel))
 
-        # Need to define colours if free choice is selected, but one of isolum or contrast is not
-        grey_is_defined = sel['contrast'] or self.colours['fg_grey']
-        col_is_defined = sel['isolum'] or self.colours['bg_col']
-        need_def = (sel['free'] or sel['divided'] or sel['selective']) and not (grey_is_defined and col_is_defined)
+        need_def, need_grey, need_col = self.need_definition(sel)
         if need_def:
-            popup = PopupEntries(self, not grey_is_defined, not col_is_defined)
+            popup = PopupEntries(self, need_grey, need_col)
             self.root.wait_window(popup.top)
             if not popup.finished:
                 return
             self.save_colours(self.colours)
 
+        mon_name = self.params['monitor_name']
+        calib_name = self.params['calibration_name']
+        try:
+            mon = self.get_monitor(mon_name, calib_name)
+            logger.info('loaded monitor {} with calibration {}'.format(mon_name, calib_name))
+        except Exception as e:
+            logger.exception('monitor not found:')
+            showwarning('Monitor', 'Monitor object not found')
+            return
+
         self.win = visual.Window(
             size = [1920, 1080],
-            # monitor = 'self.params['monitor_name']',
-            monitor = 'labDell',
+            monitor = mon,
             screen = 0,
+            numSamples = 8,
             fullscr = True,
+            allowGUI = False,
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
@@ -341,6 +348,28 @@ class Application(object):
         with open(file, 'rb') as f:
             params = json.load(f)
         return params
+
+
+    def need_definition(self, sel):
+
+        grey = sel['contrast'] or self.colours['fg_grey']
+        col = sel['isolum'] or self.colours['bg_col']
+
+        no_detects = not(grey and col)
+        exps = sel['free'] or sel['divided'] or sel['selective']
+
+        need_def = exps and no_detects
+        return need_def, not grey, not col
+
+
+    def get_monitor(self, name, calib):
+
+        if mon not in monitors.getAllMonitors():
+            raise Exception('monitor not found')
+
+        mon = monitors.Monitor(name)
+        mon.setCurrent(calib)
+        return mon
 
 
     def add_colour(self, exp_name, value):

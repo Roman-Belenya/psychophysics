@@ -1,6 +1,7 @@
 {
 	"viewing_distance": 40,
     "monitor_name": "labBENQ",
+    "calibration_name": "experiment",
     "thank_you_text": "Thank you for participating!",
 
 	"ContrastDetection":{
