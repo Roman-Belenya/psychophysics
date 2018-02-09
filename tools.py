@@ -22,6 +22,8 @@ def create_monitor(params, calibrated = False):
 
     mon.saveMon()
 
+    return mon
+
 
 def load_matrix(filename):
 

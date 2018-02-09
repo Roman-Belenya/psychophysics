@@ -256,15 +256,16 @@ class Application(object):
                 return
             self.save_colours(self.colours)
 
-        mon_name = self.params['monitor_name']
-        calib_name = self.params['calibration_name']
+        mon_name = self.params['MonitorParams']['monitor_name']
+        calib_name = self.params['MonitorParams']['calibration_name']
         try:
             mon = self.get_monitor(mon_name, calib_name)
             logger.info('loaded monitor {} with calibration {}'.format(mon_name, calib_name))
         except Exception as e:
             logger.exception('monitor not found:')
-            showwarning('Monitor', 'Monitor object not found')
-            return
+            showwarning('Monitor', 'Monitor file not found. Creating new...')
+            mon = create_monitor(self.params['MonitorParams'])
+            logger.info('recovered {}, {}'.format(mon_name, calib_name))
 
         self.win = visual.Window(
             size = [1920, 1080],

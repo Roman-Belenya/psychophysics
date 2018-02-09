@@ -1,10 +1,7 @@
 {
-	"viewing_distance": 40,
-    "monitor_name": "labDell",
-    "calibration_name": "experiment",
     "thank_you_text": "Thank you for participating!",
 
-    "monitorParams":{
+    "MonitorParams":{
         "mon_name": "labDell",
         "calib_name": "experiment",
         "viewing_distance": 40,
