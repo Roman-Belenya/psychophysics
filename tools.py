@@ -6,7 +6,7 @@ import os
 import time
 import csv
 
-def create_monitor(params):
+def create_monitor(params, calibrated = False):
 
     mon = monitors.Monitor(name = params['mon_name'])
     mon.newCalib(params['calib_name'])
