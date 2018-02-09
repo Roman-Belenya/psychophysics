@@ -1,5 +1,6 @@
 from psychopy import monitors, visual, event
 import numpy as np
+import csv
 
 class MonitorCalibration(object):
 
@@ -183,6 +184,13 @@ class MonitorCalibration(object):
         assert all([len(self.wavelengths) == len(i) for i in self.power])
 
         return monitors.makeLMS2RGB(self.wavelengths, self.power)
+
+    def save_matrix(self, name, matrix):
+        with open(name, 'wb') as f:
+            writer = csv.writer(f)
+            for line in matrix:
+                writer.writerow(line)
+
 
 
 

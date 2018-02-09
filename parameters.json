@@ -1,8 +1,20 @@
 {
 	"viewing_distance": 40,
-    "monitor_name": "labBENQ",
+    "monitor_name": "labDell",
     "calibration_name": "experiment",
     "thank_you_text": "Thank you for participating!",
+
+    "monitorParams":{
+        "mon_name": "labDell",
+        "calib_name": "experiment",
+        "viewing_distance": 40,
+        "width_cm": 52,
+        "size_pix": [1920, 1200],
+        "lin_method": 4,
+        "gamma_grid": "",
+        "dkl2rgb": "",
+        "lms2rgb": ""
+    },
 
 	"ContrastDetection":{
 		"images_dir": "./images/line_drawings",

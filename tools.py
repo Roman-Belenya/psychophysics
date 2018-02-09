@@ -4,17 +4,34 @@ from psychopy import monitors
 import matplotlib.pyplot as plt
 import os
 import time
+import csv
 
+def create_monitor(params):
 
-def create_monitor(name, distance, width_cm, dim_pix):
-    '''create_monitor(name = 'labBENQ', distance = 40, width_cm = 53.13, dim_pix = [1920, 1080])'''
+    mon = monitors.Monitor(name = params['mon_name'])
+    mon.newCalib(params['calib_name'])
 
-    mon = monitors.Monitor(name = name)
-    mon.setWidth(width_cm)
-    mon.setDistance(distance)
-    mon.setSizePix(dim_pix)
+    mon.setWidth(params['width_cm'])
+    mon.setDistance(params['viewing_distance'])
+    mon.setSizePix(params['size_pix'])
+
+    if calibrated:
+        mon.setGammaGrid(load_matrix(params['gamma_grid']))
+        mon.setDKL2RGB(load_matrix(params['dkl2rgb']))
+        mon.setLMS2RGB(load_matrix(params['lms2rgb']))
+
     mon.saveMon()
 
+
+def load_matrix(filename):
+
+    m = []
+    with open(filename, 'rb') as f:
+        reader = csv.reader(f)
+        for line in reader:
+            m.append(map(float, line))
+
+    return m
 
 def get_fg_mask(image):
     '''returns psyhopy mask of black pixel locations where 1 = transparent, -1 = opaque '''

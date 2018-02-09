@@ -139,13 +139,6 @@ class Application(object):
             return
         self.params = self.load_params('./parameters.json')
 
-        # Check monitor viewing distane
-        mon = monitors.Monitor(self.params['monitor_name'])
-        if mon.getDistance() != self.params['viewing_distance']:
-            mon.setDistance(self.params['viewing_distance'])
-            mon.saveMon()
-            logger.info('updated monitor viewing distance: {} cm'.format(mon.getDistance))
-
         self.colours = {
             'bg_grey': self.params['ContrastDetection']['bg_grey'],
             'fg_grey': None,
@@ -242,7 +235,7 @@ class Application(object):
                 logger.info('do not continue with participant {}. returning'.format(id))
                 return
         else:
-            os.makedir(self.dir)
+            os.mkdir(self.dir)
             logger.info('created new participant {}'.format(id))
 
         # Get experiment selections
@@ -364,10 +357,13 @@ class Application(object):
 
     def get_monitor(self, name, calib):
 
-        if mon not in monitors.getAllMonitors():
+        if name not in monitors.getAllMonitors():
             raise Exception('monitor not found')
 
         mon = monitors.Monitor(name)
+        if calib not in mon.calibNames:
+            raise Exception('calibration not found')
+
         mon.setCurrent(calib)
         return mon
 

@@ -425,15 +425,15 @@ class FreeChoiceExperiment(ExperimentPart):
         return seq
 
 
-    def run_trial(self, image):
+    def run_trial(self, img):
 
-        self.stim.image = image.make_image()
+        self.stim.image = img.make_image()
         event.clearEvents()
         key = None
 
         # Randomly associate global and local letters with left/right response. Local/global letters can randomly appear on the left/right (4 possible combinations)
         # left = local, left = global, right = local, right = global
-        left_letter, right_letter = np.random.choice([image.global_letter, image.local_letter], size = 2, replace = False)
+        left_letter, right_letter = np.random.choice([img.global_letter, img.local_letter], size = 2, replace = False)
 
         # Get rid of "num_" if needed (to display on screen)
         # lk = self.left_key.split('_')[-1]
@@ -469,10 +469,10 @@ class FreeChoiceExperiment(ExperimentPart):
         key, = key
         latency = key[1]
         if key[0] == self.left_key:
-            response = image.get_response_type(left_letter)
+            response = img.get_response_type(left_letter)
             self.left_resp.color = 150
         elif key[0] == self.right_key:
-            response = image.get_response_type(right_letter)
+            response = img.get_response_type(right_letter)
             self.right_resp.color = 150
         elif key[0] == 'escape':
             response = 'stop'
@@ -522,7 +522,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
     def run_trial(self, img):
 
-        self.stim.setImage(img.stim_path)
+        self.stim.image = img.make_image()
 
         self.fixation_cross.draw()
         self.win.flip()
@@ -620,7 +620,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
 
     def run_trial(self, img):
 
-        self.stim.setImage(img.stim_path)
+        self.stim.image = img.make_image()
 
         left_letter, right_letter = np.random.choice([img.global_letter, img.local_letter], size = 2, replace = False)
         self.left_resp.text = '{}  ←'.format(left_letter.upper()).decode('UTF-8')
