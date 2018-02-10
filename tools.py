@@ -14,6 +14,7 @@ def create_monitor(params, calibrated = False):
     mon.setWidth(params['width_cm'])
     mon.setDistance(params['viewing_distance'])
     mon.setSizePix(params['size_pix'])
+    mon.setLineariseMethod(params['lin_method'])
 
     if calibrated:
         mon.setGammaGrid(load_matrix(params['gamma_grid']))

@@ -6,14 +6,20 @@ class MonitorCalibration(object):
 
     def __init__(self, mon_name, calib_name):
 
+
         self.mon = monitors.Monitor(mon_name)
 
-        self.mon.newCalib(calibName = calib_name)
-        self.mon.setCurrent(calib_name)
-        self.mon.setDistance(40)
-        self.mon.setWidth(52)
-        self.mon.setSizePix([1920, 1200])
-        self.mon.setLineariseMethod(4)
+        if calib_name in self.mon.calibNames:
+            self.mon.setCurrent(calib_name)
+            print 'loaded {}'.format(calib_name)
+        else:
+            self.mon.newCalib(calibName = calib_name)
+            self.mon.setCurrent(calib_name)
+            self.mon.setDistance(40)
+            self.mon.setWidth(52)
+            self.mon.setSizePix([1920, 1200])
+            self.mon.setLineariseMethod(4)
+            print 'created ne calib'
 
         self.levels = map(int, np.linspace(0, 255, 16))
         self.lums = []
@@ -53,16 +59,16 @@ class MonitorCalibration(object):
             color = 0)
 
     def minimise(self):
-        self.win.winHandle.set_fullscreen(False)
         self.win.winHandle.minimize()
+        # self.win.winHandle.set_fullscreen(False)
         self.win.flip()
 
     def maximise(self):
-        self.win.winHandle.set_fullscreen(True)
         self.win.winHandle.maximize()
+        # self.win.winHandle.set_fullscreen(True)
         self.win.flip()
 
-    def measure_levels(self, chans = ['l', 'r', 'g', 'b']):
+    def measure_lums(self, chans = ['l', 'r', 'g', 'b']):
 
         self.maximise()
 
@@ -121,9 +127,9 @@ class MonitorCalibration(object):
         return lum
 
 
-    def get_gamma(self):
+    def get_gamma(self, lums):
 
-        if len(self.lums) != 4:
+        if len(lums) != 4:
             raise Exception('need 4 lum measurements')
 
         gamma_grid = []
@@ -191,9 +197,22 @@ class MonitorCalibration(object):
             for line in matrix:
                 writer.writerow(line)
 
+    def test_lums(self):
+
+        self.maximise()
+
+        cols = [[0, 0, 0], [128, 128, 128], [255, 255, 255]]
+
+        for col in cols:
+                self.target.color = col
+                self.target.draw()
+                self.win.flip()
+                event.waitKeys()
+
+        self.minimise()
 
 
 
-if __name__ == 'monitor_calibration':
-    c = MonitorCalibration('test', 'ha')
+# if __name__ == 'monitor_calibration':
+#     c = MonitorCalibration('test', 'ha')
 
