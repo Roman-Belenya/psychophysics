@@ -1,9 +1,9 @@
-red = importdata('./spectra_data/red.dat');
-green = importdata('./spectra_data/green.dat');
-blue = importdata('./spectra_data/blue.dat');
-lum = importdata('./spectra_data/luminance.dat');
+red = importdata('./calib/r.dat');
+green = importdata('./calib/g.dat');
+blue = importdata('./calib/b.dat');
+lum = importdata('./calib/l.dat');
 
-x = linspace(0, 255, 32)';
+x = linspace(0, 255, 16)';
 L = [lum.data(:,2) red.data(:,2) green.data(:,2) blue.data(:,2)];
 m = zeros(4, 6);
 c = ['k' 'r' 'g' 'b'];
@@ -19,7 +19,7 @@ for i = 1:4
     hold on
     plot(x, gammaFcn(x, res), c(i))
     plot(x, gammaIFcn2(x, res), c(i))
-    plot(x, gammaIFcn2(gammaFcn(x, res), res), c(i))
+    plot(x, gammaIFcn2(gammaFcn(x, res), res), 'c:')
 end
 
 % subplot(2,2,2)

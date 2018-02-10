@@ -21,6 +21,56 @@ b.aft = importdata('./calib/b_after.dat');
 
 %% Models
 
+levels = linspace(0, 255, 16)';
+
+% Luminance
+figure
+[res, gof] = gammaFit(levels, l.bef.data(:, 2));
+fit = gammaFcn(levels, res);
+
+plot(levels, l.bef.data(:, 2), 'ko')
+hold on
+plot(levels, l.aft.data(:, 2), 'k.')
+
+plot(levels, fit, 'k-')
+
+%%
+% Red
+figure
+[res, gof] = gammaFit(levels, r.bef.data(:, 2));
+fit = gammaFcn(levels, res);
+
+plot(levels, r.bef.data(:, 2), 'ro')
+hold on
+plot(levels, r.aft.data(:, 2), 'r.')
+
+plot(levels, fit, 'r-')
+
+
+% Green
+figure
+[res, gof] = gammaFit(levels, g.bef.data(:, 2));
+fit = gammaFcn(levels, res);
+
+plot(levels, g.bef.data(:, 2), 'go')
+hold on
+plot(levels, g.aft.data(:, 2), 'g.')
+
+plot(levels, fit, 'g-')
+
+
+% Blue
+figure
+[res, gof] = gammaFit(levels, b.bef.data(:, 2));
+fit = gammaFcn(levels, res);
+
+plot(levels, b.bef.data(:, 2), 'bo')
+hold on
+plot(levels, b.aft.data(:, 2), 'b.')
+
+plot(levels, fit, 'b-')
+plot(levels, gammaIFcn(b.bef.data(:, 2), res), 'b--')
+
 
 %% Spectrum plots
 
