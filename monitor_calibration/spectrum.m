@@ -26,13 +26,17 @@ levels = linspace(0, 255, 16)';
 % Luminance
 figure
 [res, gof] = gammaFit(levels, l.bef.data(:, 2));
-fit = gammaFcn(levels, res);
+fit = normalise(gammaFcn(levels, res));
 
-plot(levels, l.bef.data(:, 2), 'ko')
+plot(levels, normalise(l.bef.data(:, 2)), 'ko')
 hold on
-plot(levels, l.aft.data(:, 2), 'k.')
+plot(levels, normalise(l.aft.data(:, 2)), 'k.')
 
 plot(levels, fit, 'k-')
+plot(levels, normalise(gammaIFcn(levels, res)))
+xlabel('Input')
+ylabel('Luminance (cd/m^2)')
+legend('measurement before', 'measurement after', 'gamma model', 'location', 'northwest')
 
 %%
 % Red
