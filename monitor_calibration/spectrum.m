@@ -3,91 +3,54 @@
 
 delimeterIn = '\t';
 headerlinesIn = 33;
-spectra.bef = importdata('./calib/spectrum.dat', delimeterIn, headerlinesIn);
-spectra.aft = importdata('./calib/spectrum_after.dat', delimeterIn, headerlinesIn);
 
-l.bef = importdata('./calib/l.dat');
-l.aft = importdata('./calib/l_after.dat');
+spectrum = importdata('./calib_data/spectra/rgb.dat', delimeterIn, headerlinesIn);
 
-r.bef = importdata('./calib/r.dat');
-r.aft = importdata('./calib/r_after.dat');
+l.bef = importdata('./calib_data/l.dat');
+l.aft = importdata('./calib_data/l_after.dat');
 
-g.bef = importdata('./calib/g.dat');
-g.aft = importdata('./calib/g_after.dat');
+r.bef = importdata('./calib_data/r.dat');
+r.aft = importdata('./calib_data/r_after.dat');
 
-b.bef = importdata('./calib/b.dat');
-b.aft = importdata('./calib/b_after.dat');
+g.bef = importdata('./calib_data/g.dat');
+g.aft = importdata('./calib_data/g_after.dat');
+
+b.bef = importdata('./calib_data/b.dat');
+b.aft = importdata('./calib_data/b_after.dat');
 
 
 %% Models
 
 levels = linspace(0, 255, 16)';
 
-% Luminance
-figure
-[res, gof] = gammaFit(levels, l.bef.data(:, 2));
-fit = normalise(gammaFcn(levels, res));
+figure()
+subplot(2,2,1)
+plot_lums(levels, l.bef.data(:, 2), l.aft.data(:, 2), 'k')
 
-plot(levels, normalise(l.bef.data(:, 2)), 'ko')
-hold on
-plot(levels, normalise(l.aft.data(:, 2)), 'k.')
+subplot(2,2,2)
+plot_lums(levels, r.bef.data(:, 2), r.aft.data(:, 2), [0.6350 0.0780 0.1840])
 
-plot(levels, fit, 'k-')
-plot(levels, normalise(gammaIFcn(levels, res)))
-xlabel('Input')
-ylabel('Luminance (cd/m^2)')
-legend('measurement before', 'measurement after', 'gamma model', 'location', 'northwest')
+subplot(2,2,3)
+plot_lums(levels, g.bef.data(:, 2), g.aft.data(:, 2), [0.4660 0.6740 0.1880])
 
-%%
-% Red
-figure
-[res, gof] = gammaFit(levels, r.bef.data(:, 2));
-fit = gammaFcn(levels, res);
+subplot(2,2,4)
+plot_lums(levels, b.bef.data(:, 2), b.aft.data(:, 2), [0 0.4470 0.7410])
 
-plot(levels, r.bef.data(:, 2), 'ro')
-hold on
-plot(levels, r.aft.data(:, 2), 'r.')
+% tbl = table(levels, l.aft.data(:,2), 'VariableNames', {'levels', 'lums'});
+% mdl = fitlm(tbl, 'lums~levels');
+% plot(mdl)
 
-plot(levels, fit, 'r-')
-
-
-% Green
-figure
-[res, gof] = gammaFit(levels, g.bef.data(:, 2));
-fit = gammaFcn(levels, res);
-
-plot(levels, g.bef.data(:, 2), 'go')
-hold on
-plot(levels, g.aft.data(:, 2), 'g.')
-
-plot(levels, fit, 'g-')
-
-
-% Blue
-figure
-[res, gof] = gammaFit(levels, b.bef.data(:, 2));
-fit = gammaFcn(levels, res);
-
-plot(levels, b.bef.data(:, 2), 'bo')
-hold on
-plot(levels, b.aft.data(:, 2), 'b.')
-
-plot(levels, fit, 'b-')
-plot(levels, gammaIFcn(b.bef.data(:, 2), res), 'b--')
 
 
 %% Spectrum plots
 
-wv = spectra.bef.data(:, 1);
+wv = spectrum.data(:, 1);
 
 figure
-plot(wv, spectra.bef.data(:, 2), 'r:')
+plot(wv, spectrum.data(:, 2), 'r-')
 hold on
-plot(wv, spectra.aft.data(:, 2), 'r-')
-plot(wv, spectra.bef.data(:, 3), 'g:')
-plot(wv, spectra.aft.data(:, 3), 'g-')
-plot(wv, spectra.bef.data(:, 4), 'b:')
-plot(wv, spectra.aft.data(:, 4), 'b-')
+plot(wv, spectrum.data(:, 3), 'g-')
+plot(wv, spectrum.data(:, 4), 'b-')
 xlabel('Wavelength (nm)')
 ylabel('Radiance')
 
