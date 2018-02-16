@@ -16,8 +16,8 @@ class MonitorCalibration(object):
             self.mon.newCalib(calibName = calib_name)
             self.mon.setCurrent(calib_name)
             self.mon.setDistance(40)
-            self.mon.setWidth(52)
-            self.mon.setSizePix([1920, 1200])
+            self.mon.setWidth(53.13)
+            self.mon.setSizePix([1920, 1080])
             self.mon.setLineariseMethod(4)
             print 'created ne calib'
 
