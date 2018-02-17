@@ -259,11 +259,11 @@ class Application(object):
         mon_name = self.params['MonitorParams']['monitor_name']
         calib_name = self.params['MonitorParams']['calibration_name']
         try:
-            mon = self.get_monitor(mon_name, calib_name)
+            mon = get_monitor(mon_name, calib_name)
             logger.info('loaded monitor {} with calibration {}'.format(mon_name, calib_name))
         except Exception as e:
             logger.exception('monitor not found:')
-            showwarning('Monitor', 'Monitor file not found. Creating new...')
+            showwarning('Monitor', '{}. Creating new...'.format(str(e)))
             mon = create_monitor(self.params['MonitorParams'])
             logger.info('recovered {}, {}'.format(mon_name, calib_name))
 
@@ -356,19 +356,6 @@ class Application(object):
         return need_def, not grey, not col
 
 
-    def get_monitor(self, name, calib):
-
-        if name not in monitors.getAllMonitors():
-            raise Exception('monitor not found')
-
-        mon = monitors.Monitor(name)
-        if calib not in mon.calibNames:
-            raise Exception('calibration not found')
-
-        mon.setCurrent(calib)
-        return mon
-
-
     def add_colour(self, exp_name, value):
 
         if exp_name in ['contrast', 'ContrastDetection']:
@@ -394,7 +381,7 @@ class Application(object):
         from test_tools import TestTools
 
         to_run = [TestTools, TestExperimentPart]
-        loader= unittest.TestLoader()
+        loader = unittest.TestLoader()
         suites = [loader.loadTestsFromTestCase(test) for test in to_run]
 
         suite = unittest.TestSuite(suites)

@@ -1,12 +1,24 @@
 {
     "thank_you_text": "Thank you for participating!",
 
-    "MonitorParams":{
+    "_MonitorParams":{
         "monitor_name": "labBENQ",
         "calibration_name": "experiment",
         "viewing_distance": 40,
         "width_cm": 53.13,
         "size_pix": [1920, 1080],
+        "lin_method": 4,
+        "gamma_grid": "",
+        "dkl2rgb": "",
+        "lms2rgb": ""
+    },
+
+    "MonitorParams":{
+        "monitor_name": "LabDell",
+        "calibration_name": "no_gamma",
+        "viewing_distance": 40,
+        "width_cm": 52,
+        "size_pix": [1920, 1200],
         "lin_method": 4,
         "gamma_grid": "",
         "dkl2rgb": "",
@@ -45,7 +57,7 @@
 		"col_delta": [0, 2, 0],
 		"up_key": "up",
 		"down_key": "down",
-		"monitor_fs": 120,
+		"monitor_fs": 60,
 		"flicker_fs": 30,
         "t_prestim": 0,
         "t_poststim": 0.5

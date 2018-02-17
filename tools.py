@@ -8,8 +8,8 @@ import csv
 
 def create_monitor(params, calibrated = False):
 
-    mon = monitors.Monitor(name = params['mon_name'])
-    mon.newCalib(params['calib_name'])
+    mon = monitors.Monitor(name = params['monitor_name'])
+    mon.newCalib(params['calibration_name'])
 
     mon.setWidth(params['width_cm'])
     mon.setDistance(params['viewing_distance'])
@@ -21,9 +21,24 @@ def create_monitor(params, calibrated = False):
         mon.setDKL2RGB(load_matrix(params['dkl2rgb']))
         mon.setLMS2RGB(load_matrix(params['lms2rgb']))
 
-    mon.saveMon()
+    # mon.saveMon()
 
     return mon
+
+
+def get_monitor(name, calib):
+
+    if name not in monitors.getAllMonitors():
+        raise Exception('monitor {} not found among {}'.format(name, monitors.getAllMonitors()))
+
+    mon = monitors.Monitor(name)
+    if calib not in mon.calibNames:
+        raise Exception('calibration {} not found among {}'.format(calib, mon.calibNames))
+
+    mon.setCurrent(calib)
+
+    return mon
+
 
 
 def load_matrix(filename):

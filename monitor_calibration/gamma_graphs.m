@@ -7,17 +7,24 @@ headerlinesIn = 33;
 spectrum = importdata('./calib_data/spectra/rgb.dat', delimeterIn, headerlinesIn);
 
 l.bef = importdata('./calib_data/l.dat');
+l.bef.spectrum = importdata('./calib_data/spectra/l_spectrum.dat', delimeterIn, headerlinesIn);
 l.aft = importdata('./calib_data/l_after.dat');
+l.aft.spectrum = importdata('./calib_data/spectra/l_spectrum_after.dat', delimeterIn, headerlinesIn);
 
 r.bef = importdata('./calib_data/r.dat');
+r.bef.spectrum = importdata('./calib_data/spectra/r_spectrum.dat', delimeterIn, headerlinesIn);
 r.aft = importdata('./calib_data/r_after.dat');
+r.aft.spectrum = importdata('./calib_data/spectra/r_spectrum_after.dat', delimeterIn, headerlinesIn);
 
 g.bef = importdata('./calib_data/g.dat');
+g.bef.spectrum = importdata('./calib_data/spectra/g_spectrum.dat', delimeterIn, headerlinesIn);
 g.aft = importdata('./calib_data/g_after.dat');
+g.aft.spectrum = importdata('./calib_data/spectra/g_spectrum_after.dat', delimeterIn, headerlinesIn);
 
 b.bef = importdata('./calib_data/b.dat');
+b.bef.spectrum = importdata('./calib_data/spectra/b_spectrum.dat', delimeterIn, headerlinesIn);
 b.aft = importdata('./calib_data/b_after.dat');
-
+b.aft.spectrum = importdata('./calib_data/spectra/b_spectrum_after.dat', delimeterIn, headerlinesIn);
 
 %% Models
 
@@ -55,6 +62,34 @@ xlabel('Wavelength (nm)')
 ylabel('Radiance')
 
 
+%% Calibration spectra plots
+
+f = figure();
+subplot(2, 2, 1)
+plot(r.bef.spectrum.data(:,1), r.bef.spectrum.data(:,2:17), 'r-')
+hold on
+plot(g.bef.spectrum.data(:,1), g.bef.spectrum.data(:,2:17), 'g-')
+plot(b.bef.spectrum.data(:,1), b.bef.spectrum.data(:,2:17), 'b-')
+
+subplot(2, 2, 2)
+plot(r.aft.spectrum.data(:,1), r.aft.spectrum.data(:,2:17), 'r-')
+hold on
+plot(g.aft.spectrum.data(:,1), g.aft.spectrum.data(:,2:17), 'g-')
+plot(b.aft.spectrum.data(:,1), b.aft.spectrum.data(:,2:17), 'b-')
+
+subplot(2, 2, 3)
+plot(l.bef.spectrum.data(:,1), l.bef.spectrum.data(:,2:17), 'k-')
+
+subplot(2, 2, 4)
+plot(l.aft.spectrum.data(:,1), l.aft.spectrum.data(:,2:17), 'k-')
+
+ax = findobj(f, 'Type', 'Axes');
+for i = 1:length(ax)
+    ylabel(ax(i), {'Radiance'})
+    xlabel(ax(i), {'Wavelength'})
+    set(ax(i), 'XLim', [380, 780])
+end
+
 %% CIE plots
 
 xs = [r.bef.data(end,4) g.bef.data(end,4) b.bef.data(end,4)];
@@ -72,8 +107,8 @@ plot(b.bef.data(:,4), b.bef.data(:,5), 'w.-')
 title('Before')
 
 %%%
-xs = [r.bef.data(end,4) g.bef.data(end,4) b.bef.data(end,4)];
-ys = [r.bef.data(end,5) g.bef.data(end,5) b.bef.data(end,5)];
+xs = [r.aft.data(end,4) g.aft.data(end,4) b.aft.data(end,4)];
+ys = [r.aft.data(end,5) g.aft.data(end,5) b.aft.data(end,5)];
 
 figure
 cieplot()
