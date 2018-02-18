@@ -14,7 +14,10 @@ win = visual.Window(
     fullscr = False,
     allowGUI = False,
     color = [0, 0, 0],
-    units = 'pix')
+    units = 'pix',
+    useRetina = True)
+    
+print win.size
 
 stim1 = visual.GratingStim(
     win = win,
@@ -27,7 +30,8 @@ stim1.color = [0, 174, 0]
 col1 = visual.TextStim(
     win = win,
     text = str(stim1.color),
-    pos = [-200, -200])
+    pos = [-200, -200],
+    color = 1)
 
 stim2 = visual.GratingStim(
     win = win,
@@ -40,7 +44,8 @@ stim2.color = [225, 0, 0]
 col2 = visual.TextStim(
     win = win,
     text = str(stim2.color),
-    pos = [200, -200])
+    pos = [200, -200],
+    color = 0.2)
 
 
 stim3 = visual.GratingStim(
@@ -64,10 +69,14 @@ while True:
 
     key = event.waitKeys()
 
-    if key[0] == '1':
+    if key[0] == 'left':
         current_stim = stim1
-    elif key[0] == '2':
+        col1.color = 1
+        col2.color = 0.2
+    elif key[0] == 'right':
         current_stim = stim2
+        col2.color = 1
+        col1.color = 0.2
 
     elif key[0] == 'q':
         current_stim.color += [d, 0, 0]
@@ -80,9 +89,15 @@ while True:
         current_stim.color -= [0, d, 0]
 
     elif key[0] == 'e':
-        current_stim.color += [0, 0, d]
+        dd = d
+        if space == 'dkl':
+            dd = d * 0.1
+        current_stim.color += [0, 0, dd]
     elif key[0] == 'd':
-        current_stim.color -= [0, 0, d]
+        dd = d
+        if space == 'dkl':
+            dd = d * 0.1
+        current_stim.color -= [0, 0, dd]
 
     elif key[0] == 'f':
 
