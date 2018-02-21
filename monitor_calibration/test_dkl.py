@@ -1,12 +1,27 @@
-from psychopy import visual, event, monitors
+from psychopy import visual, event, monitors, tools
 import numpy as np
 
 mon = monitors.Monitor('LabDell')
 mon.setCurrent('experiment')
-space = 'dkl'
 d = 1
 
 
+def cart2sph(dklCart):
+
+    z,y,x = dklCart
+
+    radius = np.sqrt(x**2 + y**2 + z**2)
+    azimuth = np.arctan2(y, x)
+    elevation = np.arctan2(z, np.sqrt(x**2 + y**2))
+    
+    azimuth *= (180 / np.pi + 180)
+    elevation *= (180 / np.pi)
+    
+    sphere = np.array([elevation, azimuth, radius])
+    
+    return sphere
+
+    
 win = visual.Window(
     size = [1024, 1024],
     monitor = mon,
@@ -17,14 +32,12 @@ win = visual.Window(
     units = 'pix',
     useRetina = True)
     
-print win.size
-
 stim1 = visual.GratingStim(
     win = win,
     tex = None,
     size = 255,
     pos = [-200, 0],
-    colorSpace = space)
+    colorSpace = 'dkl')
 stim1.color = [0, 174, 0]
 
 col1 = visual.TextStim(
@@ -32,13 +45,19 @@ col1 = visual.TextStim(
     text = str(stim1.color),
     pos = [-200, -200],
     color = 1)
+    
+space1 = visual.TextStim(
+    win = win,
+    text = str(stim1.colorSpace),
+    pos = [-200, 200],
+    color = 1)
 
 stim2 = visual.GratingStim(
     win = win,
     tex = None,
     size = 255,
     pos = [200, 0],
-    colorSpace = space)
+    colorSpace = 'dkl')
 stim2.color = [225, 0, 0]
 
 col2 = visual.TextStim(
@@ -46,6 +65,12 @@ col2 = visual.TextStim(
     text = str(stim2.color),
     pos = [200, -200],
     color = 0.2)
+    
+space2 = visual.TextStim(
+    win = win,
+    text = str(stim2.colorSpace),
+    pos = [200, 200],
+    color = 1)
 
 
 stim3 = visual.GratingStim(
@@ -54,14 +79,16 @@ stim3 = visual.GratingStim(
     mask = 'circle',
     size = 128,
     pos = [0, 0],
-    colorSpace = space)
+    colorSpace = 'dkl')
 
 current_stim = stim1
 
 stim1.draw()
 col1.draw()
+space1.draw()
 stim2.draw()
 col2.draw()
+space2.draw()
 win.flip()
 
 
@@ -77,6 +104,21 @@ while True:
         current_stim = stim2
         col2.color = 1
         col1.color = 0.2
+        
+    elif key[0] == 'up':
+        if current_stim.colorSpace == 'rgb255':
+            rgb = current_stim.color / 127.5 - 1
+            conversionMatrix =  np.linalg.inv(mon.getDKL_RGB())
+            dkl = np.dot(conversionMatrix, rgb)
+            dkl = cart2sph(dkl)
+            current_stim.colorSpace = 'dkl'
+            current_stim.color = dkl
+    elif key[0] == 'down':
+        if current_stim.colorSpace == 'dkl':
+            rgb = tools.colorspacetools.dkl2rgb(current_stim.color, mon.getDKL_RGB())
+            rgb = (rgb + 1) * 127.5
+            current_stim.colorSpace = 'rgb255'
+            current_stim.color = rgb
 
     elif key[0] == 'q':
         current_stim.color += [d, 0, 0]
@@ -90,12 +132,12 @@ while True:
 
     elif key[0] == 'e':
         dd = d
-        if space == 'dkl':
+        if current_stim.colorSpace == 'dkl':
             dd = d * 0.1
         current_stim.color += [0, 0, dd]
     elif key[0] == 'd':
         dd = d
-        if space == 'dkl':
+        if current_stim.colorSpace == 'dkl':
             dd = d * 0.1
         current_stim.color -= [0, 0, dd]
 
@@ -134,12 +176,16 @@ while True:
         stim2 = current_stim
 
     col1.text = str(np.around(stim1.color, 2))
+    space1.text = str(stim1.colorSpace)
     col2.text = str(np.around(stim2.color, 2))
+    space2.text = str(stim2.colorSpace)
 
     stim1.draw()
     col1.draw()
+    space1.draw()
     stim2.draw()
     col2.draw()
+    space2.draw()
     win.flip()
 
 
