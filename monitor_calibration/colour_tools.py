@@ -1,7 +1,7 @@
 from psychopy import tools
 import numpy as np
 
-def cart2sph(dklCart):
+def dklCart2dkl(dklCart):
 
     z,y,x = dklCart
 
@@ -10,7 +10,8 @@ def cart2sph(dklCart):
     if azimuth < 0:
         azimuth += 2 * np.pi
     azimuth *= (180 / np.pi)
-    elevation = np.arctan(float(z) / np.sqrt(x**2 + y**2)) * (180 / np.pi)
+    # elevation = np.arctan(float(z) / np.sqrt(x**2 + y**2)) * (180 / np.pi)
+    elevation = np.arcsin(z/radius)
 
     return np.array([elevation, azimuth, radius])
 
@@ -26,7 +27,7 @@ def lms2rgb(lms, lms2rgb_m):
 def rgb2dkl(rgb, rgb2dkl_m):
     rgb = rgb / 127.5 - 1
     dkl = np.dot(rgb2dkl_m, rgb)
-    return self.cart2sph(dkl)
+    return dklCart2dkl(dkl)
 
 def rgb2lms(rgb, rgb2lms_m):
     rgb = rgb / 127.5 - 1
