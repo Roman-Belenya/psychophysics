@@ -12,9 +12,13 @@ class MyStim(visual.grating.GratingStim):
 
         all_spaces = ['dkl', 'rgb255', 'lms']
 
-        self.col_texts = OrderedDict( zip(all_spaces, [visual.TextStim(self.win) for i in range(3)]) )
-        for i, col_text in enumerate(self.col_texts.values()):
-            col_text.pos = [self.pos[0], self.pos[1] - (self.size[1] + 50 + i*50)]
+        texts = [
+            visual.TextStim(win = self.win,
+                pos = [self.pos[0], self.pos[1] - (self.size[1] + 50 + i*50)],
+                color = 0.2) for i in range(3)
+            ]
+
+        self.col_texts = OrderedDict( zip(all_spaces, texts) )
 
         self.space_text = visual.TextStim(win = self.win,
             text = self.colorSpace,
@@ -37,10 +41,22 @@ class MyStim(visual.grating.GratingStim):
             self.color = self.colours[space]
 
 
-    def change_colour(self, delta):
+    def change_colour(self, mag, idx):
 
-            self.color += delta
-            self.update_colours()
+        delta = [0, 0, 0]
+
+        if self.colorSpace == 'dkl':
+            if idx == 2:
+                delta[idx] += mag * 0.01
+            else:
+                delta[idx] += mag
+        elif self.colorSpace == 'lms':
+            delta[idx] += mag * 0.01
+        else:
+            delta[idx] += mag
+
+        self.color += delta
+        self.update_colours()
 
 
     def update_colours(self):
@@ -60,7 +76,14 @@ class MyStim(visual.grating.GratingStim):
             self.colours['dkl'] = rgb2dkl(self.colours['rgb255'], self.rgb2dkl_m)
 
         for key, value in self.colours.items():
-            self.col_texts[key].text = str(np.around(value, 2))
+            # self.col_texts[key].text = str(np.around(value, 2))
+            self.col_texts[key].text = '[ {:.2f} {:.2f} {:.2f} ]'.format(*value)
+
+
+    def reset_colour(self):
+
+        self.color = [0, 0, 0]
+        self.update_colours()
 
 
     def unhighlight(self):
@@ -69,7 +92,7 @@ class MyStim(visual.grating.GratingStim):
             col_text.color = 0.2
 
 
-    def hightlight(self, space):
+    def highlight(self, space):
 
         self.unhighlight()
         self.col_texts[space].color = 1
@@ -79,7 +102,7 @@ class MyStim(visual.grating.GratingStim):
 
         self.draw()
         self.space_text.draw()
-        for col_text in self.col_texts:
+        for col_text in self.col_texts.values():
             col_text.draw()
 
 
@@ -91,8 +114,9 @@ class ColourSpaces(object):
 
     def __init__(self, nStimuli = 2):
 
-        self.mon = monitors.Monitor('LabDell')
-        self.mon.setCurrent('experiment')
+        # self.mon = monitors.Monitor('LabDell')
+        # self.mon.setCurrent('experiment')
+        self.mon = monitors.Monitor('laptop')
 
         self.win = visual.Window(
             size = [1024, 1024],
@@ -107,15 +131,14 @@ class ColourSpaces(object):
 
         self.stimuli = [
             MyStim(
-            win = self.win,
-            tex = None,
-            colorSpace = 'dkl') for i in range(nStimuli)
+                win = self.win,
+                tex = None,
+                size = self.win.size[0] / (2 * nStimuli),
+                pos = [-self.win.size[0] / 2.0 + self.win.size[0] * (i+1) / (nStimuli+1), 0],
+                colorSpace = 'dkl',
+                color = [90, 0, 1]) for i in range(nStimuli)
             ]
 
-        for i, stim in enumerate(self.stimuli):
-            stim.color = [90, 0, 1]
-            stim.size = self.win.size[0] / (2*len(self.stimuli))
-            stim.pos = [-self.win.size[0] / 2.0 + self.win.size[0] * (i+1) / (len(self.stimuli)+1), 0]
 
 
     def main(self):
@@ -132,6 +155,8 @@ class ColourSpaces(object):
         increase_keys = ['q', 'w', 'e']
         vertical_keys = ['up', 'down']
         horizontal_keys = ['left', 'right']
+
+        delta_mag = 1 # how much to change the colour each time
 
         while True:
 
@@ -163,26 +188,16 @@ class ColourSpaces(object):
 
 
             elif key in increase_keys:
-                if self.stimuli[cc[1]].colorSpace != spaces[cc[0]]:
-                    cols = self.calculate_cols(self.stimuli[cc[1]])
-                    self.stimuli[cc[1]].colorSpace = spaces[cc[0]]
-                    self.stimuli[cc[1]].color = cols[cc[0]]
-                    self.spaces[cc[1]].text = spaces[cc[0]]
-
                 idx = increase_keys.index(key)
-                self.stimuli[cc[1]].color[idx] += 1
-                self.set_cols(self.stimuli[cc[1]], cc[1])
+                self.stimuli[cur_stim].change_colour(+delta_mag, idx)
 
             elif key in decrease_keys:
-                if self.stimuli[cc[1]].colorSpace != spaces[cc[0]]:
-                    cols = self.calculate_cols(self.stimuli[cc[1]])
-                    self.stimuli[cc[1]].colorSpace = spaces[cc[0]]
-                    self.stimuli[cc[1]].color = cols[cc[0]]
-                    self.spaces[cc[1]].text = spaces[cc[0]]
-
                 idx = decrease_keys.index(key)
-                self.stimuli[cc[1]].color[idx] -= 1
-                self.set_cols(self.stimuli[cc[1]], cc[1])
+                self.stimuli[cur_stim].change_colour(-delta_mag, idx)
+
+            elif key == 'r':
+                self.stimuli[cur_stim].reset_colour()
+
 
             else:
                 break
@@ -199,7 +214,7 @@ class ColourSpaces(object):
 
 if __name__ == '__main__':
 
-    cs = ColourSpaces(3)
+    cs = ColourSpaces()
 
     try:
         cs.main()

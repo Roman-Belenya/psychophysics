@@ -10,8 +10,8 @@ def dklCart2dkl(dklCart):
     if azimuth < 0:
         azimuth += 2 * np.pi
     azimuth *= (180 / np.pi)
-    # elevation = np.arctan(float(z) / np.sqrt(x**2 + y**2)) * (180 / np.pi)
-    elevation = np.arcsin(z/radius)
+    elevation = np.arctan(float(z) / np.sqrt(x**2 + y**2)) * (180 / np.pi)
+    # elevation = np.arcsin(z/radius)
 
     return np.array([elevation, azimuth, radius])
 
