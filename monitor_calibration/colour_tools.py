@@ -1,6 +1,11 @@
 from psychopy import tools
 import numpy as np
 
+def get_data(phosphors = './test_calib/spectrum_after.dat',
+    fundamentals = './lms_cone_fundamentals.csv'):
+
+    phosphors = np.loadtext()
+
 def dklCart2dkl(dklCart):
 
     z,y,x = dklCart
@@ -21,7 +26,8 @@ def dkl2rgb(dkl, dkl2rgb_m):
     return (rgb + 1) * 127.5
 
 def lms2rgb(lms, lms2rgb_m):
-    rgb = tools.colorspacetools.lms2rgb(lms, lms2rgb_m)
+    # rgb = tools.colorspacetools.lms2rgb(lms, lms2rgb_m)
+    rgb = np.dot(lms2rgb_m, lms)
     return (rgb + 1) * 127.5
 
 def rgb2dkl(rgb, rgb2dkl_m):
@@ -31,5 +37,6 @@ def rgb2dkl(rgb, rgb2dkl_m):
 
 def rgb2lms(rgb, rgb2lms_m):
     rgb = rgb / 127.5 - 1
-    lms = tools.colorspacetools.rgb2lms(rgb, rgb2lms_m)
+    # lms = tools.colorspacetools.rgb2lms(rgb, rgb2lms_m)
+    lms = np.dot(rgb2lms_m, rgb)
     return lms

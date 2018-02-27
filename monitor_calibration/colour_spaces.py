@@ -86,6 +86,18 @@ class MyStim(visual.grating.GratingStim):
         self.update_colours()
 
 
+    def round_colour(self):
+
+        if self.colorSpace == 'dkl':
+            self.color = np.append(np.around(self.color[0:2], 0), np.around(self.color[2], 2))
+        elif self.colorSpace == 'rgb255':
+            self.color = np.around(self.color, 0)
+        elif self.colorSpace == 'lms':
+            self.color = np.around(self.color, 2)
+
+        self.update_colours()
+
+
     def unhighlight(self):
 
         for col_text in self.col_texts.values():
@@ -114,9 +126,9 @@ class ColourSpaces(object):
 
     def __init__(self, nStimuli = 2):
 
-        # self.mon = monitors.Monitor('LabDell')
-        # self.mon.setCurrent('experiment')
-        self.mon = monitors.Monitor('laptop')
+        self.mon = monitors.Monitor('LabDell')
+        self.mon.setCurrent('experiment')
+        # self.mon = monitors.Monitor('laptop')
 
         self.win = visual.Window(
             size = [1024, 1024],
@@ -138,6 +150,37 @@ class ColourSpaces(object):
                 colorSpace = 'dkl',
                 color = [90, 0, 1]) for i in range(nStimuli)
             ]
+
+
+    def flicker(self):
+
+        fstim = visual.GratingStim(self.win,
+            tex = None,
+            mask = 'circle',
+            size = self.stimuli[0].size / 2.0,
+            pos = [0, 0],
+            colorSpace = self.stimuli[0].colorSpace)
+
+        self.win.flip()
+        frame = 0
+        key = None
+
+        col1 = self.stimuli[0].color
+        sp1 = self.stimuli[0].colorSpace
+        col2 = self.stimuli[1].color
+        sp2 = self.stimuli[1].colorSpace
+
+
+        while not key:
+            if frame % 1 == 0:
+                if np.all(fstim.color == col1):
+                    fstim.color = col2
+                else:
+                    fstim.color = col1
+            fstim.draw()
+            self.win.flip()
+            frame += 1
+            key = event.getKeys()
 
 
 
@@ -198,9 +241,27 @@ class ColourSpaces(object):
             elif key == 'r':
                 self.stimuli[cur_stim].reset_colour()
 
+            elif key == 't':
+                self.stimuli[cur_stim].round_colour()
 
-            else:
+            elif key == 'f':
+                self.flicker()
+
+            elif key in map(str, range(10)):
+                if key == '0':
+                    key = '10'
+                delta_mag = int(key)
+
+            elif key.startswith('num_'):
+                key = key.split('_')[1]
+                if key == '0':
+                    key = '10'
+                delta_mag = int(key)
+
+            elif key in ['return', 'escape']:
                 break
+
+
 
             for stim in self.stimuli:
                 stim.draw_all()
