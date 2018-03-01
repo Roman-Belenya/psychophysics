@@ -15,11 +15,13 @@ class TestExperimentPart(unittest.TestCase):
 
         with open('./parameters.json', 'rb') as f:
             cls.params = json.load(f)
-        id = '__test__'
+        _id = '__test__'
         os.makedirs('./__test__/stimuli')
+
+        mon = load_monitor(cls.params['MonitorParams'])
         cls.win = visual.Window(
-            size = [1920, 1080],
-            monitor = cls.params['monitor_name'],
+            size = mon.getSizePix(),
+            monitor = mon,
             screen = 0,
             fullscr = True,
             colorSpace = 'rgb255',
@@ -31,11 +33,11 @@ class TestExperimentPart(unittest.TestCase):
             'bg_col' : [0, 0, 255],
             'fg_grey': [128, 128, 128],
             'bg_grey': [150, 150, 150]}
-        cls.contrast = ContrastDetection(cls.win, id, cls.params['ContrastDetection'])
-        cls.isolum = IsoluminanceDetection(cls.win, id, cls.params['IsoluminanceDetection'])
-        cls.choice = FreeChoiceExperiment(cls.win, id, cls.colours, cls.params['FreeChoiceExperiment'])
-        cls.divided = DividedAttentionExperiment(cls.win, id, cls.colours, cls.params['DividedAttentionExperiment'])
-        cls.selective = SelectiveAttentionExperiment(cls.win, id, cls.colours, cls.params['SelectiveAttentionExperiment'])
+        cls.contrast = ContrastDetection(cls.win, _id, cls.params['ContrastDetection'])
+        cls.isolum = IsoluminanceDetection(cls.win, _id, cls.params['IsoluminanceDetection'])
+        cls.choice = FreeChoiceExperiment(cls.win, _id, cls.colours, cls.params['FreeChoiceExperiment'])
+        cls.divided = DividedAttentionExperiment(cls.win, _id, cls.colours, cls.params['DividedAttentionExperiment'])
+        cls.selective = SelectiveAttentionExperiment(cls.win, _id, cls.colours, cls.params['SelectiveAttentionExperiment'])
         cls.stream_handler = logging.StreamHandler()
         logger.addHandler(cls.stream_handler)
 
@@ -77,9 +79,9 @@ class TestExperimentPart(unittest.TestCase):
                     self.assertIn(cond, ['magno', 'parvo', 'unbiased'], 'Incorrect condition name in seq_file: {}'.format(cond))
                     self.assertIn(stim, stims, 'Incorrect stim name in seq_file: {}'.format(stim))
 
-    def test_viewing_distance(self):
-        mon = monitors.Monitor(self.params['monitor_name'])
-        self.assertEqual(self.params['viewing_distance'], mon.getDistance(), 'Need to update viewing distance')
+    # def test_viewing_distance(self):
+    #     mon = monitors.Monitor(self.params['monitor_name'])
+    #     self.assertEqual(self.params['viewing_distance'], mon.getDistance(), 'Need to update viewing distance')
 
     def test_check_colours_dict(self):
         del self.choice.colours_dict['fg_grey']
@@ -95,7 +97,7 @@ class TestExperimentPart(unittest.TestCase):
 
 
     def test_frame_rate(self):
-        mon_fs = self.isolum.monitor_fs
+        mon_fs = self.win.monitor.refresh_rate
         self.win.refreshThreshold = 1./mon_fs + 0.004
         framerate = self.win.getActualFrameRate(nIdentical = 20,
             nMaxFrames = 200,
@@ -105,17 +107,16 @@ class TestExperimentPart(unittest.TestCase):
         logger.info('actual framerate is {}'.format(framerate))
 
     def test_flicker_fs(self):
-        mfs = self.isolum.monitor_fs
+        mfs = self.win.monitor.refresh_rate
         ffs = self.isolum.flicker_fs
         self.assertLessEqual(2 * ffs, mfs, 'Flicker rate should be at least twice as little as monitor fs')
 
     def test_timing(self):
-        frame = 0
+        frame = 0.0
         t = 10
         stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
-        self.isolum.monitor_fs = float(self.isolum.monitor_fs)
         t0 = time.time()
-        while frame < self.isolum.monitor_fs * t:
+        while frame < self.win.monitor.refresh_rate * t:
             stim.text = '{:.2f}'.format(t - frame / self.isolum.monitor_fs)
             stim.draw()
             self.win.flip()
@@ -132,7 +133,7 @@ class TestExperimentPart(unittest.TestCase):
         self.isolum.col_delta = np.array([0, 1, 0])
         col = self.isolum.run_trial([0, 120, 0])
 
-        msperframe = 1000. / self.isolum.monitor_fs
+        msperframe = 1000. / self.win.monitor.refresh_rate
         fints = np.array(self.win.frameIntervals) * 1000
         t1 = fints.mean() - fints.std()
         t2 = fints.mean() + fints.std()

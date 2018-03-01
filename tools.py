@@ -6,39 +6,26 @@ import os
 import time
 import csv
 
-def create_monitor(params, calibrated = False):
+def load_monitor(params):
 
     mon = monitors.Monitor(name = params['monitor_name'])
-    mon.newCalib(params['calibration_name'])
 
+    mon.refresh_rate = params['refresh_rate']
     mon.setWidth(params['width_cm'])
     mon.setDistance(params['viewing_distance'])
     mon.setSizePix(params['size_pix'])
     mon.setLineariseMethod(params['lin_method'])
 
-    if calibrated:
-        mon.setGammaGrid(load_matrix(params['gamma_grid']))
-        mon.setDKL2RGB(load_matrix(params['dkl2rgb']))
-        mon.setLMS2RGB(load_matrix(params['lms2rgb']))
+    if params['gamma_grid']:
+        mon.setGammaGrid(params['gamma_grid'])
+    if params['dkl2rgb']:
+        mon.setDKL2RGB(params['dkl2rgb'])
+    if params['lms2rgb']:
+        mon.setLMS2RGB(params['lms2rgb'])
 
     # mon.saveMon()
 
     return mon
-
-
-def get_monitor(name, calib):
-
-    if name not in monitors.getAllMonitors():
-        raise Exception('monitor {} not found among {}'.format(name, monitors.getAllMonitors()))
-
-    mon = monitors.Monitor(name)
-    if calib not in mon.calibNames:
-        raise Exception('calibration {} not found among {}'.format(calib, mon.calibNames))
-
-    mon.setCurrent(calib)
-
-    return mon
-
 
 
 def load_matrix(filename):

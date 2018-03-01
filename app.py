@@ -256,22 +256,14 @@ class Application(object):
                 return
             self.save_colours(self.colours)
 
-        mon_name = self.params['MonitorParams']['monitor_name']
-        calib_name = self.params['MonitorParams']['calibration_name']
-        try:
-            mon = get_monitor(mon_name, calib_name)
-            logger.info('loaded monitor {} with calibration {}'.format(mon_name, calib_name))
-        except Exception as e:
-            logger.exception('monitor not found:')
-            showwarning('Monitor', '{}. Creating new...'.format(str(e)))
-            mon = create_monitor(self.params['MonitorParams'])
-            logger.info('recovered {}, {}'.format(mon_name, calib_name))
+        # Load the monitor
+        mon = load_monitor(self.params['MonitorParams'])
+        logger.info('loaded monitor {}'.format(mon.name))
 
         self.win = visual.Window(
-            size = [1920, 1080],
+            size = mon.getSizePix(),
             monitor = mon,
             screen = 0,
-            numSamples = 8,
             fullscr = True,
             allowGUI = False,
             colorSpace = 'rgb255',

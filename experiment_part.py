@@ -21,7 +21,7 @@ np.random.seed(1)
 
 class ExperimentPart(object):
 
-    def __init__(self, win, id, params):
+    def __init__(self, win, _id, params):
 
         for name, value in params.items():
             if type(value) is list:
@@ -31,7 +31,7 @@ class ExperimentPart(object):
         self.datetime = datetime.datetime.now()
 
         self.win = win
-        self.id = id
+        self.id = _id
         self.images = glob.glob(os.path.join(self.images_dir, '*.png'))
         self.responses = []
         self.colheaders = []
@@ -44,12 +44,13 @@ class ExperimentPart(object):
             color = 200,
             text = '',
             pos = (0, 0))
+        self.instructions.wrapWidth = 30
 
-        self.press_any = visual.TextStim(
+        self.press_space = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
             color = 200,
-            text = 'Press any button to continue',
+            text = 'Press the space bar to continue',
             pos = (0, -10))
 
         self.stim = visual.ImageStim(
@@ -86,9 +87,9 @@ class ExperimentPart(object):
 
         self.instructions.text = text
         self.instructions.draw()
-        self.press_any.draw()
+        self.press_space.draw()
         self.win.flip()
-        key = event.waitKeys()
+        key = event.waitKeys(keyList = ['escape', 'space'])
         if key[0] == 'escape':
             return False
         return True
@@ -128,9 +129,9 @@ class ExperimentPart(object):
 
 class ContrastDetection(ExperimentPart):
 
-    def __init__(self, win, id, params):
+    def __init__(self, win, _id, params):
 
-        super(ContrastDetection, self).__init__(win, id, params)
+        super(ContrastDetection, self).__init__(win, _id, params)
 
         self.stim.color = self.bg_grey
         self.keys = [self.pos_key, self.neg_key, 'escape']
@@ -257,14 +258,14 @@ class ContrastDetection(ExperimentPart):
 
 class IsoluminanceDetection(ExperimentPart):
 
-    def __init__(self, win, id, params):
+    def __init__(self, win, _id, params):
 
-        super(IsoluminanceDetection, self).__init__(win, id, params)
+        super(IsoluminanceDetection, self).__init__(win, _id, params)
 
         self.keys = [self.up_key, self.down_key, 'escape', 'return']
         self.colheaders = ['#', 'Condition', 'Stimulus', 'IsoColour']
 
-        self.half_cycle = self.monitor_fs / (2.0 * self.flicker_fs) # how many frames each image lasts during flickering (e.g. green 2 frames -> red 2 frames)
+        self.half_cycle = self.win.monitor.refresh_rate / (2.0 * self.flicker_fs) # how many frames each image lasts during flickering (e.g. green 2 frames -> red 2 frames)
 
 
     @property
@@ -355,9 +356,9 @@ class IsoluminanceDetection(ExperimentPart):
 
 class FreeChoiceExperiment(ExperimentPart):
 
-    def __init__(self, win, id, colours_dict, params):
+    def __init__(self, win, _id, colours_dict, params):
 
-        super(FreeChoiceExperiment, self).__init__(win, id, params)
+        super(FreeChoiceExperiment, self).__init__(win, _id, params)
 
         self.colours_dict = colours_dict
         self.check_colours_dict()
@@ -377,12 +378,12 @@ class FreeChoiceExperiment(ExperimentPart):
             color = 200,
             pos = [3, -8])
 
-        self.question = visual.TextStim(
-            win = self.win,
-            colorSpace = 'rgb255',
-            color = 200,
-            text = self.question_text,
-            pos = (0, -5))
+        # self.question = visual.TextStim(
+        #     win = self.win,
+        #     colorSpace = 'rgb255',
+        #     color = 200,
+        #     text = self.question_text,
+        #     pos = (0, -5))
 
 
     def check_colours_dict(self):
