@@ -19,9 +19,9 @@ def load_monitor(params):
     if params['gamma_grid']:
         mon.setGammaGrid(params['gamma_grid'])
     if params['dkl2rgb']:
-        mon.setDKL2RGB(params['dkl2rgb'])
+        mon.setDKL_RGB(params['dkl2rgb'])
     if params['lms2rgb']:
-        mon.setLMS2RGB(params['lms2rgb'])
+        mon.setLMS_RGB(params['lms2rgb'])
 
     # mon.saveMon()
 

@@ -126,7 +126,7 @@ class ColourSpaces(object):
 
     def __init__(self, nStimuli = 2):
 
-        self.mon = monitors.Monitor('LabDell')
+        self.mon = monitors.Monitor('labBENQ')
         self.mon.setCurrent('experiment')
         # self.mon = monitors.Monitor('laptop')
 
@@ -172,7 +172,7 @@ class ColourSpaces(object):
 
 
         while not key:
-            if frame % 1 == 0:
+            if frame % 2 == 0:
                 if np.all(fstim.color == col1):
                     fstim.color = col2
                 else:

@@ -1,7 +1,7 @@
 {
     "thank_you_text": "Thank you for participating!",
 
-    "_MonitorParams":{
+    "MonitorParams":{
         "monitor_name": "labBENQ",
         "refresh_rate": 120,
         "viewing_distance": 40,
@@ -26,7 +26,7 @@
         ]
     },
 
-    "MonitorParams":{
+    "_MonitorParams":{
         "monitor_name": "LabDell",
         "refresh_rate": 60,
         "viewing_distance": 40,
