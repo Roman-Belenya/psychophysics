@@ -265,8 +265,6 @@ class IsoluminanceDetection(ExperimentPart):
         self.keys = [self.up_key, self.down_key, 'escape', 'return']
         self.colheaders = ['#', 'Condition', 'Stimulus', 'IsoColour']
 
-        self.half_cycle = self.win.monitor.refresh_rate / (2.0 * self.flicker_fs) # how many frames each image lasts during flickering (e.g. green 2 frames -> red 2 frames)
-
 
     @property
     def output_col(self):
@@ -279,9 +277,10 @@ class IsoluminanceDetection(ExperimentPart):
     def run_trial(self, colour):
         '''colour is the colour to be changed in the trial (var_col_lo or var_col_hi)'''
 
+        half_cycle = self.win.monitor.refresh_rate / (2.0 * self.flicker_fs) # how many frames each image lasts during flickering (e.g. green 2 frames -> red 2 frames)
         frame = 0
         while True:
-            if frame % self.half_cycle == 0:
+            if frame % half_cycle == 0:
                 if np.all(self.stim.color == self.fix_col):
                     self.stim.color = colour
                 else:

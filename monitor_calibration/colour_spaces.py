@@ -2,6 +2,10 @@ from psychopy import visual, event, monitors, tools
 import numpy as np
 from colour_tools import *
 from collections import OrderedDict
+import json
+import sys
+sys.path.insert(0, '../')
+from tools import load_monitor
 
 
 class MyStim(visual.grating.GratingStim):
@@ -126,13 +130,12 @@ class ColourSpaces(object):
 
     def __init__(self, nStimuli = 2):
 
-        self.mon = monitors.Monitor('labBENQ')
-        self.mon.setCurrent('experiment')
-        # self.mon = monitors.Monitor('laptop')
+        params = json.load(open('../parameters.json', 'rb'))
+        mon = load_monitor(params['Monitors'][params['current_monitor']])
 
         self.win = visual.Window(
-            size = [1024, 1024],
-            monitor = self.mon,
+            size = [1500, 1024],
+            monitor = mon,
             screen = 0,
             fullscr = False,
             allowGUI = False,
@@ -145,34 +148,45 @@ class ColourSpaces(object):
             MyStim(
                 win = self.win,
                 tex = None,
-                size = self.win.size[0] / (2 * nStimuli),
+                size = self.win.size[1] / (2 * nStimuli),
                 pos = [-self.win.size[0] / 2.0 + self.win.size[0] * (i+1) / (nStimuli+1), 0],
                 colorSpace = 'dkl',
-                color = [90, 0, 1]) for i in range(nStimuli)
+                color = [-90, 0, 1]) for i in range(nStimuli)
             ]
 
 
+
+
+
     def flicker(self):
+
+        stim_idx1 = event.waitKeys(keyList = map(str, range(10)))
+        stim_idx1 = int(stim_idx1[0])
+        stim_idx2 = event.waitKeys(keyList = map(str, range(10)))
+        stim_idx2 = int(stim_idx2[0])
+
+        if stim_idx1 > len(self.stimuli)-1 or stim_idx2 > len(self.stimuli)-1:
+            return
 
         fstim = visual.GratingStim(self.win,
             tex = None,
             mask = 'circle',
             size = self.stimuli[0].size / 2.0,
             pos = [0, 0],
-            colorSpace = self.stimuli[0].colorSpace)
+            colorSpace = self.stimuli[stim_idx1].colorSpace)
 
         self.win.flip()
         frame = 0
         key = None
 
-        col1 = self.stimuli[0].color
-        sp1 = self.stimuli[0].colorSpace
-        col2 = self.stimuli[1].color
-        sp2 = self.stimuli[1].colorSpace
+        col1 = self.stimuli[stim_idx1].color
+        sp1 = self.stimuli[stim_idx1].colorSpace
+        col2 = self.stimuli[stim_idx2].color
+        sp2 = self.stimuli[stim_idx2].colorSpace
 
 
         while not key:
-            if frame % 2 == 0:
+            if frame % 1 == 0:
                 if np.all(fstim.color == col1):
                     fstim.color = col2
                 else:
@@ -223,7 +237,7 @@ class ColourSpaces(object):
                     if cur_space > 0:
                         cur_space -= 1
                 elif key == 'down':
-                    if cur_space < 3:
+                    if cur_space < 2:
                         cur_space += 1
 
                 self.stimuli[cur_stim].highlight(spaces[cur_space])
@@ -275,7 +289,7 @@ class ColourSpaces(object):
 
 if __name__ == '__main__':
 
-    cs = ColourSpaces()
+    cs = ColourSpaces(2)
 
     try:
         cs.main()
