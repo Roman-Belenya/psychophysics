@@ -283,6 +283,48 @@ class ColourSpaces(object):
 
 
 
+class ColourRepresentations(object):
+
+    def __init__(self, rgb255, phosphors, fundamentals):
+
+        self.rgb255 = rgb255
+        self.colour_space = 'rgb'
+        self.colours = {'rgb': rgb255, 'lms': None, 'dkl': None}
+
+
+    def rgb2lms(self, rgb255):
+
+        rgb1 = rgb255 / 255.0
+        rgbTOlms = np.dot(fundamentals, phosphors)
+        lms = np.dot(rgbTOlms, rgb1)
+        return lms
+
+
+    def lms2rgb(self, lms):
+
+        rgbTOlms = np.dot(fundamentals, phosphors)
+        lmsTOrgb = np.linalg.inv(rgbTOlms)
+        rgb1 = np.dot(lmsTOrgb, lms)
+        rgb255 = rgb1 * 255.0
+        return rgb255
+
+
+    def rgb2dkl(self, rgb255_t, rgb255_b):
+
+        lms_b = self.rgb2lms(rgb255_b)
+        lms_t = self.rgb2lms(rgb255_t)
+
+        lms_diff = lms_b - lms_t
+        B = np.array([
+            [1, 1, 0],
+            [1, -lms_b[0]/lms_b[1], 0],
+            [-1, -1, (lms_b[0] + lms_b[1]) / lms_b[2]]
+            ])
+        B_inv = np.linalg.inv(B)
+
+        lum = B_inv[:,0]
+        chro_LM = B_inv[:,1]
+        chro_S = B_inv[:,2]
 
 
 
