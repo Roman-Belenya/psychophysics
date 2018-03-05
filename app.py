@@ -257,8 +257,8 @@ class Application(object):
             self.save_colours(self.colours)
 
         # Load the monitor
-        mon = load_monitor(self.params['MonitorParams'])
-        logger.info('loaded monitor {}'.format(mon.name))
+        mon = load_monitor(self.params['Monitors'][self.params['current_monitor']])
+        logger.info('loaded monitor {}'.format(mon.currentCalib))
 
         self.win = visual.Window(
             size = mon.getSizePix(),
@@ -274,7 +274,7 @@ class Application(object):
         self.thank_you = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 200,
+            color = 255,
             text = '',
             pos = (0, 0))
 

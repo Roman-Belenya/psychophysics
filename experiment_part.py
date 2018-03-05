@@ -38,20 +38,22 @@ class ExperimentPart(object):
         self.finished = False
         self.clock = core.Clock()
 
-        self.instructions = visual.TextStim(
-            win = self.win,
-            colorSpace = 'rgb255',
-            color = 200,
-            text = '',
-            pos = (0, 0))
-        self.instructions.wrapWidth = 30
+        # self.instructions = visual.TextStim(
+        #     win = self.win,
+        #     colorSpace = 'rgb255',
+        #     color = 255,
+        #     text = '',
+        #     pos = (0, 0))
+        # self.instructions.wrapWidth = 30
 
-        self.press_space = visual.TextStim(
-            win = self.win,
-            colorSpace = 'rgb255',
-            color = 200,
-            text = 'Press the space bar to continue',
-            pos = (0, -10))
+        self.instructions = visual.ImageStim(win = self.win)
+
+        # self.press_space = visual.TextStim(
+        #     win = self.win,
+        #     colorSpace = 'rgb255',
+        #     color = 255,
+        #     text = 'Press the space bar to continue',
+        #     pos = (0, -10))
 
         self.stim = visual.ImageStim(
             win = self.win,
@@ -83,17 +85,26 @@ class ExperimentPart(object):
         return self.__class__.__name__
 
 
-    def show_instructions(self, text):
+    # def show_instructions(self, text):
 
-        self.instructions.text = text
+    #     self.instructions.text = text
+    #     self.instructions.draw()
+    #     # self.press_space.draw()
+    #     self.win.flip()
+    #     key = event.waitKeys(keyList = ['escape', 'space'])
+    #     if key[0] == 'escape':
+    #         return False
+    #     return True
+
+    def show_instructions(self, img):
+
+        self.instructions.image = img
         self.instructions.draw()
-        self.press_space.draw()
         self.win.flip()
         key = event.waitKeys(keyList = ['escape', 'space'])
         if key[0] == 'escape':
             return False
         return True
-
 
     def export_results(self, filename, *extralines):
 
@@ -140,14 +151,14 @@ class ContrastDetection(ExperimentPart):
         self.positive = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 200,
+            color = 255,
             text = '→  detected'.decode('UTF-8'),
             pos = (7, 0))
 
         self.negative = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 200,
+            color = 255,
             text = 'not detected  ←'.decode('UTF-8'),
             pos = (-7, 0))
 
@@ -201,15 +212,16 @@ class ContrastDetection(ExperimentPart):
         self.win.flip()
 
         core.wait(1)
-        self.positive.color = 200
-        self.negative.color = 200
+        self.positive.color = 255
+        self.negative.color = 255
 
         return response, increment
 
 
     def main_sequence(self):
 
-        start = self.show_instructions(self.instructions_text)
+        start = self.show_instructions(self.instructions_img)
+        print self.instructions.image
         if not start:
             logger.info('did not start experiment')
             return
@@ -334,7 +346,7 @@ class IsoluminanceDetection(ExperimentPart):
 
     def main_sequence(self):
 
-        start = self.show_instructions(self.instructions_text)
+        start = self.show_instructions(self.instructions_img)
         if not start:
             logger.info('did not start the experiment')
             return
@@ -368,19 +380,19 @@ class FreeChoiceExperiment(ExperimentPart):
         self.left_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 200,
+            color = 255,
             pos = [-3, -8])
 
         self.right_resp = visual.TextStim(
             win = self.win,
             colorSpace = 'rgb255',
-            color = 200,
+            color = 255,
             pos = [3, -8])
 
         # self.question = visual.TextStim(
         #     win = self.win,
         #     colorSpace = 'rgb255',
-        #     color = 200,
+        #     color = 255,
         #     text = self.question_text,
         #     pos = (0, -5))
 
@@ -485,8 +497,8 @@ class FreeChoiceExperiment(ExperimentPart):
         core.wait(self.t_poststim)
 
         # Reset the colours of the answer options
-        self.left_resp.color = 200
-        self.right_resp.color = 200
+        self.left_resp.color = 255
+        self.right_resp.color = 255
 
         return response, latency
 
@@ -495,7 +507,7 @@ class FreeChoiceExperiment(ExperimentPart):
 
         self.keylist = [self.left_key, self.right_key, 'escape']
 
-        start = self.show_instructions(self.instructions_text)
+        start = self.show_instructions(self.instructions_img)
         if not start:
             logger.info('did not start the experiment')
             return
@@ -590,7 +602,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Correct', 'Latency']
         self.keylist = [self.pos_key, self.neg_key, 'escape']
 
-        start = self.show_instructions(self.instructions_text)
+        start = self.show_instructions(self.instructions_img)
         if not start:
             logger.info('did not start the experiment')
             return
@@ -658,8 +670,8 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         self.right_resp.draw()
         self.win.flip()
 
-        self.left_resp.color = 200
-        self.right_resp.color = 200
+        self.left_resp.color = 255
+        self.right_resp.color = 255
         core.wait(self.t_poststim)
 
         return response, latency
@@ -668,9 +680,9 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
     def run_block(self, kind, imgs_seq):
 
         if kind[1] == 'local':
-            txt = self.instructions_text_local
+            txt = self.instructions_img_local
         elif kind[1] == 'global':
-            txt = self.instructions_text_global
+            txt = self.instructions_img_global
 
         start = self.show_instructions(txt)
         if not start:
@@ -695,10 +707,10 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
         self.keylist = [self.left_key, self.right_key, 'escape']
 
-        start = self.show_instructions(self.instructions_text)
-        if not start:
-            logger.info('did not start the experiment')
-            return
+        # start = self.show_instructions(self.instructions_text)
+        # if not start:
+        #     logger.info('did not start the experiment')
+        #     return
         logger.info('started the experiment')
 
         total_blocks = self.n_practice_blocks + self.n_blocks
