@@ -6,6 +6,8 @@ import json
 import sys
 sys.path.insert(0, '../')
 from tools import load_monitor
+from scipy.io import loadmat
+import csv
 
 
 class MyStim(visual.grating.GratingStim):
@@ -285,35 +287,95 @@ class ColourSpaces(object):
 
 class ColourRepresentations(object):
 
-    def __init__(self, rgb255, phosphors, fundamentals):
 
-        self.rgb255 = rgb255
+    def __init__(self,
+        phosphors = './calib_data/spectra/rgb.dat',
+        fundamentals = './2deg_StockmanSharpe.csv'):
+
+        self.fundamentals_mat = loadmat(r"C:\Program Files\MATLAB\colour_toolbox\fundamentals_ss.mat")['fundamentals']
+        self.phosphors_mat = loadmat(r"C:\Program Files\MATLAB\colour_toolbox\phosphors.mat")['phosphors']
+
+        self.fundamentals = self.load_fundamentals(fundamentals)
+        self.phosphors = self.load_phosphors(phosphors)
+
         self.colour_space = 'rgb'
-        self.colours = {'rgb': rgb255, 'lms': None, 'dkl': None}
+        self.colours = {'rgb': np.zeros(3), 'lms': None, 'dkl': None}
+        self.update_colours()
+
+
+    def update_colours(self):
+
+        if self.colour_space == 'rgb':
+            rgb = self.colours['rgb']
+            lms = self.rgb2lms(rgb)
+            dkl_cart = self.lms2dkl(lms)
+            dkl = self.dkl_cart2sph(dkl_cart)
+
+        elif self.colour_space == 'lms':
+            lms = self.colours['lms']
+            rgb = self.lms2rgb(lms)
+            dkl_cart = self.lms2dkl(lms)
+            dkl = self.dkl_cart2sph(dkl_cart)
+
+        elif self.colour_space == 'dkl':
+            dkl = self.colours['dkl']
+            dkl_cart = self.dkl_sph2cart(dkl)
+            lms = self.dkl2lms(dkl_cart)
+            rgb = self.lms2rgb(lms)
+
+        self.colours['rgb'] = rgb
+        self.colours['lms'] = lms
+        self.colours['dkl'] = dkl
+
+
+    def load_fundamentals(self, file):
+
+        with open(file, 'rb') as f:
+            reader = csv.reader(f)
+            rows = np.array([map(float, row) for row in reader])
+
+        mask = np.logical_and(390 <= rows[:,0], rows[:,0] <= 780)
+        return rows[mask, 1:]
+
+
+    def load_phosphors(self, file):
+
+        rows = []
+        record = False
+        with open(file, 'rb') as f:
+            for row in f:
+                if row.startswith('380'):
+                    record = True
+                if record:
+                    row_floats = map(float, row.rstrip().split('\t'))
+                    rows.append(row_floats)
+
+        rows = np.array(rows)
+        mask = np.logical_and(390 <= rows[:,0], rows[:,0] <= 780)
+
+        return rows[mask, 1:]
 
 
     def rgb2lms(self, rgb255):
 
-        rgb1 = rgb255 / 255.0
-        rgbTOlms = np.dot(fundamentals, phosphors)
+        rgb1 = np.array(rgb255) / 255.0
+        rgbTOlms = np.dot(self.fundamentals.T, self.phosphors)
         lms = np.dot(rgbTOlms, rgb1)
         return lms
 
 
     def lms2rgb(self, lms):
 
-        rgbTOlms = np.dot(fundamentals, phosphors)
+        rgbTOlms = np.dot(self.fundamentals.T, self.phosphors)
         lmsTOrgb = np.linalg.inv(rgbTOlms)
         rgb1 = np.dot(lmsTOrgb, lms)
         rgb255 = rgb1 * 255.0
         return rgb255
 
 
-    def rgb2dkl(self, rgb255_t, rgb255_b):
+    def lms2dkl(self, lms_t, lms_b = [128,128,128]):
 
-        lms_b = self.rgb2lms(rgb255_b)
-        lms_t = self.rgb2lms(rgb255_t)
-
+        lms_b = np.array(lms_b); lms_t = np.array(lms_t)
         lms_diff = lms_b - lms_t
         B = np.array([
             [1, 1, 0],
@@ -325,6 +387,129 @@ class ColourRepresentations(object):
         lum = B_inv[:,0]
         chro_LM = B_inv[:,1]
         chro_S = B_inv[:,2]
+
+        lum_pooled = np.linalg.norm(lum / lms_b)
+        chro_LM_pooled = np.linalg.norm(chro_LM / lms_b)
+        chro_S_pooled = np.linalg.norm(chro_S / lms_b)
+
+        lum_unit = lum / lum_pooled
+        chro_LM_unit = chro_LM / chro_LM_pooled
+        chro_S_unit = chro_S / chro_S_pooled
+
+        lum_norm = np.dot(B, lum_unit)
+        chro_LM_norm = np.dot(B, chro_LM_unit)
+        chro_S_norm = np.dot(B, chro_S_unit)
+
+        D_const = np.array([
+            [1 / lum_norm[0], 0, 0],
+            [0, 1 / chro_LM_norm[1], 0],
+            [0, 0, 1 / chro_S_norm[2]]
+            ])
+
+        T = np.dot(D_const, B)
+        dkl_rad = np.dot(T, lms_diff)
+
+        return dkl_rad
+
+
+    def dkl2lms(self, dkl_rad, lms_b = [128,128,128]):
+
+        lms_b = np.array(lms_b); dkl_rad = np.array(dkl_rad)
+
+        B = np.array([
+            [1, 1, 0],
+            [1, -lms_b[0] / lms_b[1], 0],
+            [-1, -1, (lms_b[0] + lms_b[1]) / lms_b[2]]
+            ])
+
+        B_inv = np.linalg.inv(B)
+
+        lum = B_inv[:,0]
+        chro_LM = B_inv[:,1]
+        chro_S = B_inv[:,2]
+
+        lum_pooled = np.linalg.norm(lum / lms_b)
+        chro_LM_pooled = np.linalg.norm(chro_LM / lms_b)
+        chro_S_pooled = np.linalg.norm(chro_S / lms_b)
+
+        lum_unit = lum / lum_pooled
+        chro_LM_unit=  chro_LM / chro_LM_pooled
+        chro_S_unit = chro_S / chro_S_pooled
+
+        lum_norm = np.dot(B, lum_unit)
+        chro_LM_norm = np.dot(B, chro_LM_unit)
+        chro_S_norm = np.dot(B, chro_S_unit)
+
+        D_const = np.array([
+            [1 / lum_norm[0], 0, 0],
+            [0, 1 / chro_LM_norm[1], 0],
+            [0, 0, 1 / chro_S_norm[2]]
+            ])
+        T = np.dot(D_const, B)
+        T_inv = np.linalg.inv(T)
+
+        lms_diff = np.dot(T_inv, dkl_rad)
+        lms_t = lms_b - lms_diff
+
+        return lms_t
+
+
+    def dkl_cart2sph(self, dkl_rad):
+
+        isolum_len = np.sqrt(dkl_rad[1]**2 + dkl_rad[2]**2)
+
+        if isolum_len == 0:
+            elevation_rad = np.arctan(dkl_rad[0] / 1e-9)
+        else:
+            elevation_rad = np.arctan(dkl_rad[0] / isolum_len)
+
+        if dkl_rad[1] > -1e-6 and dkl_rad[1] < 1e-6 and dkl_rad[2] > -1e-6 and dkl_rad[2] < 1e-6:
+            azimuth_rad = 0
+            radius = np.sqrt(dkl_rad[0]**2)
+        else:
+            azimuth_rad = np.arctan(-dkl_rad[2] / dkl_rad[1])
+            radius = isolum_len
+
+        if dkl_rad[1] > 0 and dkl_rad[2] > 0:
+            azimuth_deg = azimuth_rad * 180 / np.pi + 180
+        elif dkl_rad[1] > 0 and dkl_rad[2] < 0:
+            azimuth_deg = azimuth_rad * 180 / np.pi + 180
+        elif dkl_rad[1] < 0 and dkl_rad[2] < 0:
+            azimuth_deg = azimuth_rad * 180 / np.pi + 360
+        else:
+            azimuth_deg = azimuth_rad * 180 / np.pi
+
+        elevation_deg = -elevation_rad * 180 / np.pi
+        dkl_deg = np.array([elevation_deg, azimuth_deg, radius])
+
+        return dkl_deg
+
+
+    def dkl_sph2cart(self, dkl_sph):
+
+        elevation_deg = -dkl_sph[0]
+        azimuth_deg = dkl_sph[1]
+        radius = dkl_sph[2]
+
+        azimuth_rad = azimuth_deg * np.pi / 180
+        elevation_rad = elevation_deg * np.pi / 180
+
+        if elevation_deg in [-90, 90]:
+            lum = radius
+            rgisolum = 0
+            sisolum = 0
+        else:
+            lum = radius * np.tan(elevation_rad)
+            chro_LM = radius * -np.cos(azimuth_rad)
+            chro_S = radius * np.sin(azimuth_rad)
+
+        dkl_rad = np.array([lum, chro_LM, chro_S])
+
+        return dkl_rad
+
+
+
+
 
 
 
