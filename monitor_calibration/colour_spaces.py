@@ -16,7 +16,7 @@ class MyStim(visual.grating.GratingStim):
 
         super(MyStim, self).__init__(**kwargs)
 
-        all_spaces = ['dkl', 'rgb255', 'lms']
+        all_spaces = ['dkl', 'rgb', 'lms']
 
         texts = [
             visual.TextStim(win = self.win,
@@ -27,81 +27,23 @@ class MyStim(visual.grating.GratingStim):
         self.col_texts = OrderedDict( zip(all_spaces, texts) )
 
         self.space_text = visual.TextStim(win = self.win,
-            text = self.colorSpace,
+            text = 'rgb',
             pos = [self.pos[0], self.pos[1] + self.size[1] + 50])
 
-        self.dkl2rgb_m = self.win.monitor.getDKL_RGB()
-        self.rgb2dkl_m = np.linalg.inv(self.dkl2rgb_m)
-        self.lms2rgb_m = self.win.monitor.getLMS_RGB()
-        self.rgb2lms_m = np.linalg.inv(self.lms2rgb_m)
-
-        self.colours = OrderedDict( zip(all_spaces, [None]*3) )
-        self.update_colours()
+        self.col_repr = ColourRepresentations()
+        self.update_col_texts()
 
 
-    def change_space(self, space):
+    def update_colour(self):
+        self.color = self.col_repr.colours['rgb']
 
-        if self.colorSpace != space:
-            self.colorSpace = space
-            self.space_text.text = space
-            self.color = self.colours[space]
-
-
-    def change_colour(self, mag, idx):
-
-        delta = [0, 0, 0]
-
-        if self.colorSpace == 'dkl':
-            if idx == 2:
-                delta[idx] += mag * 0.01
-            else:
-                delta[idx] += mag
-        elif self.colorSpace == 'lms':
-            delta[idx] += mag * 0.01
-        else:
-            delta[idx] += mag
-
-        self.color += delta
-        self.update_colours()
+    def update_space(self):
+        self.space_text.text = self.col_repr.current_space
 
 
-    def update_colours(self):
-
-        self.colours[self.colorSpace] = self.color
-
-        if self.colorSpace == 'dkl':
-            self.colours['rgb255'] = dkl2rgb(self.color, self.dkl2rgb_m)
-            self.colours['lms'] = rgb2lms(self.colours['rgb255'], self.rgb2lms_m)
-
-        elif self.colorSpace == 'rgb255':
-            self.colours['dkl'] = rgb2dkl(self.color, self.rgb2dkl_m)
-            self.colours['lms'] = rgb2lms(self.color, self.rgb2lms_m)
-
-        elif self.colorSpace == 'lms':
-            self.colours['rgb255'] = lms2rgb(self.color, self.lms2rgb_m)
-            self.colours['dkl'] = rgb2dkl(self.colours['rgb255'], self.rgb2dkl_m)
-
-        for key, value in self.colours.items():
-            # self.col_texts[key].text = str(np.around(value, 2))
-            self.col_texts[key].text = '[ {:.2f} {:.2f} {:.2f} ]'.format(*value)
-
-
-    def reset_colour(self):
-
-        self.color = [0, 0, 0]
-        self.update_colours()
-
-
-    def round_colour(self):
-
-        if self.colorSpace == 'dkl':
-            self.color = np.append(np.around(self.color[0:2], 0), np.around(self.color[2], 2))
-        elif self.colorSpace == 'rgb255':
-            self.color = np.around(self.color, 0)
-        elif self.colorSpace == 'lms':
-            self.color = np.around(self.color, 2)
-
-        self.update_colours()
+    def update_col_texts(self):
+        for key, value in self.col_texts.items():
+            value.text = '[ {:.2f} {:.2f} {:.2f} ]'.format(*self.col_repr.colours[key])
 
 
     def unhighlight(self):
@@ -152,12 +94,9 @@ class ColourSpaces(object):
                 tex = None,
                 size = self.win.size[1] / (2 * nStimuli),
                 pos = [-self.win.size[0] / 2.0 + self.win.size[0] * (i+1) / (nStimuli+1), 0],
-                colorSpace = 'dkl',
-                color = [-90, 0, 1]) for i in range(nStimuli)
+                colorSpace = 'rgb255',
+                color = np.zeros(3)) for i in range(nStimuli)
             ]
-
-
-
 
 
     def flicker(self):
@@ -175,16 +114,14 @@ class ColourSpaces(object):
             mask = 'circle',
             size = self.stimuli[0].size / 2.0,
             pos = [0, 0],
-            colorSpace = self.stimuli[stim_idx1].colorSpace)
+            colorSpace = 'rgb255')
 
         self.win.flip()
         frame = 0
         key = None
 
         col1 = self.stimuli[stim_idx1].color
-        sp1 = self.stimuli[stim_idx1].colorSpace
         col2 = self.stimuli[stim_idx2].color
-        sp2 = self.stimuli[stim_idx2].colorSpace
 
 
         while not key:
@@ -206,7 +143,7 @@ class ColourSpaces(object):
             stim.draw_all()
         self.win.flip()
 
-        spaces = ['dkl', 'rgb255', 'lms']
+        spaces = ['dkl', 'rgb', 'lms']
         cur_stim = 0
         cur_space = 0
 
@@ -232,7 +169,8 @@ class ColourSpaces(object):
                         cur_stim += 1
 
                 self.stimuli[cur_stim].highlight(spaces[cur_space])
-                self.stimuli[cur_stim].change_space(spaces[cur_space])
+                self.stimuli[cur_stim].col_repr.change_space(spaces[cur_space])
+                self.stimuli[cur_stim].update_space()
 
             elif key in vertical_keys:
                 if key == 'up':
@@ -243,22 +181,33 @@ class ColourSpaces(object):
                         cur_space += 1
 
                 self.stimuli[cur_stim].highlight(spaces[cur_space])
-                self.stimuli[cur_stim].change_space(spaces[cur_space])
+                self.stimuli[cur_stim].col_repr.change_space(spaces[cur_space])
+                self.stimuli[cur_stim].update_space()
 
 
             elif key in increase_keys:
                 idx = increase_keys.index(key)
-                self.stimuli[cur_stim].change_colour(+delta_mag, idx)
+                self.stimuli[cur_stim].col_repr.change_colour(idx, +delta_mag)
+
+                self.stimuli[cur_stim].update_colour()
+                self.stimuli[cur_stim].update_col_texts()
 
             elif key in decrease_keys:
                 idx = decrease_keys.index(key)
-                self.stimuli[cur_stim].change_colour(-delta_mag, idx)
+                self.stimuli[cur_stim].col_repr.change_colour(idx, -delta_mag)
+
+                self.stimuli[cur_stim].update_colour()
+                self.stimuli[cur_stim].update_col_texts()
 
             elif key == 'r':
-                self.stimuli[cur_stim].reset_colour()
+                self.stimuli[cur_stim].col_repr.reset_colour()
+                self.stimuli[cur_stim].update_colour()
+                self.stimuli[cur_stim].update_col_texts()
 
             elif key == 't':
-                self.stimuli[cur_stim].round_colour()
+                self.stimuli[cur_stim].col_repr.round_colour()
+                self.stimuli[cur_stim].update_colour()
+                self.stimuli[cur_stim].update_col_texts()
 
             elif key == 'f':
                 self.flicker()
@@ -289,7 +238,7 @@ class ColourRepresentations(object):
 
 
     def __init__(self,
-        phosphors = './calib_data/spectra/rgb.dat',
+        phosphors = './test_calib/spectrum_after.dat',
         fundamentals = './2deg_StockmanSharpe.csv'):
 
         self.fundamentals_mat = loadmat(r"C:\Program Files\MATLAB\colour_toolbox\fundamentals_ss.mat")['fundamentals']
@@ -298,34 +247,84 @@ class ColourRepresentations(object):
         self.fundamentals = self.load_fundamentals(fundamentals)
         self.phosphors = self.load_phosphors(phosphors)
 
-        self.colour_space = 'rgb'
-        self.colours = {'rgb': np.zeros(3), 'lms': None, 'dkl': None}
+        self.all_spaces = ['rgb', 'lms', 'dkl']
+        self.colours = OrderedDict( zip(self.all_spaces, [None]*3) )
+        self.colours['rgb'] = np.zeros(3)
+        self.current_space = 'rgb'
         self.update_colours()
+
+
+    def change_colour(self, idx, mag):
+
+        delta = np.zeros(3)
+
+        if self.current_space == 'dkl':
+            if idx == 2:
+                delta[idx] += mag * 0.01
+            else:
+                delta[idx] += mag
+        elif self.current_space == 'lms':
+            delta[idx] += mag * 0.01
+        else:
+            delta[idx] += mag
+
+        self.colours[self.current_space] += delta
+        self.update_colours()
+
+
+    def change_space(self, space):
+
+        if space in range(3):
+            self.current_space = self.all_spaces[space]
+        elif type(space) is str:
+            self.current_space = space
 
 
     def update_colours(self):
 
-        if self.colour_space == 'rgb':
+        if self.current_space == 'rgb':
             rgb = self.colours['rgb']
             lms = self.rgb2lms(rgb)
             dkl_cart = self.lms2dkl(lms)
             dkl = self.dkl_cart2sph(dkl_cart)
 
-        elif self.colour_space == 'lms':
+        elif self.current_space == 'lms':
             lms = self.colours['lms']
             rgb = self.lms2rgb(lms)
             dkl_cart = self.lms2dkl(lms)
             dkl = self.dkl_cart2sph(dkl_cart)
 
-        elif self.colour_space == 'dkl':
+        elif self.current_space == 'dkl':
             dkl = self.colours['dkl']
             dkl_cart = self.dkl_sph2cart(dkl)
             lms = self.dkl2lms(dkl_cart)
             rgb = self.lms2rgb(lms)
+            print rgb
 
         self.colours['rgb'] = rgb
         self.colours['lms'] = lms
         self.colours['dkl'] = dkl
+
+
+    def reset_colour(self):
+
+        self.colours[self.current_space] = np.zeros(3)
+        self.update_colours()
+
+
+    def round_colour(self):
+
+        cur_c = self.colours[self.current_space]
+
+        if self.current_space == 'dkl':
+            round_c = np.append(np.around(cur_c[0:2], 0), np.around(cur_c[2], 2))
+        elif self.current_space == 'rgb':
+            round_c = np.around(cur_c, 0)
+        elif self.current_space == 'lms':
+            round_c = np.around(cur_c, 2)
+
+        self.colours[self.current_space] = round_c
+        self.update_colours()
 
 
     def load_fundamentals(self, file):
@@ -373,9 +372,10 @@ class ColourRepresentations(object):
         return rgb255
 
 
-    def lms2dkl(self, lms_t, lms_b = [128,128,128]):
+    def lms2dkl(self, lms_t):
 
-        lms_b = np.array(lms_b); lms_t = np.array(lms_t)
+        lms_b = self.rgb2lms([128,128,128])
+        lms_t = np.array(lms_t)
         lms_diff = lms_b - lms_t
         B = np.array([
             [1, 1, 0],
@@ -412,16 +412,16 @@ class ColourRepresentations(object):
         return dkl_rad
 
 
-    def dkl2lms(self, dkl_rad, lms_b = [128,128,128]):
+    def dkl2lms(self, dkl_rad):
 
-        lms_b = np.array(lms_b); dkl_rad = np.array(dkl_rad)
+        lms_b = self.rgb2lms([128, 128, 128])
+        dkl_rad = np.array(dkl_rad)
 
         B = np.array([
             [1, 1, 0],
-            [1, -lms_b[0] / lms_b[1], 0],
+            [1, -lms_b[0]/lms_b[1], 0],
             [-1, -1, (lms_b[0] + lms_b[1]) / lms_b[2]]
             ])
-
         B_inv = np.linalg.inv(B)
 
         lum = B_inv[:,0]
@@ -433,7 +433,7 @@ class ColourRepresentations(object):
         chro_S_pooled = np.linalg.norm(chro_S / lms_b)
 
         lum_unit = lum / lum_pooled
-        chro_LM_unit=  chro_LM / chro_LM_pooled
+        chro_LM_unit = chro_LM / chro_LM_pooled
         chro_S_unit = chro_S / chro_S_pooled
 
         lum_norm = np.dot(B, lum_unit)
@@ -445,6 +445,7 @@ class ColourRepresentations(object):
             [0, 1 / chro_LM_norm[1], 0],
             [0, 0, 1 / chro_S_norm[2]]
             ])
+
         T = np.dot(D_const, B)
         T_inv = np.linalg.inv(T)
 
@@ -487,25 +488,42 @@ class ColourRepresentations(object):
 
     def dkl_sph2cart(self, dkl_sph):
 
-        elevation_deg = -dkl_sph[0]
+        elevation_deg = dkl_sph[0]
         azimuth_deg = dkl_sph[1]
         radius = dkl_sph[2]
 
-        azimuth_rad = azimuth_deg * np.pi / 180
-        elevation_rad = elevation_deg * np.pi / 180
+        azimuth_rad = np.radians(azimuth_deg)
+        elevation_rad = np.radians(elevation_deg)
 
         if elevation_deg in [-90, 90]:
             lum = radius
-            rgisolum = 0
-            sisolum = 0
+            chro_LM = 0
+            chro_S = 0
         else:
-            lum = radius * np.tan(elevation_rad)
-            chro_LM = radius * -np.cos(azimuth_rad)
-            chro_S = radius * np.sin(azimuth_rad)
+            lum =     radius * np.sin(elevation_rad)
+            chro_LM = radius * np.cos(azimuth_rad) * np.cos(elevation_rad)
+            chro_S =  radius * np.sin(azimuth_rad) * np.cos(elevation_rad)
 
-        dkl_rad = np.array([lum, chro_LM, chro_S])
+        dkl_rad = np.array([-lum, chro_LM, chro_S])
 
         return dkl_rad
+
+
+    def dkl_sph2rgb(self, dkl_sph):
+
+        dkl_cart = self.dkl_sph2cart(dkl_sph)
+        lms = self.dkl2lms(dkl_cart)
+        rgb = self.lms2rgb(lms)
+
+        return lms
+
+    def rgb2dkl_sph(self, rgb):
+
+        lms = self.rgb2lms(rgb)
+        dkl_cart = self.lms2dkl(lms)
+        dkl_sph = self.dkl_cart2sph(dkl_cart)
+
+        return dkl_sph
 
 
 
