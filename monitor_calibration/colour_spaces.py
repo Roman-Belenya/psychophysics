@@ -555,7 +555,7 @@ class ColourRepresentations(object):
             chro_LM = radius * np.cos(azimuth_rad) * np.cos(elevation_rad)
             chro_S =  radius * np.sin(azimuth_rad) * np.cos(elevation_rad)
 
-        dkl_rad = np.array([-lum, chro_LM, chro_S])
+        dkl_rad = np.array([lum, chro_LM, chro_S])
 
         return dkl_rad
 
