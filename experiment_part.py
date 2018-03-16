@@ -137,6 +137,86 @@ class ExperimentPart(object):
         logger.info('exported file {}'.format(filename))
 
 
+class ColourTest(ExperimentPart):
+
+    def __init__(self, win, _id, params):
+
+        super(ColourTest, self).__init__(win, _id, params)
+        self.images = glob.glob(os.path.join(self.images_dir, '*.jpg'))
+        self.stim.colorSpace = 'rgb'
+
+        self.response_txt = visual.TextStim(win, text = '', pos = [0, -10])
+
+        self.colheaders = ['#', 'Number', 'Response', 'Latency']
+        self.correct_responses = [48, 67, 38, 92, 70, 95, 26, 2, 74, 62, 4, 28, 46, 7, 39]
+
+
+    def undo_gamma(self, img):
+
+        gamma = self.win.monitor.getGamma()
+        arr = (np.array(img) / 255.0) ** gamma
+        arr = np.around(arr * 255, 0)
+        new_img = Image.fromarray(arr.astype(np.uint8))
+
+        return new_img
+
+
+    def run_trial(self, img):
+
+        img = self.undo_gamma(Image.open(img))
+        self.stim.image = img
+
+        self.stim.draw()
+        self.win.flip()
+        self.clock.reset()
+
+        while True:
+            key = event.waitKeys()
+            key = key[0]
+
+            if key.startswith('num'):
+                key = key.lstrip('num_')
+
+            if key in map(str, range(10)):
+                self.response_txt.text += key
+            elif key == 'backspace':
+                self.response_txt.text = self.response_txt.text[:-1]
+            elif key == 'return':
+                if self.response_txt.text:
+                    return int(self.response_txt.text), self.clock.getTime()
+            elif key == 'escape':
+                return 'stop', None
+
+            self.stim.draw()
+            self.response_txt.draw()
+            self.win.flip()
+
+
+    def main(self):
+
+        start = self.show_instructions(self.instructions_img)
+        if not start:
+            logger.info('did not start experiment')
+            return
+
+        logger.info('started experiment')
+        core.wait(1)
+
+        for i, image in enumerate(self.images):
+
+            self.response_txt.text = ''
+            response, latency = self.run_trial(image)
+
+            if response == 'stop':
+                logger.info('broke from the experiment')
+                return
+
+            self.responses.append( (i, self.correct_responses[i], response, latency) )
+            logger.info('ran trial: {}'.format(self.responses[-1]))
+
+
+
+
 
 class ContrastDetection(ExperimentPart):
 
@@ -218,10 +298,9 @@ class ContrastDetection(ExperimentPart):
         return response, increment
 
 
-    def main_sequence(self):
+    def main(self):
 
         start = self.show_instructions(self.instructions_img)
-        print self.instructions.image
         if not start:
             logger.info('did not start experiment')
             return
@@ -344,7 +423,7 @@ class IsoluminanceDetection(ExperimentPart):
 
 
 
-    def main_sequence(self):
+    def main(self):
 
         start = self.show_instructions(self.instructions_img)
         if not start:
@@ -503,7 +582,7 @@ class FreeChoiceExperiment(ExperimentPart):
         return response, latency
 
 
-    def main_sequence(self):
+    def main(self):
 
         self.keylist = [self.left_key, self.right_key, 'escape']
 
@@ -597,7 +676,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         logger.info('finished block {}'.format(kind))
 
 
-    def main_sequence(self):
+    def main(self):
 
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Correct', 'Latency']
         self.keylist = [self.pos_key, self.neg_key, 'escape']
@@ -702,7 +781,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         logger.info('finished block {}'.format(kind))
 
 
-    def main_sequence(self):
+    def main(self):
 
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
         self.keylist = [self.left_key, self.right_key, 'escape']

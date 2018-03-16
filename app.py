@@ -139,12 +139,13 @@ class Application(object):
             return
         self.params = self.load_params('./parameters.json')
 
-        self.colours = {
-            'bg_grey': self.params['ContrastDetection']['bg_grey'],
-            'fg_grey': None,
-            'bg_col': None,
-            'fg_col': self.params['IsoluminanceDetection']['fix_col']
-            }
+        # self.colours = {
+        #     'bg_grey': self.params['ContrastDetection']['bg_grey'],
+        #     'fg_grey': None,
+        #     'bg_col': None,
+        #     'fg_col': self.params['IsoluminanceDetection']['fix_col']
+        #     }
+        self.colours = self.params['default_colours']
 
         # Participant's id entry
         self.id = tk.StringVar()
@@ -158,35 +159,41 @@ class Application(object):
 
 
         # Checkbuttons
+        self.colour_var = tk.IntVar()
+        tk.Checkbutton(
+            self.frame,
+            text = 'Colour test',
+            variable = self.colour_var).grid(row = 1, column = 0, sticky = 'W', pady = (0, 5))
+
         self.contrast_var = tk.IntVar()
         tk.Checkbutton(
             self.frame,
             text = 'Contrast detection',
-            variable = self.contrast_var).grid(row = 1, column = 0, sticky = 'W')
+            variable = self.contrast_var).grid(row = 2, column = 0, sticky = 'W')
 
         self.isolum_var = tk.IntVar()
         tk.Checkbutton(
             self.frame,
             text = 'Isoluminance deteciton',
-            variable = self.isolum_var).grid(row = 2, column = 0, sticky = 'W', pady = (0, 5))
+            variable = self.isolum_var).grid(row = 3, column = 0, sticky = 'W', pady = (0, 5))
 
         self.free_var = tk.IntVar()
         tk.Checkbutton(
             self.frame,
             text = 'Free choice',
-            variable = self.free_var).grid(row = 3, column = 0, sticky = 'W')
+            variable = self.free_var).grid(row = 4, column = 0, sticky = 'W')
 
         self.divided_var = tk.IntVar()
         tk.Checkbutton(
             self.frame,
             text = 'Divided attention',
-            variable = self.divided_var).grid(row = 4, column = 0, sticky = 'W')
+            variable = self.divided_var).grid(row = 5, column = 0, sticky = 'W')
 
         self.selective_var = tk.IntVar()
         tk.Checkbutton(
             self.frame,
             text = 'Selective attention',
-            variable = self.selective_var).grid(row = 5, column = 0, sticky = 'W')
+            variable = self.selective_var).grid(row = 6, column = 0, sticky = 'W')
 
         # Buttons
         self.tests_button = tk.Button(self.frame,
@@ -195,7 +202,7 @@ class Application(object):
             height = 2,
             width = 10,
             relief = tk.GROOVE)
-        self.tests_button.grid(row = 6, column = 0, columnspan = 2, sticky = 'EW', pady = (20, 0))
+        self.tests_button.grid(row = 7, column = 0, columnspan = 2, sticky = 'EW', pady = (20, 0))
 
         self.start_button = tk.Button(self.frame,
             text = 'Start experiment',
@@ -203,7 +210,7 @@ class Application(object):
             height = 2,
             width = 10,
             relief = tk.GROOVE)
-        self.start_button.grid(row = 7, column = 0, columnspan = 2, sticky = 'EW', pady = (10, 0))
+        self.start_button.grid(row = 8, column = 0, columnspan = 2, sticky = 'EW', pady = (10, 0))
 
         logger.info('started app')
 
@@ -215,31 +222,32 @@ class Application(object):
         np.random.seed(1)
 
         # Get participant's id
-        id = self.id.get()
-        if id == "Participant's id":
+        _id = self.id.get()
+        if _id == "Participant's id":
             showwarning('Missing id', "Enter participant's id")
             return
 
-        self.dir = os.path.join('.', 'data', id)
+        self.dir = os.path.join('.', 'data', _id)
         if os.path.isdir(self.dir):
-            ans = askyesno("Participant's id", '{} already exists. Continue experiment with this participant?'.format(id))
+            ans = askyesno("Participant's id", '{} already exists. Continue experiment with this participant?'.format(_id))
             if ans:
-                logger.info('continuing with participant {}'.format(id))
-                cols = os.path.join(self.dir, 'colours.json')
+                logger.info('continuing with participant {}'.format(_id))
+                cols_file = os.path.join(self.dir, 'colours.json')
                 try:
-                    self.colours = json.load(open(cols, 'rb'))
-                    logger.info('loaded colours from {}'.format(cols))
+                    self.colours = json.load(open(cols_file, 'rb'))
+                    logger.info('loaded colours from {}'.format(cols_file))
                 except:
-                    logger.exception('failed to load colours from {}'.format(cols))
+                    logger.exception('failed to load colours from {}'.format(cols_file))
             else:
-                logger.info('do not continue with participant {}. returning'.format(id))
+                logger.info('do not continue with participant {}. returning'.format(_id))
                 return
         else:
             os.mkdir(self.dir)
-            logger.info('created new participant {}'.format(id))
+            logger.info('created new participant {}'.format(_id))
 
         # Get experiment selections
         sel = {
+            'colour': self.colour_var.get(),
             'contrast': self.contrast_var.get(),
             'isolum': self.isolum_var.get(),
             'free': self.free_var.get(),
@@ -248,13 +256,13 @@ class Application(object):
             }
         logger.info('selected experiments: {}'.format(sel))
 
-        need_def, need_grey, need_col = self.need_definition(sel)
-        if need_def:
-            popup = PopupEntries(self, need_grey, need_col)
-            self.root.wait_window(popup.top)
-            if not popup.finished:
-                return
-            self.save_colours(self.colours)
+        # need_def, need_grey, need_col = self.need_definition(sel)
+        # if need_def:
+        #     popup = PopupEntries(self, need_grey, need_col)
+        #     self.root.wait_window(popup.top)
+        #     if not popup.finished:
+        #         return
+        #     self.save_colours(self.colours)
 
         # Load the monitor
         mon = load_monitor(self.params['Monitors'][self.params['current_monitor']])
@@ -275,14 +283,15 @@ class Application(object):
             win = self.win,
             colorSpace = 'rgb255',
             color = 255,
-            text = '',
+            text = self.params['thank_you_text'],
             pos = (0, 0))
 
         # The app is no longer needed
         self.root.quit()
         self.root.destroy()
 
-        exps = [ ('contrast', 'ContrastDetection', ContrastDetection),
+        exps = [('colour', 'ColourTest', ColourTest),
+                ('contrast', 'ContrastDetection', ContrastDetection),
                 ('isolum', 'IsoluminanceDetection', IsoluminanceDetection),
                 ('free', 'FreeChoiceExperiment', FreeChoiceExperiment),
                 ('divided', 'DividedAttentionExperiment', DividedAttentionExperiment) ,
@@ -290,26 +299,11 @@ class Application(object):
 
         for name, fullname, exp in exps:
 
-            if name in ['contrast', 'isolum']:
-                if sel[name]: # if this experiment is selected
-                    try:
-                        experiment = exp(self.win, id, self.params[fullname])
-                        experiment.main_sequence()
-                    except Exception as e:
-                        self.win.close()
-                        showwarning('Experiment error', str(e))
-                        logger.exception('error in experiment:')
-                        return
-                    finally:
-                        filename = os.path.join(self.dir, experiment.export_filename)
-                        experiment.export_results(filename, ['Mean colour:', experiment.output_col])
-                        self.add_colour(name, experiment.output_col)
-
-            elif name in ['free', 'divided', 'selective']:
+            if name == 'colour':
                 if sel[name]:
                     try:
-                        experiment = exp(self.win, id, self.colours, self.params[fullname])
-                        experiment.main_sequence()
+                        experiment = exp(self.win, _id, self.params[fullname])
+                        experiment.main()
                     except Exception as e:
                         self.win.close()
                         showwarning('Experiment error', str(e))
@@ -319,8 +313,37 @@ class Application(object):
                         filename = os.path.join(self.dir, experiment.export_filename)
                         experiment.export_results(filename)
 
+            elif name in ['contrast', 'isolum']:
+                if sel[name]: # if this experiment is selected
+                    try:
+                        experiment = exp(self.win, _id, self.params[fullname])
+                        experiment.main()
+                    except Exception as e:
+                        self.win.close()
+                        showwarning('Experiment error', str(e))
+                        logger.exception('error in experiment:')
+                        return
+                    finally:
+                        filename = os.path.join(self.dir, experiment.export_filename)
+                        experiment.export_results(filename, ['Mean colour:', experiment.output_col])
+                        self.change_colour(name, experiment.output_col)
+
+            elif name in ['free', 'divided', 'selective']:
+                if sel[name]:
+                    try:
+                        experiment = exp(self.win, _id, self.colours, self.params[fullname])
+                        experiment.main()
+                    except Exception as e:
+                        self.win.close()
+                        showwarning('Experiment error', str(e))
+                        logger.exception('error in experiment:')
+                        return
+                    finally:
+                        filename = os.path.join(self.dir, experiment.export_filename)
+                        experiment.export_results(filename)
+
+        self.save_colours()
         self.win.flip()
-        self.thank_you.text = self.params['thank_you_text']
         self.thank_you.draw()
         self.win.flip()
         event.waitKeys()
@@ -348,22 +371,24 @@ class Application(object):
         return need_def, not grey, not col
 
 
-    def add_colour(self, exp_name, value):
+    def change_colour(self, exp_name, value):
 
         if exp_name in ['contrast', 'ContrastDetection']:
             self.colours['fg_grey'] = value
         elif exp_name in ['isolum', 'IsoluminanceDetection']:
             self.colours['bg_col'] = value
-        self.save_colours(self.colours)
+        # self.save_colours(self.colours)
 
 
-    def save_colours(self, col_dict):
-        for name, value in col_dict.items():
+    def save_colours(self):
+
+        for name, value in self.colours.items():
             if type(value) is np.ndarray:
-                col_dict[name] = list(value)
+                self.colours[name] = list(value)
+
         path = os.path.join(self.dir, 'colours.json')
         with open(path, 'wb') as f:
-            json.dump(col_dict, f)
+            json.dump(self.colours, f)
 
 
     def run_tests(self):

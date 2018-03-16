@@ -1,6 +1,12 @@
 {
     "thank_you_text": "Thank you for participating!",
     "current_monitor": "DELL",
+    "default_colours":{
+        "bg_grey": [128, 128, 128],
+        "fg_grey": [131, 131, 131],
+        "bg_col": [255, 0, 0],
+        "fg_col": [127, 0, 0]
+    },
 
     "Monitors":{
         "BENQ":{
@@ -49,6 +55,13 @@
     },
 
 
+    "ColourTest":{
+        "images_dir": "./images/colour_test",
+        "export_filename": "colour_test.exp",
+        "stim_size": [8, 8],
+        "instructions_img": "./images/instructions/Slide1.png"
+    },
+
 	"ContrastDetection":{
 		"images_dir": "./images/line_drawings",
         "export_filename": "contrast.exp",
@@ -59,7 +72,7 @@
         "bg_grey": [128, 128, 128],
 		"colour_delta": [1, 1, 1],
 		"instructions_text": "On these trials you will be shown grey line drawings.  Please indicate if you detect the line drawing by pressing the right arrow key if it’s detected and left arrow key if it’s not detected.  The next trial will begin immediately following your response.",
-        "instructions_img": "./images/instructions/Slide1.png",
+        "instructions_img": "./images/instructions/Slide2.png",
 		"t_stim": 0.25,
 		"t_prestim": 0.5,
 		"t_poststim": 1,
@@ -72,7 +85,7 @@
         "export_filename": "isoluminance.exp",
         "stim_size": [9.26, 9.26],
 		"instructions_text": "On these trials you will be shown flickering line drawings. Use the up and down arrow keys to adjust the flicker until it is no longer detected. The next trial will begin immediately following your response.",
-        "instructions_img": "./images/instructions/Slide2.png",
+        "instructions_img": "./images/instructions/Slide3.png",
 		"instructions_text_up": "Press up key until the image stops flickering",
 		"instructions_text_down": "Press down key until the image stops flickering",
 		"blocks_seq": ["up", "down", "up", "down"],
@@ -94,7 +107,7 @@
         "export_filename": "free_choice.exp",
         "seq_file": "./imgs_seq_free_choice_short.csv",
 		"instructions_text": "On each trial you will be presented with a letter stimulus. Your task is to indicate the letter you first see on the screen. Two response options will be shown immediately following the stimulus.  Press the left or right arrow key corresponding with your response.",
-        "instructions_img": "./images/instructions/Slide3.png",
+        "instructions_img": "./images/instructions/Slide4.png",
 		"n_trials": 5,
 		"t_fix": 1,
 		"t_stim": 0.25,
@@ -111,7 +124,7 @@
         "seq_file": "./imgs_seq_div_attention_short.csv",
         "question_text": "ignore this for now",
         "instructions_text": "On each trial you will be presented with a letter stimulus.  Press the right arrow key if you see the letter ‘H’ and the left arrow key if you do not see the letter ‘H’ displayed on each trial.  Please answer as quickly and accurately as possible.",
-        "instructions_img": "./images/instructions/Slide4.png",
+        "instructions_img": "./images/instructions/Slide5.png",
         "instructions_text_block": "next block...",
         "n_practice_blocks": 1,
         "n_practice_trials": 2,
@@ -133,9 +146,9 @@
         "question_text": "ignore this for now",
         "instructions_text": "Selective attention experiment",
         "instructions_text_local": "On each trial you will be presented with a letter stimulus.  In these trials, please focus on the small letters on the screen.  Upon stimulus presentation, indicate as quickly and accurately as possible the small letters you saw using the left and right arrow keys corresponding to your response.",
-        "instructions_img_local": "./images/instructions/Slide5.png",
+        "instructions_img_local": "./images/instructions/Slide6.png",
         "instructions_text_global": "On each trial you will be presented with a letter stimulus.  In these trials, please focus on the big letter on the screen.  Upon stimulus presentation, indicate as quickly and accurately as possible the big letter you saw using the left and right arrow keys corresponding to your response.",
-        "instructions_img_global": "./images/instructions/Slide6.png",
+        "instructions_img_global": "./images/instructions/Slide7.png",
         "local_first": true,
         "n_blocks": 2,
         "n_trials": 5,
