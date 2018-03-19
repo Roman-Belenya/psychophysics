@@ -8,8 +8,8 @@ plot(levels, g.data(:,2), 'g.', 'MarkerSize', 10)
 
 grid on
 xlim([-17 255+17])
-xticks(linspace(0, 255, 6))
-xticklabels(linspace(0, 255, 6))
+set(gca, 'xtick', linspace(0, 255, 6))
+set(gca, 'xticklabel', linspace(0, 255, 6))
 xlabel('Input levels')
 ylim([-10, max(g.data(:,2)+10)])
 ylabel('Luminance')

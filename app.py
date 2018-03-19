@@ -23,105 +23,6 @@ logging.basicConfig(filename = os.path.join('./logs', time + '.log'),
 logger = logging.getLogger(__name__)
 
 
-class PopupEntries(object):
-
-    def __init__(self, master, def_grey = True, def_col = True):
-
-        self.master = master
-        self.top = tk.Toplevel(master.root, padx = 20, pady = 20)
-        self.top.focus_set()
-        self.top.grab_set()
-        self.top.title('Define colours')
-        self.def_grey = def_grey
-        self.def_col = def_col
-        self.finished = False
-
-
-        self.grey_vars = {'r': tk.IntVar(),
-                          'g': tk.IntVar(),
-                          'b': tk.IntVar()}
-
-        self.col_vars = {'r': tk.IntVar(),
-                  'g': tk.IntVar(),
-                  'b': tk.IntVar()}
-
-        entry_params = {'width': 3, 'relief': tk.FLAT, 'justify': tk.CENTER}
-        grid_params = {'padx': 5, 'pady': 5}
-
-        for i, n in enumerate(['R', 'G', 'B']):
-            tk.Label(self.top, text = n).grid(row = 0, column = i+1, sticky = 'WE', pady = 5)
-
-        if def_grey:
-            tk.Label(self.top, text = 'Contrast (FG grey):').grid(row = 1, column = 0, sticky = 'E', pady = 5)
-            for i, col in enumerate(['r', 'g', 'b']):
-                tk.Entry(self.top,
-                    textvariable = self.grey_vars[col],
-                    **entry_params).grid(row = 1, column = i+1, **grid_params)
-
-        if def_col:
-            tk.Label(self.top, text = 'Isoluminance (BG col):').grid(row = 2, column = 0, sticky = 'E', pady = 5)
-            for i, col in enumerate(['r', 'g', 'b']):
-                tk.Entry(self.top,
-                    textvariable = self.col_vars[col],
-                    **entry_params).grid(row = 2, column = i+1, **grid_params)
-
-        tk.Button(self.top,
-            text = 'OK',
-            command = self.ok,
-            width = 5,
-            relief = tk.GROOVE).grid(row = 3, column = 1, columnspan = 3, pady = (15, 0))
-
-        tk.Button(self.top,
-            text = 'Load colours',
-            command = self.load_colours,
-            width = 10,
-            relief = tk.GROOVE).grid(row = 3, column = 0, pady = (15,0))
-
-
-    def ok(self):
-
-        try:
-            grey = [self.grey_vars['r'].get(), self.grey_vars['g'].get(), self.grey_vars['b'].get()]
-            col = [self.col_vars['r'].get(), self.col_vars['g'].get(), self.col_vars['b'].get()]
-            for arr in [grey, col]:
-                assert all(0 <= i <= 255 for i in arr)
-        except AssertionError:
-            showwarning('Entry', 'Incorrect value')
-            return
-
-        if self.def_grey:
-            self.master.colours['fg_grey'] = grey
-            logger.info('defining fg_grey by hand: {}'.format(grey))
-
-        if self.def_col:
-            self.master.colours['bg_col'] = col
-            logger.info('defining bg_col by hand: {}'.format(col))
-
-
-        self.finished = True
-        self.top.grab_release()
-        self.top.destroy()
-
-    def load_colours(self):
-
-        file = tkFileDialog.askopenfilename(filetypes = [('json files', '.json')])
-        if not file:
-            return
-        with open(file, 'rb') as f:
-            d = json.load(f)
-
-        try:
-            for name, value in zip(['r', 'g', 'b'], d['bg_col']):
-                self.col_vars[name].set(value)
-            for name, value in zip(['r', 'g', 'b'], d['fg_grey']):
-                self.grey_vars[name].set(value)
-
-        except Exception:
-            showwarning('File error', 'Bad colours file')
-            logger.exception('bad colours.json file: {}'.format(file))
-            return
-
-
 class Application(object):
 
     def __init__(self, root):
@@ -413,9 +314,107 @@ class Application(object):
             logger.info('all tests are successful')
 
 
+            
+            
+class PopupEntries(object):
+
+    def __init__(self, master, def_grey = True, def_col = True):
+
+        self.master = master
+        self.top = tk.Toplevel(master.root, padx = 20, pady = 20)
+        self.top.focus_set()
+        self.top.grab_set()
+        self.top.title('Define colours')
+        self.def_grey = def_grey
+        self.def_col = def_col
+        self.finished = False
 
 
+        self.grey_vars = {'r': tk.IntVar(),
+                          'g': tk.IntVar(),
+                          'b': tk.IntVar()}
 
+        self.col_vars = {'r': tk.IntVar(),
+                  'g': tk.IntVar(),
+                  'b': tk.IntVar()}
+
+        entry_params = {'width': 3, 'relief': tk.FLAT, 'justify': tk.CENTER}
+        grid_params = {'padx': 5, 'pady': 5}
+
+        for i, n in enumerate(['R', 'G', 'B']):
+            tk.Label(self.top, text = n).grid(row = 0, column = i+1, sticky = 'WE', pady = 5)
+
+        if def_grey:
+            tk.Label(self.top, text = 'Contrast (FG grey):').grid(row = 1, column = 0, sticky = 'E', pady = 5)
+            for i, col in enumerate(['r', 'g', 'b']):
+                tk.Entry(self.top,
+                    textvariable = self.grey_vars[col],
+                    **entry_params).grid(row = 1, column = i+1, **grid_params)
+
+        if def_col:
+            tk.Label(self.top, text = 'Isoluminance (BG col):').grid(row = 2, column = 0, sticky = 'E', pady = 5)
+            for i, col in enumerate(['r', 'g', 'b']):
+                tk.Entry(self.top,
+                    textvariable = self.col_vars[col],
+                    **entry_params).grid(row = 2, column = i+1, **grid_params)
+
+        tk.Button(self.top,
+            text = 'OK',
+            command = self.ok,
+            width = 5,
+            relief = tk.GROOVE).grid(row = 3, column = 1, columnspan = 3, pady = (15, 0))
+
+        tk.Button(self.top,
+            text = 'Load colours',
+            command = self.load_colours,
+            width = 10,
+            relief = tk.GROOVE).grid(row = 3, column = 0, pady = (15,0))
+
+
+    def ok(self):
+
+        try:
+            grey = [self.grey_vars['r'].get(), self.grey_vars['g'].get(), self.grey_vars['b'].get()]
+            col = [self.col_vars['r'].get(), self.col_vars['g'].get(), self.col_vars['b'].get()]
+            for arr in [grey, col]:
+                assert all(0 <= i <= 255 for i in arr)
+        except AssertionError:
+            showwarning('Entry', 'Incorrect value')
+            return
+
+        if self.def_grey:
+            self.master.colours['fg_grey'] = grey
+            logger.info('defining fg_grey by hand: {}'.format(grey))
+
+        if self.def_col:
+            self.master.colours['bg_col'] = col
+            logger.info('defining bg_col by hand: {}'.format(col))
+
+
+        self.finished = True
+        self.top.grab_release()
+        self.top.destroy()
+
+    def load_colours(self):
+
+        file = tkFileDialog.askopenfilename(filetypes = [('json files', '.json')])
+        if not file:
+            return
+        with open(file, 'rb') as f:
+            d = json.load(f)
+
+        try:
+            for name, value in zip(['r', 'g', 'b'], d['bg_col']):
+                self.col_vars[name].set(value)
+            for name, value in zip(['r', 'g', 'b'], d['fg_grey']):
+                self.grey_vars[name].set(value)
+
+        except Exception:
+            showwarning('File error', 'Bad colours file')
+            logger.exception('bad colours.json file: {}'.format(file))
+            return
+
+            
 if __name__ == '__main__':
     app = Application(tk.Tk())
     app.root.mainloop()

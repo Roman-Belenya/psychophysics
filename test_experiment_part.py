@@ -18,12 +18,13 @@ class TestExperimentPart(unittest.TestCase):
         _id = '__test__'
         # os.makedirs('./__test__/stimuli')
 
-        mon = load_monitor(cls.params['Monitors']['DELL'])
+        mon = load_monitor(cls.params['Monitors']['BENQ'])
         cls.win = visual.Window(
             size = mon.getSizePix(),
             monitor = mon,
             screen = 0,
             fullscr = True,
+            allowGUI = False,
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
@@ -104,17 +105,17 @@ class TestExperimentPart(unittest.TestCase):
         self.assertLessEqual(2 * ffs, mfs, 'Flicker rate should be at least twice as little as monitor fs')
 
     def test_timing(self):
-        frame = 0.0
+        frame = 0
         t = 10
         stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
         t0 = time.time()
         while frame < self.win.monitor.refresh_rate * t:
-            stim.text = '{:.2f}'.format(t - frame / self.isolum.monitor_fs)
+            stim.text = '{:.2f}'.format(t - float(frame) / self.win.monitor.refresh_rate)
             stim.draw()
             self.win.flip()
             frame += 1
         dt = time.time() - t0
-        self.assertAlmostEqual(dt, t, delta = 0.03, msg = 'Large timing error: {}, should be {} sec'.format(dt, t))
+        self.assertAlmostEqual(dt, t, delta = 0.5, msg = 'Large timing error: {}, should be {} sec'.format(dt, t))
         logger.info('timing error is {}'.format(dt - t))
 
     def test_flicker(self):
