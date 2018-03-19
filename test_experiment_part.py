@@ -16,9 +16,9 @@ class TestExperimentPart(unittest.TestCase):
         with open('./parameters.json', 'rb') as f:
             cls.params = json.load(f)
         _id = '__test__'
-        os.makedirs('./__test__/stimuli')
+        # os.makedirs('./__test__/stimuli')
 
-        mon = load_monitor(cls.params['MonitorParams'])
+        mon = load_monitor(cls.params['Monitors']['DELL'])
         cls.win = visual.Window(
             size = mon.getSizePix(),
             monitor = mon,
@@ -28,23 +28,18 @@ class TestExperimentPart(unittest.TestCase):
             color = 128,
             units = 'deg')
 
-        cls.colours = {
-            'fg_col' : [255, 255, 0],
-            'bg_col' : [0, 0, 255],
-            'fg_grey': [128, 128, 128],
-            'bg_grey': [150, 150, 150]}
         cls.contrast = ContrastDetection(cls.win, _id, cls.params['ContrastDetection'])
         cls.isolum = IsoluminanceDetection(cls.win, _id, cls.params['IsoluminanceDetection'])
-        cls.choice = FreeChoiceExperiment(cls.win, _id, cls.colours, cls.params['FreeChoiceExperiment'])
-        cls.divided = DividedAttentionExperiment(cls.win, _id, cls.colours, cls.params['DividedAttentionExperiment'])
-        cls.selective = SelectiveAttentionExperiment(cls.win, _id, cls.colours, cls.params['SelectiveAttentionExperiment'])
+        cls.choice = FreeChoiceExperiment(cls.win, _id, cls.params['default_colours'], cls.params['FreeChoiceExperiment'])
+        cls.divided = DividedAttentionExperiment(cls.win, _id, cls.params['default_colours'], cls.params['DividedAttentionExperiment'])
+        cls.selective = SelectiveAttentionExperiment(cls.win, _id, cls.params['default_colours'], cls.params['SelectiveAttentionExperiment'])
         cls.stream_handler = logging.StreamHandler()
         logger.addHandler(cls.stream_handler)
 
     @classmethod
     def tearDownClass(cls):
         cls.win.close()
-        shutil.rmtree('./__test__/')
+        # shutil.rmtree('./__test__/')
         logger.removeHandler(cls.stream_handler)
 
     def test_files(self):
@@ -79,9 +74,6 @@ class TestExperimentPart(unittest.TestCase):
                     self.assertIn(cond, ['magno', 'parvo', 'unbiased'], 'Incorrect condition name in seq_file: {}'.format(cond))
                     self.assertIn(stim, stims, 'Incorrect stim name in seq_file: {}'.format(stim))
 
-    # def test_viewing_distance(self):
-    #     mon = monitors.Monitor(self.params['monitor_name'])
-    #     self.assertEqual(self.params['viewing_distance'], mon.getDistance(), 'Need to update viewing distance')
 
     def test_check_colours_dict(self):
         del self.choice.colours_dict['fg_grey']
