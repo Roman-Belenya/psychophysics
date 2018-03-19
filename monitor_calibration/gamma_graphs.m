@@ -32,22 +32,16 @@ levels = linspace(0, 255, 16)';
 
 figure()
 subplot(2,2,1)
-plot_lums(levels, l.bef.data(:, 2), l.aft.data(:, 2), 'k')
+plot_lums(levels, l.bef.data(:, 2), l.aft.data(:, 2), 'k');
 
 subplot(2,2,2)
-plot_lums(levels, r.bef.data(:, 2), r.aft.data(:, 2), [0.6350 0.0780 0.1840])
+plot_lums(levels, r.bef.data(:, 2), r.aft.data(:, 2), [0.6350 0.0780 0.1840]);
 
 subplot(2,2,3)
-plot_lums(levels, g.bef.data(:, 2), g.aft.data(:, 2), [0.4660 0.6740 0.1880])
+plot_lums(levels, g.bef.data(:, 2), g.aft.data(:, 2), [0.4660 0.6740 0.1880]);
 
 subplot(2,2,4)
-plot_lums(levels, b.bef.data(:, 2), b.aft.data(:, 2), [0 0.4470 0.7410])
-
-% tbl = table(levels, l.aft.data(:,2), 'VariableNames', {'levels', 'lums'});
-% mdl = fitlm(tbl, 'lums~levels');
-% plot(mdl)
-
-
+plot_lums(levels, b.bef.data(:, 2), b.aft.data(:, 2), [0 0.4470 0.7410]);
 
 %% Spectrum plots
 
