@@ -29,9 +29,11 @@ class TestExperimentPart(unittest.TestCase):
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
+            
+        cls.instructions = visual.TextStim(win = cls.win, pos = (0, 15), color = 255)
 
-        cls.contrast = ContrastDetection(cls.win, _id, cls.params['ContrastDetection'])
-        cls.isolum = IsoluminanceDetection(cls.win, _id, cls.params['IsoluminanceDetection'])
+        cls.contrast = ContrastDetection(cls.win, _id, cls.params['default_colours'], cls.params['ContrastDetection'])
+        cls.isolum = IsoluminanceDetection(cls.win, _id, cls.params['default_colours'], cls.params['IsoluminanceDetection'])
         cls.choice = FreeChoiceExperiment(cls.win, _id, cls.params['default_colours'], cls.params['FreeChoiceExperiment'])
         cls.divided = DividedAttentionExperiment(cls.win, _id, cls.params['default_colours'], cls.params['DividedAttentionExperiment'])
         cls.selective = SelectiveAttentionExperiment(cls.win, _id, cls.params['default_colours'], cls.params['SelectiveAttentionExperiment'])
@@ -115,19 +117,6 @@ class TestExperimentPart(unittest.TestCase):
             stim.draw()
             self.win.flip()
             frame += 1
-        
-        self.win.winHandle.maximize()
-        self.win.winHandle.activate()
-        
-        frame = 0
-        t = 10
-        stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
-        t0 = time.time()
-        while frame < self.win.monitor.refresh_rate * t:
-            stim.text = '{:.2f}'.format(t - float(frame) / self.win.monitor.refresh_rate)
-            stim.draw()
-            self.win.flip()
-            frame += 1
         dt = time.time() - t0
         self.assertAlmostEqual(dt, t, delta = 0.5, msg = 'Large timing error: {}, should be {} sec'.format(dt, t))
         logger.info('timing error is {}'.format(dt - t))
@@ -148,13 +137,15 @@ class TestExperimentPart(unittest.TestCase):
         self.assertLess(self.win.nDroppedFrames, 5, msg = 'Too many dropped frames ({})'.format(self.win.nDroppedFrames))
         logger.info('{} +- {} ms to refresh each frame, should be {}'.format(fints.mean(), fints.std(), msperframe))
         logger.info('dropped {} frames'.format(self.win.nDroppedFrames))
+        
+    def test_gamma(self):
+        bg = visual.GratingStim(win = self.win, tex = None, size = 500, color = 0, colorSpace = 'rgb255', units = 'pix')
+        stim = visual.GratingStim(win = self.win, tex = None, mask = 'circle', size = 200, color = 1, colorSpace = 'rgb255', units = 'pix')
+        bg.draw()
+        stim.draw()
+        self.win.flip()
+        event.waitKeys()
 
-    # def test_image_creation(self):
-    #     out_dir = './__test__/stimuli'
-    #     for img in self.choice.images + self.divided.images:
-    #         for cond in ['magno', 'parvo', 'unbiased']:
-    #             image = MyImage(img, out_dir, cond, self.colours)
-    #             self.assertTrue(os.path.isfile(image.stim_path))
 
 
 

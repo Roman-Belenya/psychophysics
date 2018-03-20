@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 class Application(object):
 
     def __init__(self, root):
+    
 
         self.root = root
         self.root.resizable(width = False, height = False)
@@ -39,6 +40,9 @@ class Application(object):
             logger.warning('missing parameters file')
             return
         self.params = self.load_params('./parameters.json')
+        
+        if self.params['run_tests']:
+            self.run_tests()
 
         self.colours = self.params['default_colours']
 
