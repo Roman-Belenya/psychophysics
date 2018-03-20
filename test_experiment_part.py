@@ -29,7 +29,7 @@ class TestExperimentPart(unittest.TestCase):
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
-            
+
         cls.instructions = visual.TextStim(win = cls.win, pos = (0, 15), color = 255)
 
         cls.contrast = ContrastDetection(cls.win, _id, cls.params['default_colours'], cls.params['ContrastDetection'])
@@ -81,13 +81,12 @@ class TestExperimentPart(unittest.TestCase):
 
     def test_check_colours_dict(self):
         del self.choice.colours_dict['fg_grey']
-        with self.assertRaises(AssertionError):
-            self.choice.check_colours_dict()
+        self.assertRaises(AssertionError, self.choice.check_colours_dict)
         self.choice.colours_dict['fg_grey'] = [128, 128, 128]
 
         self.choice.colours_dict['bg_col'] = [256, 0, 0]
-        with self.assertRaises(AssertionError):
-            self.choice.check_colours_dict()
+        self.assertRaises(AssertionError, self.choice.check_colours_dict)
+
 
         self.choice.colours_dict['bg_col'] = [0, 0, 255]
 
@@ -137,7 +136,7 @@ class TestExperimentPart(unittest.TestCase):
         self.assertLess(self.win.nDroppedFrames, 5, msg = 'Too many dropped frames ({})'.format(self.win.nDroppedFrames))
         logger.info('{} +- {} ms to refresh each frame, should be {}'.format(fints.mean(), fints.std(), msperframe))
         logger.info('dropped {} frames'.format(self.win.nDroppedFrames))
-        
+
     def test_gamma(self):
         bg = visual.GratingStim(win = self.win, tex = None, size = 500, color = 0, colorSpace = 'rgb255', units = 'pix')
         stim = visual.GratingStim(win = self.win, tex = None, mask = 'circle', size = 200, color = 1, colorSpace = 'rgb255', units = 'pix')
