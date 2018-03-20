@@ -136,7 +136,7 @@ class ColourSpaces(object):
         mon = load_monitor(params['Monitors'][params['current_monitor']])
 
         self.win = visual.Window(
-            size = [1500, 1024],
+            size = [1000, 1000],
             monitor = mon,
             screen = 0,
             fullscr = False,

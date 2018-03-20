@@ -38,22 +38,7 @@ class ExperimentPart(object):
         self.finished = False
         self.clock = core.Clock()
 
-        # self.instructions = visual.TextStim(
-        #     win = self.win,
-        #     colorSpace = 'rgb255',
-        #     color = 255,
-        #     text = '',
-        #     pos = (0, 0))
-        # self.instructions.wrapWidth = 30
-
         self.instructions = visual.ImageStim(win = self.win)
-
-        # self.press_space = visual.TextStim(
-        #     win = self.win,
-        #     colorSpace = 'rgb255',
-        #     color = 255,
-        #     text = 'Press the space bar to continue',
-        #     pos = (0, -10))
 
         self.stim = visual.ImageStim(
             win = self.win,
@@ -83,18 +68,7 @@ class ExperimentPart(object):
 
     def __str__(self):
         return self.__class__.__name__
-
-
-    # def show_instructions(self, text):
-
-    #     self.instructions.text = text
-    #     self.instructions.draw()
-    #     # self.press_space.draw()
-    #     self.win.flip()
-    #     key = event.waitKeys(keyList = ['escape', 'space'])
-    #     if key[0] == 'escape':
-    #         return False
-    #     return True
+        
 
     def show_instructions(self, img):
 
@@ -139,7 +113,7 @@ class ExperimentPart(object):
 
 class ColourTest(ExperimentPart):
 
-    def __init__(self, win, _id, params):
+    def __init__(self, win, _id, colours_dict, params):
 
         super(ColourTest, self).__init__(win, _id, params)
         self.images = glob.glob(os.path.join(self.images_dir, '*.jpg'))
@@ -220,11 +194,11 @@ class ColourTest(ExperimentPart):
 
 class ContrastDetection(ExperimentPart):
 
-    def __init__(self, win, _id, params):
+    def __init__(self, win, _id, colours_dict, params):
 
         super(ContrastDetection, self).__init__(win, _id, params)
-
-        self.stim.color = self.bg_grey
+        
+        self.colours_dict = colours_dict
         self.keys = [self.pos_key, self.neg_key, 'escape']
         self.colheaders = ['#', 'Condition', 'Stimulus', 'GreyValue', 'Response']
 
@@ -241,18 +215,24 @@ class ContrastDetection(ExperimentPart):
             color = 255,
             text = 'not detected  ←'.decode('UTF-8'),
             pos = (-7, 0))
-
-
-    @property
-    def output_col(self):
-        if not self.responses:
-            return [999]*3
+            
+            
+    def get_mean_col(self):
+        
+        if self.responses:
         # take average of positive responses to exprimental trials (exclude catch)
-        values = [i[3] for i in self.responses if i[1] and i[4]]
-        if not values:
-            return [None, None, None]
+            values = [i[3] for i in self.responses if i[1] and i[4]]
+            col = np.mean(values, axis = 0)
+        else:
+            col = self.colours_dict['fg_grey']
+            
+        return list(col)
+            
 
-        return np.mean(values, axis = 0).tolist()
+    def get_colours_dict(self):
+    
+        self.colours_dict['fg_grey'] = self.get_mean_col()
+        return self.colours_dict
 
 
     def run_trial(self, kind):
@@ -307,7 +287,8 @@ class ContrastDetection(ExperimentPart):
 
         logger.info('started experiment')
         core.wait(1)
-
+        
+        cur_grey = self.colours_dict['bg_grey'] # at first, not different from background
         i = 0
         detects = 0 # number of times they detected the image when kind == 1
 
@@ -321,9 +302,8 @@ class ContrastDetection(ExperimentPart):
             # Process the image
             if kind:
                 img = np.random.choice(self.images)
-                fg = get_fg_mask(img)
-                self.stim.mask = fg
-                self.stim.color = self.fg_grey
+                self.stim.mask = get_fg_mask(img)
+                self.stim.color = cur_grey
 
             #Run the trial
             response, increment = self.run_trial(kind)
@@ -331,12 +311,12 @@ class ContrastDetection(ExperimentPart):
                 logger.info('broke from the experiment')
                 break
 
-            self.responses.append( (i, kind, os.path.split(img)[1], list(self.fg_grey), response) )
+            self.responses.append( (i, kind, os.path.split(img)[1], list(cur_grey), response) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
 
             # Adjust grey if experimental trial
             if kind:
-                self.fg_grey += increment
+                cur_grey += increment
                 if response:
                     detects += 1
             i += 1
@@ -349,20 +329,39 @@ class ContrastDetection(ExperimentPart):
 
 class IsoluminanceDetection(ExperimentPart):
 
-    def __init__(self, win, _id, params):
+    def __init__(self, win, _id, colours_dict, params):
 
         super(IsoluminanceDetection, self).__init__(win, _id, params)
 
+        self.colours_dict = colours_dict
+        self.fix_col = colours_dict['fg_col']
+        self.var_col_lo = colours_dict['bg_col'] + 30 * -self.col_delta
+        if any(self.var_col_lo < 0):
+            self.var_col_lo = np.zeros(3)
+            
+        self.var_col_hi = colours_dict['bg_col'] + 30 *  self.col_delta
+        if any(self.var_col_hi > 255):
+            self.var_col_lo = self.col_delta * (255 / self.col_delta)
+        
         self.keys = [self.up_key, self.down_key, 'escape', 'return']
         self.colheaders = ['#', 'Condition', 'Stimulus', 'IsoColour']
 
+        
+    def get_mean_col(self):
+    
+        if self.responses:
+            values = [i[3] for i in self.responses]
+            col = np.mean(values, axis = 0)
+        else:
+            col = self.colours_dict['bg_col']
+        
+        return list(col)
 
-    @property
-    def output_col(self):
-        if not self.responses:
-            return [999]*3
-        values = [i[3] for i in self.responses]
-        return np.mean(values, axis = 0).tolist()
+        
+    def get_colours_dict(self):
+    
+        self.colours_dict['bg_col'] = self.get_mean_col()
+        return self.colours_dict
 
 
     def run_trial(self, colour):
@@ -395,13 +394,13 @@ class IsoluminanceDetection(ExperimentPart):
     def run_block(self, kind, images_seq):
 
         if kind == 'up':
-            text = self.instructions_text_up
+            img = self.instructions_img_up
             colour = self.var_col_lo
         elif kind == 'down':
-            text = self.instructions_text_down
+            img = self.instructions_img_down
             colour = self.var_col_hi
 
-        start = self.show_instructions(text)
+        start = self.show_instructions(img)
         if not start:
             logger.info('did not start the block {}'.format(kind))
             return
@@ -467,13 +466,6 @@ class FreeChoiceExperiment(ExperimentPart):
             colorSpace = 'rgb255',
             color = 255,
             pos = [3, -8])
-
-        # self.question = visual.TextStim(
-        #     win = self.win,
-        #     colorSpace = 'rgb255',
-        #     color = 255,
-        #     text = self.question_text,
-        #     pos = (0, -5))
 
 
     def check_colours_dict(self):
@@ -657,7 +649,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
     def run_block(self, kind, imgs_seq):
 
-        start = self.show_instructions(self.instructions_text_block)
+        start = self.show_instructions(None)
         if not start:
             logger.info('did not start block {}'.format(kind))
             return
@@ -759,11 +751,11 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
     def run_block(self, kind, imgs_seq):
 
         if kind[1] == 'local':
-            txt = self.instructions_img_local
+            img = self.instructions_img_local
         elif kind[1] == 'global':
-            txt = self.instructions_img_global
+            img = self.instructions_img_global
 
-        start = self.show_instructions(txt)
+        start = self.show_instructions(img)
         if not start:
             logger.info('did not start block {}'.format(kind))
             return
@@ -821,11 +813,11 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
 
 
 #                           ExperimentPart
-#                _______________|________________________
-#               |               |                       |
-#   ContrastDetection   IsoluminanceDetection   FreeChoiceExperiment
-#                                                       |
-#                                               DividedAttentionExperiment
-#                                                       |
-#                                               SelectiveAttentionExperiment
+#                _______________|__________________ ___________________
+#               |               |                  |                   |
+#   ContrastDetection   IsoluminanceDetection   ColourTest       FreeChoiceExperiment
+#                                                                      |
+#                                                            DividedAttentionExperiment
+#                                                                      |
+#                                                            SelectiveAttentionExperiment
 

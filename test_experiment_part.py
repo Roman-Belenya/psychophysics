@@ -23,8 +23,9 @@ class TestExperimentPart(unittest.TestCase):
             size = mon.getSizePix(),
             monitor = mon,
             screen = 0,
-            fullscr = True,
             allowGUI = False,
+            fullscr = True,
+            waitBlanking = False,
             colorSpace = 'rgb255',
             color = 128,
             units = 'deg')
@@ -105,6 +106,19 @@ class TestExperimentPart(unittest.TestCase):
         self.assertLessEqual(2 * ffs, mfs, 'Flicker rate should be at least twice as little as monitor fs')
 
     def test_timing(self):
+        frame = 0
+        t = 10
+        stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
+        t0 = time.time()
+        while frame < self.win.monitor.refresh_rate * t:
+            stim.text = '{:.2f}'.format(t - float(frame) / self.win.monitor.refresh_rate)
+            stim.draw()
+            self.win.flip()
+            frame += 1
+        
+        self.win.winHandle.maximize()
+        self.win.winHandle.activate()
+        
         frame = 0
         t = 10
         stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))

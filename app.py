@@ -40,12 +40,6 @@ class Application(object):
             return
         self.params = self.load_params('./parameters.json')
 
-        # self.colours = {
-        #     'bg_grey': self.params['ContrastDetection']['bg_grey'],
-        #     'fg_grey': None,
-        #     'bg_col': None,
-        #     'fg_col': self.params['IsoluminanceDetection']['fix_col']
-        #     }
         self.colours = self.params['default_colours']
 
         # Participant's id entry
@@ -200,48 +194,23 @@ class Application(object):
 
         for name, fullname, exp in exps:
 
-            if name == 'colour':
-                if sel[name]:
-                    try:
-                        experiment = exp(self.win, _id, self.params[fullname])
-                        experiment.main()
-                    except Exception as e:
-                        self.win.close()
-                        showwarning('Experiment error', str(e))
-                        logger.exception('error in experiment:')
-                        return
-                    finally:
-                        filename = os.path.join(self.dir, experiment.export_filename)
+            if sel[name]: # if this experiment is selected
+                try:
+                    experiment = exp(self.win, _id, self.colours, self.params[fullname])
+                    experiment.main()
+                except Exception as e:
+                    self.win.close()
+                    showwarning('Experiment error', str(e))
+                    logger.exception('error in experiment:')
+                    return
+                finally:
+                    filename = os.path.join(self.dir, experiment.export_filename)
+                    if name in ['contrast', 'isolum']:
+                        experiment.export_results(filename, ['Mean Colour:', experiment.get_mean_col()])
+                        self.colours = experiment.get_colours_dict()
+                    else:
                         experiment.export_results(filename)
 
-            elif name in ['contrast', 'isolum']:
-                if sel[name]: # if this experiment is selected
-                    try:
-                        experiment = exp(self.win, _id, self.params[fullname])
-                        experiment.main()
-                    except Exception as e:
-                        self.win.close()
-                        showwarning('Experiment error', str(e))
-                        logger.exception('error in experiment:')
-                        return
-                    finally:
-                        filename = os.path.join(self.dir, experiment.export_filename)
-                        experiment.export_results(filename, ['Mean colour:', experiment.output_col])
-                        self.change_colour(name, experiment.output_col)
-
-            elif name in ['free', 'divided', 'selective']:
-                if sel[name]:
-                    try:
-                        experiment = exp(self.win, _id, self.colours, self.params[fullname])
-                        experiment.main()
-                    except Exception as e:
-                        self.win.close()
-                        showwarning('Experiment error', str(e))
-                        logger.exception('error in experiment:')
-                        return
-                    finally:
-                        filename = os.path.join(self.dir, experiment.export_filename)
-                        experiment.export_results(filename)
 
         self.save_colours()
         self.win.flip()
@@ -270,15 +239,6 @@ class Application(object):
 
         need_def = exps and no_detects
         return need_def, not grey, not col
-
-
-    def change_colour(self, exp_name, value):
-
-        if exp_name in ['contrast', 'ContrastDetection']:
-            self.colours['fg_grey'] = value
-        elif exp_name in ['isolum', 'IsoluminanceDetection']:
-            self.colours['bg_col'] = value
-        # self.save_colours(self.colours)
 
 
     def save_colours(self):
