@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class Application(object):
 
     def __init__(self, root):
-    
+
 
         self.root = root
         self.root.resizable(width = False, height = False)
@@ -40,7 +40,7 @@ class Application(object):
             logger.warning('missing parameters file')
             return
         self.params = self.load_params('./parameters.json')
-        
+
         if self.params['run_tests']:
             self.run_tests()
 
@@ -134,8 +134,10 @@ class Application(object):
                 cols_file = os.path.join(self.dir, 'colours.json')
                 try:
                     self.colours = json.load(open(cols_file, 'rb'))
+                    showinfo('Loaded existing colours', self.colours)
                     logger.info('loaded colours from {}'.format(cols_file))
                 except:
+                    showwarning('Failed to load colours', 'Continuing with default')
                     logger.exception('failed to load colours from {}'.format(cols_file))
             else:
                 logger.info('do not continue with participant {}. returning'.format(_id))
@@ -278,8 +280,8 @@ class Application(object):
             logger.info('all tests are successful')
 
 
-            
-            
+
+
 class PopupEntries(object):
 
     def __init__(self, master, def_grey = True, def_col = True):
@@ -378,7 +380,7 @@ class PopupEntries(object):
             logger.exception('bad colours.json file: {}'.format(file))
             return
 
-            
+
 if __name__ == '__main__':
     app = Application(tk.Tk())
     app.root.mainloop()
