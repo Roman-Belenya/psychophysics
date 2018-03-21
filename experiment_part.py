@@ -68,7 +68,7 @@ class ExperimentPart(object):
 
     def __str__(self):
         return self.__class__.__name__
-        
+
 
     def show_instructions(self, img):
 
@@ -197,7 +197,7 @@ class ContrastDetection(ExperimentPart):
     def __init__(self, win, _id, colours_dict, params):
 
         super(ContrastDetection, self).__init__(win, _id, params)
-        
+
         self.colours_dict = colours_dict
         self.keys = [self.pos_key, self.neg_key, 'escape']
         self.colheaders = ['#', 'Condition', 'Stimulus', 'GreyValue', 'Response']
@@ -215,22 +215,22 @@ class ContrastDetection(ExperimentPart):
             color = 255,
             text = 'not detected  ←'.decode('UTF-8'),
             pos = (-7, 0))
-            
-            
+
+
     def get_mean_col(self):
-        
+
         if self.responses:
         # take average of positive responses to exprimental trials (exclude catch)
             values = [i[3] for i in self.responses if i[1] and i[4]]
             col = np.mean(values, axis = 0)
         else:
             col = self.colours_dict['fg_grey']
-            
+
         return list(col)
-            
+
 
     def get_colours_dict(self):
-    
+
         self.colours_dict['fg_grey'] = self.get_mean_col()
         return self.colours_dict
 
@@ -287,7 +287,7 @@ class ContrastDetection(ExperimentPart):
 
         logger.info('started experiment')
         core.wait(1)
-        
+
         cur_grey = self.colours_dict['bg_grey'] # at first, not different from background
         i = 0
         detects = 0 # number of times they detected the image when kind == 1
@@ -338,28 +338,28 @@ class IsoluminanceDetection(ExperimentPart):
         self.var_col_lo = colours_dict['bg_col'] + 30 * -self.col_delta
         if any(self.var_col_lo < 0):
             self.var_col_lo = np.zeros(3)
-            
+
         self.var_col_hi = colours_dict['bg_col'] + 30 *  self.col_delta
         if any(self.var_col_hi > 255):
             self.var_col_lo = self.col_delta * (255 / self.col_delta)
-        
+
         self.keys = [self.up_key, self.down_key, 'escape', 'return']
         self.colheaders = ['#', 'Condition', 'Stimulus', 'IsoColour']
 
-        
+
     def get_mean_col(self):
-    
+
         if self.responses:
             values = [i[3] for i in self.responses]
             col = np.mean(values, axis = 0)
         else:
             col = self.colours_dict['bg_col']
-        
+
         return list(col)
 
-        
+
     def get_colours_dict(self):
-    
+
         self.colours_dict['bg_col'] = self.get_mean_col()
         return self.colours_dict
 
@@ -649,7 +649,11 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
     def run_block(self, kind, imgs_seq):
 
-        start = self.show_instructions(None)
+        if kind == 'practice':
+            start = self.show_instructions(self.instructions_img_practice)
+        elif kind == 'experimental':
+            start = self.show_instructions(self.instructions_img_exp)
+
         if not start:
             logger.info('did not start block {}'.format(kind))
             return
