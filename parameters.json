@@ -12,7 +12,7 @@
     "Monitors":{
         "BENQ":{
             "monitor_name": "labBENQ",
-            "refresh_rate": 60,
+            "refresh_rate": 120,
             "viewing_distance": 40,
             "width_cm": 53.13,
             "size_pix": [1920, 1080],
