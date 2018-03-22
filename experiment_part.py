@@ -92,10 +92,13 @@ class ExperimentPart(object):
         core.wait(pause)
 
 
-    def stopped_experiment(self, pause = 1):
+    def stopped_experiment(self, block = None, pause = 1):
 
-        logger.info('stopped experiment {}'.format(str(self)))
-        self.stopped_experiment.draw()
+        if block:
+            logger.info('stopped block {}'.format(block))
+        else:
+            logger.info('stopped experiment {}'.format(str(self)))
+        self.stopped_experiment_txt.draw()
         self.win.flip()
         core.wait(pause)
 
@@ -438,7 +441,7 @@ class IsoluminanceDetection(ExperimentPart):
             core.wait(self.t_poststim)
 
             if np.any(iso_col == 'stop'):
-                logger.info('stopped block {}'.format(kind))
+                self.stopped_experiment(block = block)
                 return
 
             self.responses.append( (i, kind, os.path.split(img)[1], list(iso_col)) )
@@ -683,7 +686,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         for i, img in enumerate(imgs_seq):
             resp, lat = self.run_trial(img)
             if resp == 'stop':
-                logger.info('stopped block {}'.format(kind))
+                self.stopped_experiment(block = kind)
                 return
             correct = img.has_letter(self.target_letter) == resp # this var tells whether the resp was correct or not
             self.responses.append( (i, kind, img.cond, img.name, resp, correct, lat) )
@@ -791,7 +794,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         for i, img in enumerate(imgs_seq):
             resp, lat = self.run_trial(img)
             if resp == 'stop':
-                logger.info('stopped block {}'.format(kind))
+                self.stopped_experiment(block = kind)
                 return
             self.responses.append( (i, '-'.join(kind), img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
