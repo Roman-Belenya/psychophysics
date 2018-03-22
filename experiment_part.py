@@ -39,6 +39,8 @@ class ExperimentPart(object):
         self.clock = core.Clock()
 
         self.instructions = visual.ImageStim(win = self.win)
+        self.finished_experiment_txt = visual.TextStim(self.win, text = 'Done!')
+        self.stopped_experiment_txt = visual.TextStim(self.win, text = 'Continuing...')
 
         self.stim = visual.ImageStim(
             win = self.win,
@@ -80,6 +82,24 @@ class ExperimentPart(object):
             return False
         return True
 
+
+    def finished_experiment(self, pause = 3):
+
+        self.finished = True
+        logger.info('finished experiment {}'.format(str(self)))
+        self.finished_experiment_txt.draw()
+        self.win.flip()
+        core.wait(pause)
+
+
+    def stopped_experiment(self, pause = 1):
+
+        logger.info('stopped experiment {}'.format(str(self)))
+        self.stopped_experiment.draw()
+        self.win.flip()
+        core.wait(pause)
+
+
     def export_results(self, filename, *extralines):
 
         while os.path.isfile(filename):
@@ -96,6 +116,7 @@ class ExperimentPart(object):
 
             writer.writerow( ['Experiment:', str(self)] )
             writer.writerow( ['Participant:', self.id] )
+            writer.writerow( ['Finished:', self.finished])
             writer.writerow( ['Date:', self.datetime.strftime('%d %B %Y')] )
             exp_time = datetime.datetime.now()
             writer.writerow( ['Time:', self.datetime.strftime('%H:%M:%S'), exp_time.strftime('%H:%M:%S')] )
@@ -182,11 +203,14 @@ class ColourTest(ExperimentPart):
             response, latency = self.run_trial(image)
 
             if response == 'stop':
-                logger.info('broke from the experiment')
+                self.stopped_experiment()
                 return
 
             self.responses.append( (i, self.correct_responses[i], response, latency) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
+
+        self.finished_experiment()
+
 
 
 
@@ -308,8 +332,8 @@ class ContrastDetection(ExperimentPart):
             #Run the trial
             response, increment = self.run_trial(kind)
             if response == 'stop':
-                logger.info('broke from the experiment')
-                break
+                self.stopped_experiment()
+                return
 
             self.responses.append( (i, kind, os.path.split(img)[1], list(cur_grey), response) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
@@ -321,9 +345,7 @@ class ContrastDetection(ExperimentPart):
                     detects += 1
             i += 1
 
-        self.win.flip()
-        core.wait(2)
-        self.finished = True
+        self.finished_experiment()
 
 
 
@@ -416,7 +438,9 @@ class IsoluminanceDetection(ExperimentPart):
             core.wait(self.t_poststim)
 
             if np.any(iso_col == 'stop'):
+                logger.info('stopped block {}'.format(kind))
                 return
+
             self.responses.append( (i, kind, os.path.split(img)[1], list(iso_col)) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
 
@@ -437,9 +461,7 @@ class IsoluminanceDetection(ExperimentPart):
             np.random.shuffle(images_seq)
             self.run_block(kind, images_seq)
 
-        self.win.flip()
-        core.wait(2)
-        self.finished = True
+        self.finished_experiment()
 
 
 
@@ -590,14 +612,12 @@ class FreeChoiceExperiment(ExperimentPart):
         for n, img in enumerate(images_seq):
             resp, lat = self.run_trial(img)
             if resp == 'stop':
-                logger.info('stopped experiment')
-                break
+                self.stopped_experiment()
+                return
             self.responses.append( (n, img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
-        self.win.flip()
-        core.wait(2)
-        self.finished = True
+        self.finished_experiment()
 
 
 
@@ -698,9 +718,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
                 seq = reversed(seq)
             self.run_block(block, seq)
 
-        self.win.flip()
-        core.wait(2)
-        self.finished = True
+        self.finished_experiment()
 
 
 class SelectiveAttentionExperiment(DividedAttentionExperiment):
@@ -754,9 +772,13 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
 
     def run_block(self, kind, imgs_seq):
 
-        if kind[1] == 'local':
+        if kind == ('practice', 'local'):
+            img = self.instructions_img_local_practice
+        elif kind == ('practice', 'global'):
+            img = self.instructions_img_global_practice
+        elif kind == ('experimental', 'local'):
             img = self.instructions_img_local
-        elif kind[1] == 'global':
+        elif kind == ('experimental', 'global'):
             img = self.instructions_img_global
 
         start = self.show_instructions(img)
@@ -782,10 +804,10 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Latency']
         self.keylist = [self.left_key, self.right_key, 'escape']
 
-        # start = self.show_instructions(self.instructions_text)
-        # if not start:
-        #     logger.info('did not start the experiment')
-        #     return
+        start = self.show_instructions(self.instructions_img)
+        if not start:
+            logger.info('did not start the experiment')
+            return
         logger.info('started the experiment')
 
         total_blocks = self.n_practice_blocks + self.n_blocks
@@ -810,9 +832,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
                 seq = reversed(seq)
             self.run_block(block, seq)
 
-        self.win.flip()
-        core.wait(2)
-        self.finished = True
+        self.finished_experiment()
 
 
 

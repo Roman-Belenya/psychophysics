@@ -18,7 +18,7 @@ class TestExperimentPart(unittest.TestCase):
         _id = '__test__'
         # os.makedirs('./__test__/stimuli')
 
-        mon = load_monitor(cls.params['Monitors']['BENQ'])
+        mon = load_monitor(cls.params['Monitors'][cls.params['current_monitor']])
         cls.win = visual.Window(
             size = mon.getSizePix(),
             monitor = mon,
@@ -108,8 +108,8 @@ class TestExperimentPart(unittest.TestCase):
         logger.info('dropped {} frames: {}%'.format(self.win.nDroppedFrames, self.win.nDroppedFrames*100.0/frame))
         logger.info('timing error is {}'.format(dt - t))
         self.assertAlmostEqual(dt, t, delta = 0.5, msg = 'Large timing error: {}, should be {} sec'.format(dt, t))
-        
-        
+
+
     def test_flicker(self):
         self.win.nDroppedFrames = 0
         img = os.path.join('.', 'images', 'circle.png')
@@ -147,11 +147,11 @@ class TestExperimentPart(unittest.TestCase):
         fints = np.array(self.win.frameIntervals) * 1000
         t1 = fints.mean() - fints.std()
         t2 = fints.mean() + fints.std()
-        
+
         logger.info('Flicker frequency is {}'.format(cycles_per_sec))
         logger.info('dropped {} frames: {}%'.format(self.win.nDroppedFrames, self.win.nDroppedFrames*100.0/frame))
         logger.info('{} +- {} ms to refresh each frame, should be {}'.format(fints.mean(), fints.std(), msperframe))
-        
+
         self.assertTrue(t1 < msperframe < t2, 'Strange refresh period ({}, should be {})'.format(fints.mean(), msperframe))
         self.assertEqual(self.isolum.flicker_fs, cycles_per_sec, 'Strange flicker rate: set to {}, but actually is {}'.format(self.isolum.flicker_fs, cycles_per_sec))
         self.assertLessEqual(2.0 * self.isolum.flicker_fs, self.win.monitor.refresh_rate, 'Flicker frequency cannot be greater than half the monitor fs: set to {}'.format(self.isolum.flicker_fs))
@@ -175,7 +175,7 @@ class TestExperimentPart(unittest.TestCase):
             bg.draw()
             stim.draw()
             self.win.flip()
-            
+
         logger.info('dropped {} frames: {}%'.format(self.win.nDroppedFrames, self.win.nDroppedFrames*100.0/(t*self.win.monitor.refresh_rate)))
 
 
