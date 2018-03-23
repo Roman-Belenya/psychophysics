@@ -163,14 +163,14 @@ class TestExperimentPart(unittest.TestCase):
         t = 5.0
         width_pix = self.win.size[0]
         bg = visual.GratingStim(win = self.win, tex = None, size = self.win.size, color = 0, colorSpace = 'rgb255', units = 'pix')
-        stim = visual.GratingStim(win = self.win, tex = None, size = 200, color = 1, colorSpace = 'rgb255', units = 'pix', pos = [-width_pix/2.0, 0])
+        stim = visual.GratingStim(win = self.win, tex = None, size = 200, color = 1, colorSpace = 'rgb255', units = 'pix')#, pos = [-width_pix/2.0, 0])
         bg.draw()
         stim.draw()
         self.win.flip()
         clock = core.Clock()
-        pp = width_pix/(t * self.win.monitor.refresh_rate)
+        # pp = width_pix/(t * self.win.monitor.refresh_rate)
         while clock.getTime() < t:
-            stim.pos[0] += pp
+            # stim.pos[0] += pp
             stim.ori += 360.0*5 / (t * self.win.monitor.refresh_rate)
             bg.draw()
             stim.draw()
