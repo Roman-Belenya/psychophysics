@@ -1,6 +1,6 @@
 {
-    "thank_you_text": "Thank you for participating!",
-    "current_monitor": "DELL",
+    "thank_you_img": "./images/instructions/Slide15.png",
+    "current_monitor": "BENQ",
     "run_tests": true,
     "default_colours":{
         "bg_grey": [128, 128, 128],
@@ -13,7 +13,7 @@
         "BENQ":{
             "monitor_name": "labBENQ",
             "refresh_rate": 120,
-            "viewing_distance": 40,
+            "viewing_distance": 50,
             "width_cm": 53.13,
             "size_pix": [1920, 1080],
             "lin_method": 4,
@@ -59,7 +59,7 @@
     "ColourTest":{
         "images_dir": "./images/colour_test",
         "export_filename": "colour_test.exp",
-        "stim_size": [8, 8],
+        "stim_size": [9, 9],
         "instructions_img": "./images/instructions/Slide1.png"
     },
 

@@ -183,12 +183,9 @@ class Application(object):
             units = 'deg')
         self.win.mouseVisible = False
 
-        self.thank_you = visual.TextStim(
+        self.thank_you = visual.ImageStim(
             win = self.win,
-            colorSpace = 'rgb255',
-            color = 255,
-            text = self.params['thank_you_text'],
-            pos = (0, 0))
+            image = self.params['thank_you_img'])
 
         # The app is no longer needed
         self.root.quit()

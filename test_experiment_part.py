@@ -91,23 +91,23 @@ class TestExperimentPart(unittest.TestCase):
 
 
 
-    def test_timing(self):
-        self.win.nDroppedFrames = 0
-        frame = 0
-        t = 10
-        stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
-        t0 = time.time()
-        while frame < self.win.monitor.refresh_rate * t:
-            if frame % 4 == 0:
-                stim.text = '{:.2f}'.format(t - float(frame) / self.win.monitor.refresh_rate)
-            stim.draw()
-            self.win.flip()
-            frame += 1
-        dt = time.time() - t0
+    # def test_timing(self):
+        # self.win.nDroppedFrames = 0
+        # frame = 0
+        # t = 10
+        # stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
+        # t0 = time.time()
+        # while frame < self.win.monitor.refresh_rate * t:
+            # if frame % 5 == 0:
+                # stim.text = '{:.2f}'.format(t - float(frame) / self.win.monitor.refresh_rate)
+            # stim.draw()
+            # self.win.flip()
+            # frame += 1
+        # dt = time.time() - t0
 
-        logger.info('dropped {} frames: {}%'.format(self.win.nDroppedFrames, self.win.nDroppedFrames*100.0/frame))
-        logger.info('timing error is {}'.format(dt - t))
-        self.assertAlmostEqual(dt, t, delta = 0.5, msg = 'Large timing error: {}, should be {} sec'.format(dt, t))
+        # logger.info('dropped {} frames: {}%'.format(self.win.nDroppedFrames, self.win.nDroppedFrames*100.0/frame))
+        # logger.info('timing error is {}'.format(dt - t))
+        # self.assertAlmostEqual(dt, t, delta = 0.5, msg = 'Large timing error: {}, should be {} sec'.format(dt, t))
 
 
     def test_flicker(self):
