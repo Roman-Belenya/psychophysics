@@ -14,7 +14,8 @@ for DIR in DIRS:
         os.mkdir(DIR)
 
 time = datetime.datetime.strftime(datetime.datetime.now(), '%d-%b-%Y %H-%M-%S,%f')
-logging.basicConfig(filename = os.path.join('./logs', time + '.log'),
+logfile = os.path.join('./logs', time + '.log')
+logging.basicConfig(filename = logfile,
     level = logging.INFO,
     format = '%(asctime)s - %(levelname)s - %(funcName)s: %(message)s',
     filemode = 'a')
@@ -208,7 +209,7 @@ class Application(object):
                     experiment.main()
                 except Exception as e:
                     self.win.close()
-                    showwarning('Experiment error', str(e))
+                    showwarning('Experiment error', 'See {}'.format(logfile))
                     logger.exception('error in experiment:')
                     return
                 finally:
