@@ -106,7 +106,7 @@ class ExperimentPart(object):
     def export_results(self, filename, *extralines):
 
         filename = os.path.abspath(filename)
-        
+
         while os.path.isfile(filename):
             name, ext = os.path.splitext(filename)
             filename = name + '_new' + ext
@@ -817,11 +817,18 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
             return
         logger.info('started the experiment')
 
-        total_blocks = 2 * self.n_blocks # practice block for every experimental
-        if self.local_first:
-            cond_seq = ['local' if i%2==0 else 'global' for i in range(total_blocks)]
-        else:
-            cond_seq = ['global' if i%2==0 else 'local' for i in range(total_blocks)]
+        cond_seq = []
+        ls = ['local'] * 2 # practice and experimental
+        gs = ['global'] * 2
+
+        for i in range(self.n_blocks):
+            if self.local_first:
+                if i % 2 == 0: cond_seq.extend(ls)
+                else: cond_seq.extend(gs)
+            else:
+                if i % 2 == 0: cond_seq.extend(gs)
+                else: cond_seq.extend(ls)
+
         type_seq = ['practice', 'experimental'] * self.n_blocks
         blocks_seq = zip(type_seq, cond_seq) # (practice, global), (experimental, local) etc.
         logger.info('made blocks sequence: {}'.format(blocks_seq))
