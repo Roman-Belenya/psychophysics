@@ -105,6 +105,8 @@ class ExperimentPart(object):
 
     def export_results(self, filename, *extralines):
 
+        filename = os.path.abspath(filename)
+        
         while os.path.isfile(filename):
             name, ext = os.path.splitext(filename)
             filename = name + '_new' + ext
@@ -249,7 +251,10 @@ class ContrastDetection(ExperimentPart):
         if self.responses:
         # take average of positive responses to exprimental trials (exclude catch)
             values = [i[3] for i in self.responses if i[1] and i[4]]
-            col = np.mean(values, axis = 0)
+            if values:
+                col = np.mean(values, axis = 0)
+            else:
+                col = self.colours_dict['fg_grey']
         else:
             col = self.colours_dict['fg_grey']
 
@@ -321,7 +326,7 @@ class ContrastDetection(ExperimentPart):
 
         while detects < self.n_trials:
 
-            if i < 5:
+            if i < 10:
                 kind = 1
             else:
                 kind = np.random.choice([0, 1], p = [self.p_catch, 1 - self.p_catch])
@@ -585,7 +590,6 @@ class FreeChoiceExperiment(ExperimentPart):
         elif key[0] == 'escape':
             response = 'stop'
 
-        # self.question.draw()
         self.left_resp.draw()
         self.right_resp.draw()
         self.win.flip()
@@ -813,12 +817,12 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
             return
         logger.info('started the experiment')
 
-        total_blocks = self.n_practice_blocks + self.n_blocks
+        total_blocks = 2 * self.n_blocks # practice block for every experimental
         if self.local_first:
             cond_seq = ['local' if i%2==0 else 'global' for i in range(total_blocks)]
         else:
             cond_seq = ['global' if i%2==0 else 'local' for i in range(total_blocks)]
-        type_seq = ['practice'] * self.n_practice_blocks + ['experimental'] * self.n_blocks
+        type_seq = ['practice', 'experimental'] * self.n_blocks
         blocks_seq = zip(type_seq, cond_seq) # (practice, global), (experimental, local) etc.
         logger.info('made blocks sequence: {}'.format(blocks_seq))
 

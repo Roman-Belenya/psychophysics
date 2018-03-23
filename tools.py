@@ -6,6 +6,17 @@ import os
 import time
 import csv
 
+def has_illegal_chars(s):
+
+    illegal = '/\\:*?"<>|'
+    
+    for i in illegal:
+        if i in s:
+            return True
+            
+    return False
+
+    
 def load_monitor(params):
 
     mon = monitors.Monitor(name = params['monitor_name'])

@@ -121,11 +121,15 @@ class Application(object):
         np.random.seed(1)
 
         # Get participant's id
-        _id = self.id.get()
-        if _id == "Participant's id":
+        _id = self.id.get().rstrip()
+        if has_illegal_chars(_id):
+            showwarning('Illegal charater', 'Avoid /\\:*?"<>| in the name')
+            return
+        elif _id in ["Participant's id", '']:
             showwarning('Missing id', "Enter participant's id")
             return
 
+        # Make directories
         self.dir = os.path.join('.', 'data', _id)
         if os.path.isdir(self.dir):
             ans = askyesno("Participant's id", '{} already exists. Continue experiment with this participant?'.format(_id))
