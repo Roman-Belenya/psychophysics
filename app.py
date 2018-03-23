@@ -1,4 +1,3 @@
-import psychopy
 from psychopy import monitors
 import Tkinter as tk
 import logging
@@ -7,7 +6,6 @@ import json
 from tools import *
 import tkFileDialog
 from tkMessageBox import showwarning, showinfo, askyesno
-import subprocess
 import unittest
 
 DIRS = ['./data', './logs']
@@ -270,6 +268,7 @@ class Application(object):
 
         to_run = [TestTools, TestExperimentPart]
         loader = unittest.TestLoader()
+        loader.sortTestMethodsUsing = None
         suites = [loader.loadTestsFromTestCase(test) for test in to_run]
 
         suite = unittest.TestSuite(suites)

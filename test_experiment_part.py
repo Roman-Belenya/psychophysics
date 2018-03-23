@@ -30,9 +30,6 @@ class TestExperimentPart(unittest.TestCase):
             units = 'deg')
         cls.win.recordFrameIntervals = True
 
-
-        cls.instructions = visual.TextStim(win = cls.win, pos = (0, 15), color = 255)
-
         cls.contrast = ContrastDetection(cls.win, _id, cls.params['default_colours'], cls.params['ContrastDetection'])
         cls.isolum = IsoluminanceDetection(cls.win, _id, cls.params['default_colours'], cls.params['IsoluminanceDetection'])
         cls.choice = FreeChoiceExperiment(cls.win, _id, cls.params['default_colours'], cls.params['FreeChoiceExperiment'])
@@ -92,6 +89,8 @@ class TestExperimentPart(unittest.TestCase):
         logger.info('actual framerate is {}'.format(framerate))
 
 
+
+
     def test_timing(self):
         self.win.nDroppedFrames = 0
         frame = 0
@@ -99,7 +98,8 @@ class TestExperimentPart(unittest.TestCase):
         stim = visual.TextStim(win = self.win, text = '0', pos = (0,0))
         t0 = time.time()
         while frame < self.win.monitor.refresh_rate * t:
-            stim.text = '{:.2f}'.format(t - float(frame) / self.win.monitor.refresh_rate)
+            if frame % 4 == 0:
+                stim.text = '{:.2f}'.format(t - float(frame) / self.win.monitor.refresh_rate)
             stim.draw()
             self.win.flip()
             frame += 1
@@ -177,6 +177,17 @@ class TestExperimentPart(unittest.TestCase):
             self.win.flip()
 
         logger.info('dropped {} frames: {}%'.format(self.win.nDroppedFrames, self.win.nDroppedFrames*100.0/(t*self.win.monitor.refresh_rate)))
+
+
+    def test_warm_up(self):
+
+        stim = visual.GratingStim(win = self.win, size = 1024, units = 'pix')
+        clock = core.Clock()
+        while clock.getTime() < 10:
+            stim.tex = np.random.rand(1024, 1024) * 2 - 1
+            stim.draw()
+            self.win.flip()
+
 
 
 
