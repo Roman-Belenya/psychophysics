@@ -55,7 +55,7 @@ class MyImage(object):
             return False
 
 
-    def make_image(self, blur = 0.5):
+    def make_image(self, blur = 1):
 
         arr = np.array(Image.open(self.template_path))
         fg_mask = arr[:, :, 0] == 0
