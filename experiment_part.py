@@ -103,8 +103,9 @@ class ExperimentPart(object):
         core.wait(pause)
 
 
-    def export_results(self, filename, *extralines):
+    def export_results(self, dirname, *extralines):
 
+        filename = os.path.join(dirname, self.export_filename)
         filename = os.path.abspath(filename)
 
         while os.path.isfile(filename):
@@ -211,7 +212,7 @@ class ColourTest(ExperimentPart):
                 self.stopped_experiment()
                 return
 
-            self.responses.append( (i, self.correct_responses[i], response, latency) )
+            self.responses.append( (i+1, self.correct_responses[i], response, latency) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
 
         self.finished_experiment()
@@ -343,7 +344,7 @@ class ContrastDetection(ExperimentPart):
                 self.stopped_experiment()
                 return
 
-            self.responses.append( (i, kind, os.path.split(img)[1], list(cur_grey), response) )
+            self.responses.append( (i+1, kind, os.path.split(img)[1], list(cur_grey), response) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
 
             # Adjust grey if experimental trial
@@ -449,7 +450,7 @@ class IsoluminanceDetection(ExperimentPart):
                 self.stopped_experiment(block = block)
                 return
 
-            self.responses.append( (i, kind, os.path.split(img)[1], list(iso_col)) )
+            self.responses.append( (i+1, kind, os.path.split(img)[1], list(iso_col)) )
             logger.info('ran trial: {}'.format(self.responses[-1]))
 
 
@@ -616,12 +617,12 @@ class FreeChoiceExperiment(ExperimentPart):
         images_seq = self.load_images_sequence()
         core.wait(1)
 
-        for n, img in enumerate(images_seq):
+        for i, img in enumerate(images_seq):
             resp, lat = self.run_trial(img)
             if resp == 'stop':
                 self.stopped_experiment()
                 return
-            self.responses.append( (n, img.cond, img.name, resp, lat) )
+            self.responses.append( (i+1, img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
         self.finished_experiment()
@@ -693,7 +694,7 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
                 self.stopped_experiment(block = kind)
                 return
             correct = img.has_letter(self.target_letter) == resp # this var tells whether the resp was correct or not
-            self.responses.append( (i, kind, img.cond, img.name, resp, correct, lat) )
+            self.responses.append( (i+1, kind, img.cond, img.name, resp, correct, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
         logger.info('finished block {}'.format(kind))
@@ -800,7 +801,7 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
             if resp == 'stop':
                 self.stopped_experiment(block = kind)
                 return
-            self.responses.append( (i, '-'.join(kind), img.cond, img.name, resp, lat) )
+            self.responses.append( (i+1, '-'.join(kind), img.cond, img.name, resp, lat) )
             logger.info('ran trial {}'.format(self.responses[-1]))
 
         logger.info('finished block {}'.format(kind))

@@ -58,14 +58,14 @@
 
     "ColourTest":{
         "images_dir": "./images/colour_test",
-        "export_filename": "colour_test.exp",
+        "export_filename": "colour_test.csv",
         "stim_size": [9, 9],
         "instructions_img": "./images/instructions/Slide1.png"
     },
 
 	"ContrastDetection":{
 		"images_dir": "./images/line_drawings",
-        "export_filename": "contrast.exp",
+        "export_filename": "contrast.csv",
         "stim_size": [9.26, 9.26],
 		"n_trials":	 15,
 		"p_catch": 0.15,
@@ -80,7 +80,7 @@
 
 	"IsoluminanceDetection":{
 		"images_dir": "./images/line_drawings",
-        "export_filename": "isoluminance.exp",
+        "export_filename": "isoluminance.csv",
         "stim_size": [9.26, 9.26],
         "instructions_img": "./images/instructions/Slide3.png",
         "instructions_img_up": "./images/instructions/Slide4.png",
@@ -97,7 +97,7 @@
 
 	"FreeChoiceExperiment":{
 		"images_dir": "./images/letters_free_choice",
-        "export_filename": "free_choice.exp",
+        "export_filename": "free_choice.csv",
         "seq_file": "./imgs_seq_free_choice.csv",
         "instructions_img": "./images/instructions/Slide6.png",
 		"n_trials": 5,
@@ -112,7 +112,7 @@
 
     "DividedAttentionExperiment":{
         "images_dir": "./images/letters_div_attention",
-        "export_filename": "divided_attention.exp",
+        "export_filename": "divided_attention.csv",
         "seq_file": "./imgs_seq_div_attention.csv",
         "instructions_img": "./images/instructions/Slide7.png",
         "instructions_img_practice": "./images/instructions/Slide8.png",
@@ -132,7 +132,7 @@
 
     "SelectiveAttentionExperiment":{
         "images_dir": "./images/letters_free_choice",
-        "export_filename": "selective_attention.exp",
+        "export_filename": "selective_attention.csv",
         "seq_file": "./imgs_seq_sel_attention.csv",
         "instructions_img": "./images/instructions/Slide10.png",
         "instructions_img_local_practice": "./images/instructions/Slide11.png",

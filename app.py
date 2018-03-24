@@ -210,12 +210,12 @@ class Application(object):
                     logger.exception('error in experiment:')
                     return
                 finally:
-                    filename = os.path.join(self.dir, experiment.export_filename)
                     if name in ['contrast', 'isolum']:
-                        experiment.export_results(filename, ['Mean Colour:', experiment.get_mean_col()])
+                        avg = ['Mean Colour:', experiment.get_mean_col()]
+                        experiment.export_results(self.dir, avg)
                         self.colours = experiment.get_colours_dict()
                     else:
-                        experiment.export_results(filename)
+                        experiment.export_results(self.dir)
 
 
         self.save_colours()
