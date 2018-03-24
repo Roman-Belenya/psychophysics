@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
-
-import psychopy
 from psychopy import visual, core, event
 import numpy as np
 import glob
 import os
 from tools import *
 from my_image import MyImage
-import sys
 from itertools import product
 import csv
-import shutil
 import datetime
 import logging
 
@@ -46,7 +42,7 @@ class ExperimentPart(object):
             win = self.win,
             units = 'deg',
             size = self.stim_size,
-            colorSpace = 'rgb255',
+            colorSpace = 'rgb',
             interpolate = True)
 
         # self.fixation_cross = visual.GratingStim(
@@ -83,7 +79,7 @@ class ExperimentPart(object):
         return True
 
 
-    def finished_experiment(self, pause = 3):
+    def finished_experiment(self, pause = 2):
 
         self.finished = True
         logger.info('finished experiment {}'.format(str(self)))
@@ -144,7 +140,6 @@ class ColourTest(ExperimentPart):
 
         super(ColourTest, self).__init__(win, _id, params)
         self.images = glob.glob(os.path.join(self.images_dir, '*.jpg'))
-        self.stim.colorSpace = 'rgb'
 
         self.response_txt = visual.TextStim(win, text = '', pos = [0, -10])
 
@@ -311,6 +306,19 @@ class ContrastDetection(ExperimentPart):
         return response, increment
 
 
+    def get_image(self, image, fg_grey):
+
+        arr = np.array(Image.open(image))
+        fg = arr[:,:,0] == 0
+
+        arr[fg] = fg_grey
+        arr[~fg] = self.colours_dict['bg_grey']
+
+        img = Image.fromarray(arr)
+
+        return img
+
+
     def main(self):
 
         start = self.show_instructions(self.instructions_img)
@@ -335,8 +343,9 @@ class ContrastDetection(ExperimentPart):
             # Process the image
             if kind:
                 img = np.random.choice(self.images)
-                self.stim.mask = get_fg_mask(img)
-                self.stim.color = cur_grey
+                # self.stim.mask = get_fg_mask(img)
+                # self.stim.color = cur_grey
+                self.stim.image = self.get_image(img, cur_grey)
 
             #Run the trial
             response, increment = self.run_trial(kind)
@@ -363,6 +372,8 @@ class IsoluminanceDetection(ExperimentPart):
     def __init__(self, win, _id, colours_dict, params):
 
         super(IsoluminanceDetection, self).__init__(win, _id, params)
+
+        self.stim.colorSpace = 'rgb255'
 
         self.colours_dict = colours_dict
         self.fix_col = colours_dict['fg_col']
@@ -447,7 +458,7 @@ class IsoluminanceDetection(ExperimentPart):
             core.wait(self.t_poststim)
 
             if np.any(iso_col == 'stop'):
-                self.stopped_experiment(block = block)
+                self.stopped_experiment(block = kind)
                 return
 
             self.responses.append( (i+1, kind, os.path.split(img)[1], list(iso_col)) )
@@ -483,7 +494,6 @@ class FreeChoiceExperiment(ExperimentPart):
         self.colours_dict = colours_dict
         self.check_colours_dict()
 
-        self.stim.colorSpace = 'rgb' # back to default, would show inverted colours with rgb255
         self.colheaders = ['#', 'Condition', 'Stimulus', 'Response', 'Latency']
 
         self.left_resp = visual.TextStim(

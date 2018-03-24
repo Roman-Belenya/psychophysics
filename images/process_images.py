@@ -17,6 +17,6 @@ for image in images:
         print image
 
     img = Image.fromarray(arr)
-    img.resize((1024, 1024), Image.LANCZOS)
+    img.resize((1024, 1024), Image.NEAREST)
 
     img.save(image[:-3] + 'png')
