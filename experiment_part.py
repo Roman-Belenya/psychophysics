@@ -457,7 +457,7 @@ class IsoluminanceDetection(ExperimentPart):
             self.win.flip()
             core.wait(self.t_poststim)
 
-            if np.any(iso_col == 'stop'):
+            if iso_col == 'stop':
                 self.stopped_experiment(block = kind)
                 return
 

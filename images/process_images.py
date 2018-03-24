@@ -7,6 +7,7 @@ path = os.path.abspath("C:\Users\marotta_admin\Desktop\BOSS\__Set of stimuli\Mod
 images = glob.glob(os.path.join(path, '*.jpg'))
 
 for image in images:
+    print image
     img = Image.open(image)
 
     arr = np.array(img)
@@ -17,6 +18,6 @@ for image in images:
         print image
 
     img = Image.fromarray(arr)
-    img.resize((1024, 1024), Image.NEAREST)
+    img = img.resize((1024,1024), Image.NEAREST)
 
     img.save(image[:-3] + 'png')
