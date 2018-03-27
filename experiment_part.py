@@ -655,6 +655,8 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         core.wait(self.t_prestim)
 
         self.stim.draw()
+        self.left_resp.draw()
+        self.right_resp.draw()
         self.win.flip()
         self.clock.reset()
         key = event.waitKeys(keyList = self.keylist, timeStamped = self.clock)
@@ -663,13 +665,21 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
         latency = key[1]
         if key[0] == self.pos_key:
             response = 1
+            self.right_resp.color = 150
         elif key[0] == self.neg_key:
             response = 0
+            self.left_resp.color = 150
         elif key[0] == 'escape':
             response = 'stop'
 
+        self.stim.draw()
+        self.left_resp.draw()
+        self.right_resp.draw()
         self.win.flip()
         core.wait(self.t_poststim)
+
+        self.left_resp.color = 255
+        self.right_resp.color = 255
 
         return response, latency
 
@@ -714,6 +724,11 @@ class DividedAttentionExperiment(FreeChoiceExperiment):
 
         self.colheaders = ['#', 'BlockType', 'Condition', 'Stimulus', 'Response', 'Correct', 'Latency']
         self.keylist = [self.pos_key, self.neg_key, 'escape']
+
+        self.left_resp.text = 'not present  ←'.decode('UTF-8')
+        self.left_resp.pos = (-5, -8)
+        self.right_resp.text = '→ present'.decode('UTF-8')
+        self.right_resp.pos = (5, -8)
 
         start = self.show_instructions(self.instructions_img)
         if not start:
@@ -780,10 +795,10 @@ class SelectiveAttentionExperiment(DividedAttentionExperiment):
         self.left_resp.draw()
         self.right_resp.draw()
         self.win.flip()
+        core.wait(self.t_poststim)
 
         self.left_resp.color = 255
         self.right_resp.color = 255
-        core.wait(self.t_poststim)
 
         return response, latency
 
