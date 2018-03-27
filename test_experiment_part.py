@@ -35,15 +35,15 @@ class TestExperimentPart(unittest.TestCase):
         cls.choice = FreeChoiceExperiment(cls.win, _id, cls.params['default_colours'], cls.params['FreeChoiceExperiment'])
         cls.divided = DividedAttentionExperiment(cls.win, _id, cls.params['default_colours'], cls.params['DividedAttentionExperiment'])
         cls.selective = SelectiveAttentionExperiment(cls.win, _id, cls.params['default_colours'], cls.params['SelectiveAttentionExperiment'])
-        cls.stream_handler = logging.StreamHandler()
-        logger.addHandler(cls.stream_handler)
+        # cls.stream_handler = logging.StreamHandler()
+        # logger.addHandler(cls.stream_handler)
 
     @classmethod
     def tearDownClass(cls):
         cls.win.winHandle.minimize()
         cls.win.close()
         # shutil.rmtree('./__test__/')
-        logger.removeHandler(cls.stream_handler)
+        # logger.removeHandler(cls.stream_handler)
 
     def test_files(self):
         self.assertTrue(os.path.isfile('./parameters.json'))
@@ -85,8 +85,9 @@ class TestExperimentPart(unittest.TestCase):
             nMaxFrames = 200,
             nWarmUpFrames = 100,
             threshold = 1)
-        self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate: {}, actual is {}'.format(mon_fs, framerate))
         logger.info('actual framerate is {}'.format(framerate))
+        self.assertEqual(mon_fs, round(framerate), 'Incorrect monitor frame rate: {}, actual is {}'.format(mon_fs, framerate))
+
 
 
 
@@ -122,6 +123,7 @@ class TestExperimentPart(unittest.TestCase):
         n = 0
         t = 10
 
+        t0 = time.time()
         while frame < self.win.monitor.refresh_rate * t:
             if frame % half_cycle == 0:
                 if all(self.isolum.stim.color == self.isolum.fix_col):
@@ -142,18 +144,19 @@ class TestExperimentPart(unittest.TestCase):
                 elif ans[0] == 'return':
                     logger.info('Colours are {} and {}'.format(colour, self.isolum.fix_col))
 
-        cycles_per_sec = float(n) / (float(frame) / self.win.monitor.refresh_rate)
+        cycles_per_sec = float(n) / (time.time() - t0)
         msperframe = 1000. / self.win.monitor.refresh_rate
         fints = np.array(self.win.frameIntervals) * 1000
         t1 = fints.mean() - fints.std()
         t2 = fints.mean() + fints.std()
 
-        logger.info('Flicker frequency is {}'.format(cycles_per_sec))
+        logger.info('Flicker frequency ~ {}'.format(cycles_per_sec))
         logger.info('dropped {} frames: {}%'.format(self.win.nDroppedFrames, self.win.nDroppedFrames*100.0/frame))
         logger.info('{} +- {} ms to refresh each frame, should be {}'.format(fints.mean(), fints.std(), msperframe))
 
         self.assertTrue(t1 < msperframe < t2, 'Strange refresh period ({}, should be {})'.format(fints.mean(), msperframe))
-        self.assertEqual(self.isolum.flicker_fs, cycles_per_sec, 'Strange flicker rate: set to {}, but actually is {}'.format(self.isolum.flicker_fs, cycles_per_sec))
+        self.assertAlmostEqual(self.isolum.flicker_fs, cycles_per_sec, delta = 0.1,
+            msg = 'Strange flicker rate: set to {}, but actually is {}'.format(self.isolum.flicker_fs, cycles_per_sec))
         self.assertLessEqual(2.0 * self.isolum.flicker_fs, self.win.monitor.refresh_rate, 'Flicker frequency cannot be greater than half the monitor fs: set to {}'.format(self.isolum.flicker_fs))
         self.assertLess(self.win.nDroppedFrames, frame*0.05, msg = 'Too many dropped frames ({})'.format(self.win.nDroppedFrames))
 
