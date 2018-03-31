@@ -4,22 +4,10 @@ import csv
 
 class MonitorCalibration(object):
 
-    def __init__(self, mon_name, calib_name):
+    def __init__(self, mon_params):
 
 
-        self.mon = monitors.Monitor(mon_name)
-
-        if calib_name in self.mon.calibNames:
-            self.mon.setCurrent(calib_name)
-            print 'loaded {}'.format(calib_name)
-        else:
-            self.mon.newCalib(calibName = calib_name)
-            self.mon.setCurrent(calib_name)
-            self.mon.setDistance(40)
-            self.mon.setWidth(53.13)
-            self.mon.setSizePix([1920, 1080])
-            self.mon.setLineariseMethod(4)
-            print 'created ne calib'
+        self.mon = self.load_monitor(mon_params)
 
         self.levels = map(int, np.linspace(0, 255, 16))
         self.lums = []
@@ -31,13 +19,14 @@ class MonitorCalibration(object):
         self.lms2rgb = []
 
         self.win = visual.Window(
-            size = [1920, 1200],
+            size = self.mon.getSizePix(),
             monitor = self.mon,
             screen = 0,
-            fullscr = True,
+            fullscr = False,
             colorSpace = 'rgb255',
             color = 128,
-            units = 'pix')
+            units = 'pix',
+            useRetina = True)
         self.minimise()
 
         self.target = visual.GratingStim(
@@ -45,11 +34,11 @@ class MonitorCalibration(object):
             tex = None,
             colorSpace = 'rgb255',
             color = [0,0,0],
-            size = 256)
+            size = 1024)
 
         self.curr_colour = visual.TextStim(
             win = self.win,
-            pos = (0, -500),
+            pos = (0, -600),
             colorSpace = 'rgb255',
             color = 255)
 
@@ -57,6 +46,20 @@ class MonitorCalibration(object):
             win = self.win,
             colorSpace = 'rgb255',
             color = 0)
+
+
+    def load_monitor(self, params):
+
+        mon = monitors.Monitor(name = params['monitor_name'])
+
+        mon.refresh_rate = params['refresh_rate']
+        mon.setWidth(params['width_cm'])
+        mon.setDistance(params['viewing_distance'])
+        mon.setSizePix(params['size_pix'])
+        mon.setLineariseMethod(params['lin_method'])
+
+        return mon
+
 
     def minimise(self):
         self.win.winHandle.minimize()
@@ -127,13 +130,13 @@ class MonitorCalibration(object):
         return lum
 
 
-    def get_gamma(self, lums):
+    def get_gamma(self):
 
-        if len(lums) != 4:
+        if len(self.lums) != 4:
             raise Exception('need 4 lum measurements')
 
         gamma_grid = []
-        for chan in lums:
+        for chan in self.lums:
             model = monitors.GammaCalculator(inputs = self.levels,
                 lums = chan, eq = 4)
             gamma_grid.append([model.min, model.max, model.gamma, model.a, model.b, model.k])
