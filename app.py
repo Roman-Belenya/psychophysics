@@ -62,12 +62,14 @@ class Application(object):
             self.frame,
             text = 'Colour test',
             variable = self.colour_var).grid(row = 1, column = 0, sticky = 'W', pady = (0, 5))
+        self.colour_var.set(1) # checked off by default
 
         self.contrast_var = tk.IntVar()
         tk.Checkbutton(
             self.frame,
             text = 'Contrast detection',
             variable = self.contrast_var).grid(row = 2, column = 0, sticky = 'W')
+        self.contrast_var.set(1)
 
         self.isolum_var = tk.IntVar()
         tk.Checkbutton(
@@ -80,18 +82,21 @@ class Application(object):
             self.frame,
             text = 'Free choice',
             variable = self.free_var).grid(row = 4, column = 0, sticky = 'W')
+        self.free_var.set(1)
 
         self.divided_var = tk.IntVar()
         tk.Checkbutton(
             self.frame,
             text = 'Divided attention',
             variable = self.divided_var).grid(row = 5, column = 0, sticky = 'W')
+        self.divided_var.set(1)
 
         self.selective_var = tk.IntVar()
         tk.Checkbutton(
             self.frame,
             text = 'Selective attention',
             variable = self.selective_var).grid(row = 6, column = 0, sticky = 'W')
+        self.selective_var.set(1)
 
         # Buttons
         self.tests_button = tk.Button(self.frame,
